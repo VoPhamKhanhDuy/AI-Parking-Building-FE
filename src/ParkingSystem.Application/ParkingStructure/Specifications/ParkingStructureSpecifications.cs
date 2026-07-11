@@ -70,7 +70,7 @@ public static class ParkingZoneSpecifications
             AddCriteria(z => z.FloorId == floorId);
             // Primary: lowest distance (closest to exit). Secondary: highest priority.
             ApplyOrderBy(z => z.DistanceToExitOrElevator);
-            ApplyOrderByDescending(z => z.Priority);
+            ThenByDescending(z => z.Priority);
 #pragma warning disable CS8603 // Navigation properties may be null but the include is intentional.
             AddInclude(z => z.Floor);
             AddInclude(z => z.VehicleType);

@@ -30,6 +30,14 @@ public static class SpecificationEvaluator<T> where T : class
             query = query.OrderByDescending(specification.OrderByDescending);
         }
 
+        // Apply secondary sort keys as ThenBy / ThenByDescending.
+        foreach (var thenBy in specification.ThenBys)
+        {
+            query = thenBy.Descending
+                ? ((IOrderedQueryable<T>)query).ThenByDescending(thenBy.KeySelector)
+                : ((IOrderedQueryable<T>)query).ThenBy(thenBy.KeySelector);
+        }
+
         if (specification.IsPagingEnabled)
         {
             query = query.Skip(specification.Skip!.Value).Take(specification.Take!.Value);
