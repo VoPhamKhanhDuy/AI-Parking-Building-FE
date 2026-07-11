@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
 import { initialSlots } from '../../mock-data/slots'
 import { initialRecentEntries } from '../../mock-data/vehicleEntries'
@@ -10,7 +11,10 @@ import {
 } from './vehicleEntryService'
 
 function VehicleEntryPage() {
-  // Mock State
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  // State for persistent logs and slot occupancy
   const [slots, setSlots] = useState(initialSlots)
   const [recentEntries, setRecentEntries] = useState(initialRecentEntries)
 
@@ -20,7 +24,7 @@ function VehicleEntryPage() {
   const [vehicleType, setVehicleType] = useState('Car')
   const [ticketType, setTicketType] = useState('Normal (Visitor)')
   const [reservationCode, setReservationCode] = useState('')
-  const [entryTime, setEntryTime] = useState('2023-10-27 14:32:05') // Initial mock time
+  const [entryTime, setEntryTime] = useState('2023-10-27 14:32:05') // Initial mock time from image
 
   // Logic states
   const [checkStatus, setCheckStatus] = useState('Existing Vehicle')
@@ -30,20 +34,27 @@ function VehicleEntryPage() {
     type: 'Standard',
     score: 92,
     reason: 'Optimized match for vehicle class'
-  })
-  const [selectedSlotId, setSelectedSlotId] = useState('B2-18')
+  }) // Prepopulated to match image initially
+  const [selectedSlotId, setSelectedSlotId] = useState('B2-18') // Prepopulated to match image initially
   const [isRecommending, setIsRecommending] = useState(false)
-  const [showModal, setShowModal] = useState(false)
-  const [modalFilterFloor, setModalFilterFloor] = useState('All')
   const [notification, setNotification] = useState(null)
 
-  // Keep system time running
+  // Read state from Manual Slot Selection redirect
   useEffect(() => {
-    const timer = setInterval(() => {
-      // Just keep time format ready, but don't force reset the mock form time unless scanned
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [])
+    if (location.state) {
+      const s = location.state
+      if (s.licensePlate !== undefined) setLicensePlate(s.licensePlate)
+      if (s.vehicleType !== undefined) setVehicleType(s.vehicleType)
+      if (s.ticketType !== undefined) setTicketType(s.ticketType)
+      if (s.checkStatus !== undefined) setCheckStatus(s.checkStatus)
+      if (s.plateSource !== undefined) setPlateSource(s.plateSource)
+      if (s.selectedSlotId !== undefined) {
+        setSelectedSlotId(s.selectedSlotId)
+        setAiRecommendation(null) // Manual override
+        setNotification({ type: 'info', message: `Đã chỉ định vị trí đỗ thủ công: ${s.selectedSlotId}` })
+      }
+    }
+  }, [location.state])
 
   // Action: Check Info
   const handleCheckInfo = () => {
@@ -53,7 +64,7 @@ function VehicleEntryPage() {
     }
     const cleanInput = licensePlate.toUpperCase().trim()
 
-    // 1. Check Reservation
+    // 1. Check reservation
     const reservation = checkReservation(cleanInput)
     if (reservation) {
       setTicketType('Reservation')
@@ -72,7 +83,7 @@ function VehicleEntryPage() {
       setVehicleType(pass.vehicleType)
       setReservationCode('')
       setCheckStatus(`Active Monthly Pass: ${pass.ownerName}`)
-      setNotification({ type: 'success', message: `Thẻ tháng hợp lệ cho: ${pass.ownerName}!` })
+      setNotification({ type: 'success', message: `Vé tháng của: ${pass.ownerName}!` })
       return
     }
 
@@ -81,7 +92,7 @@ function VehicleEntryPage() {
     setNotification({ type: 'info', message: 'Biển số mới (Vé vãng lai).' })
   }
 
-  // Presets simulator
+  // Preset quick simulated scanning
   const handlePresetScan = (plate, vType, tType) => {
     setLicensePlate(plate)
     setVehicleType(vType)
@@ -113,10 +124,10 @@ function VehicleEntryPage() {
     }, 100)
   }
 
-  // AI Recommender
+  // Request AI Recommendation
   const handleRequestAIRecommendation = () => {
     if (!licensePlate.trim()) {
-      setNotification({ type: 'warning', message: 'Vui lòng nhập biển số trước!' })
+      setNotification({ type: 'warning', message: 'Vui lòng nhập biển số xe trước khi yêu cầu AI!' })
       return
     }
 
@@ -132,34 +143,50 @@ function VehicleEntryPage() {
         setAiRecommendation(recommendation)
         setSelectedSlotId(recommendation.slotId)
       } else {
-        setNotification({ type: 'warning', message: 'Không tìm thấy vị trí phù hợp!' })
+        setNotification({ type: 'warning', message: 'Không có vị trí đỗ trống khả dụng!' })
       }
     }, 500)
   }
 
-  // Confirm check-in entry
+  // Handle click on Manual Slot Selection button -> redirect to page passing current state
+  const handleManualSlotClick = () => {
+    navigate('/vehicle-entry/manual-slot', {
+      state: {
+        licensePlate,
+        vehicleType,
+        ticketType,
+        checkStatus,
+        plateSource
+      }
+    })
+  }
+
+  // Confirm Entry check-in
   const handleConfirmEntry = () => {
     if (!licensePlate.trim()) {
       setNotification({ type: 'warning', message: 'Vui lòng nhập biển số xe!' })
       return
     }
     if (!selectedSlotId) {
-      setNotification({ type: 'warning', message: 'Vui lòng chọn vị trí đỗ!' })
+      setNotification({ type: 'warning', message: 'Vui lòng chỉ định vị trí đỗ xe!' })
       return
     }
 
+    // Verify availability
     const slotObj = slots.find((s) => s.id === selectedSlotId)
     if (slotObj && slotObj.status === 'Occupied') {
-      setNotification({ type: 'warning', message: `Vị trí ${selectedSlotId} đã có xe đỗ!` })
+      setNotification({ type: 'warning', message: `Vị trí đỗ ${selectedSlotId} đã có xe đỗ!` })
       return
     }
 
-    // Occupy
-    setSlots((prev) =>
-      prev.map((s) => (s.id === selectedSlotId ? { ...s, status: 'Occupied' } : s))
+    // Occupy slot in state
+    setSlots((prevSlots) =>
+      prevSlots.map((s) =>
+        s.id === selectedSlotId ? { ...s, status: 'Occupied' } : s
+      )
     )
 
-    // Prepend log
+    // Prepend log entry
     const timeStr = getFormattedCurrentTime().split(' ')[1]
     const cleanPlateInput = licensePlate.toUpperCase().trim()
     const newEntry = {
@@ -174,9 +201,9 @@ function VehicleEntryPage() {
     }
 
     setRecentEntries([newEntry, ...recentEntries])
-    setNotification({ type: 'success', message: `Check-in thành công xe ${cleanPlateInput} tại ô ${selectedSlotId}!` })
+    setNotification({ type: 'success', message: `Đã check-in thành công xe ${cleanPlateInput} tại ô ${selectedSlotId}!` })
 
-    // Reset Form
+    // Reset Form fields
     setLicensePlate('')
     setReservationCode('')
     setCheckStatus('Idle')
@@ -184,29 +211,23 @@ function VehicleEntryPage() {
     setAiRecommendation(null)
   }
 
-  // Clear Form
+  // Clear Form handler
   const handleClearForm = () => {
     setLicensePlate('')
     setReservationCode('')
     setCheckStatus('Idle')
     setSelectedSlotId('')
     setAiRecommendation(null)
-    setNotification({ type: 'info', message: 'Đã xóa form nhập liệu.' })
+    setNotification({ type: 'info', message: 'Đã xóa trắng form.' })
   }
 
-  // Stats
+  // Facility Status calculations
   const totalCount = slots.length
   const occupiedCount = slots.filter((s) => s.status === 'Occupied').length
   const availableCount = slots.filter((s) => s.status === 'Available').length
   const reservedCount = slots.filter((s) => s.status === 'Reserved').length
-  const maintenanceCount = 12
+  const maintenanceCount = 12 // Simulated or disabled
   const occupancyRate = Math.round((occupiedCount / totalCount) * 100)
-
-  // Filters for manual selection modal
-  const floors = ['All', 'Basement', 'Floor 1', 'Floor 2', 'Floor 3']
-  const filteredSlots = modalFilterFloor === 'All' 
-    ? slots 
-    : slots.filter((s) => s.floor === modalFilterFloor)
 
   return (
     <MainLayout>
@@ -228,7 +249,7 @@ function VehicleEntryPage() {
                 <a href="/dashboard" className="hover:text-primary transition-colors">Dashboard</a>
               </li>
               <li className="">
-                <div class="flex items-center">
+                <div className="flex items-center">
                   <span className="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
                   <span className="text-on-surface">Vehicle Entry</span>
                 </div>
@@ -419,7 +440,7 @@ function VehicleEntryPage() {
                       <button 
                         className="w-full sm:w-auto px-6 py-2.5 border border-outline-variant text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-container-low transition-colors duration-200 active:scale-[0.98] flex items-center justify-center gap-2" 
                         type="button"
-                        onClick={() => setShowModal(true)}
+                        onClick={handleManualSlotClick}
                       >
                         <span className="material-symbols-outlined text-[18px]">map</span>
                         Manual Slot Selection
@@ -463,7 +484,7 @@ function VehicleEntryPage() {
             {/* AI Module Status */}
             <div className="bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(15,23,42,0.05)] border border-outline-variant/30 p-5">
               <div className="flex items-center justify-between mb-4">
-                <h3 class="font-headline-md text-[18px] font-semibold text-on-surface flex items-center gap-2">
+                <h3 className="font-headline-md text-[18px] font-semibold text-on-surface flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary">memory</span>
                   AI Slot Engine
                 </h3>
@@ -555,7 +576,7 @@ function VehicleEntryPage() {
                 <div>
                   <div className="text-label-md text-on-surface-variant uppercase tracking-wider mb-1 text-[10px]">Gate Queue</div>
                   <div className="font-headline-md font-semibold text-on-surface flex items-center gap-2">
-                    3 <span class="text-body-sm text-error flex items-center"><span class="material-symbols-outlined text-[16px]">trending_up</span></span>
+                    3 <span className="text-body-sm text-error flex items-center"><span className="material-symbols-outlined text-[16px]">trending_up</span></span>
                   </div>
                 </div>
               </div>
@@ -574,14 +595,14 @@ function VehicleEntryPage() {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-body-sm">
-              <thead class="bg-[#F1F5F9] text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
+              <thead className="bg-[#F1F5F9] text-on-surface-variant font-label-md text-label-md uppercase tracking-wider">
                 <tr>
-                  <th scope="col" class="px-6 py-4">Time</th>
-                  <th scope="col" class="px-6 py-4">License Plate</th>
-                  <th scope="col" class="px-6 py-4">Type</th>
-                  <th scope="col" class="px-6 py-4">Ticket</th>
-                  <th scope="col" class="px-6 py-4">Assigned Slot</th>
-                  <th scope="col" class="px-6 py-4">Status</th>
+                  <th scope="col" className="px-6 py-4">Time</th>
+                  <th scope="col" className="px-6 py-4">License Plate</th>
+                  <th scope="col" className="px-6 py-4">Type</th>
+                  <th scope="col" className="px-6 py-4">Ticket</th>
+                  <th scope="col" className="px-6 py-4">Assigned Slot</th>
+                  <th scope="col" className="px-6 py-4">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant/20 bg-surface-container-lowest">
@@ -625,82 +646,6 @@ function VehicleEntryPage() {
             </table>
           </div>
         </div>
-
-        {/* Modal Overlay for Manual Slot Selector */}
-        {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setShowModal(false)}>
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
-              <div className="px-6 py-4 border-b border-outline-variant/30 flex justify-between items-center">
-                <h3 className="font-semibold text-lg text-on-surface">Manual Slot Selection</h3>
-                <button className="p-1 rounded-full hover:bg-surface-container text-outline" onClick={() => setShowModal(false)}>
-                  <span className="material-symbols-outlined">close</span>
-                </button>
-              </div>
-              <div className="p-6 max-h-[70vh] overflow-y-auto">
-                <div className="p-3 bg-primary-container/10 border-l-4 border-primary-container text-xs text-on-surface-variant mb-4 rounded-r">
-                  Vui lòng lọc theo tầng và chọn vị trí khả dụng (màu xanh lá). 
-                  Nhấn <strong>Confirm Selection</strong> để chỉ định vị trí đỗ.
-                </div>
-
-                <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-                  {floors.map((floor) => (
-                    <button
-                      key={floor}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors ${
-                        modalFilterFloor === floor 
-                          ? 'bg-primary text-white' 
-                          : 'bg-surface border border-outline-variant text-on-surface-variant hover:bg-surface-container'
-                      }`}
-                      onClick={() => setModalFilterFloor(floor)}
-                    >
-                      {floor}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                  {filteredSlots.map((slot) => {
-                    const isSelected = selectedSlotId === slot.id
-                    const isAvail = slot.status === 'Available'
-                    return (
-                      <button
-                        key={slot.id}
-                        type="button"
-                        disabled={!isAvail}
-                        className={`p-2 border rounded-lg text-center font-semibold font-mono text-xs transition-all ${
-                          isSelected 
-                            ? 'bg-primary border-primary text-white scale-105 shadow-md' 
-                            : isAvail
-                              ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-500 hover:text-white hover:border-green-500'
-                              : 'bg-red-50 border-red-200 text-red-400 cursor-not-allowed opacity-50'
-                        }`}
-                        onClick={() => setSelectedSlotId(slot.id)}
-                      >
-                        <div>{slot.id}</div>
-                        <div className="text-[9px] font-normal opacity-85 mt-0.5">{slot.type}</div>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-              <div className="px-6 py-4 bg-surface border-t border-outline-variant/30 flex justify-end gap-2">
-                <button className="px-4 py-2 border border-outline-variant rounded-lg text-xs font-semibold hover:bg-surface-container" onClick={() => setShowModal(false)}>
-                  Huỷ
-                </button>
-                <button 
-                  className="px-4 py-2 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-primary-container disabled:opacity-50"
-                  onClick={() => {
-                    setAiRecommendation(null)
-                    setShowModal(false)
-                  }}
-                  disabled={!selectedSlotId}
-                >
-                  Xác nhận chọn chỗ
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
       </div>
       

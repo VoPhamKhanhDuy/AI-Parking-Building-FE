@@ -4,6 +4,7 @@ export const ROUTE_PATHS = {
   notifications: '/notifications',
   profile: '/profile',
   vehicleEntry: '/vehicle-entry',
+  manualSlot: '/vehicle-entry/manual-slot',
   vehicleExit: '/vehicle-exit',
   tickets: '/tickets',
   parkingStructure: '/parking-structure',
