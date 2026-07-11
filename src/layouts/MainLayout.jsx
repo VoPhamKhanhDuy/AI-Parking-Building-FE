@@ -63,12 +63,12 @@ function MainLayout({ children }) {
           </div>
           <div className="menu-anchor">
             <button className="icon-button" aria-label="Settings" onClick={() => setOpenMenu(openMenu === 'settings' ? null : 'settings')}><span className="material-symbols-outlined">settings</span></button>
-            {openMenu === 'settings' && <div className="action-menu compact"><button onClick={() => navigate('/settings')}>System settings</button><button onClick={() => navigate('/profile')}>Account settings</button></div>}
+            {openMenu === 'settings' && <div className="action-menu compact"><button onClick={() => navigate('/settings')}>System settings</button><button onClick={() => navigate(ROUTE_PATHS.profile)}>Account settings</button></div>}
           </div>
           <span className="top-divider" />
           <div className="menu-anchor">
             <button className="profile-button" onClick={() => setOpenMenu(openMenu === 'profile' ? null : 'profile')}><span><strong>Parking Staff</strong><small>Entry Gate Operator</small></span><b>A</b></button>
-            {openMenu === 'profile' && <div className="action-menu compact profile-menu"><button onClick={() => navigate('/profile')}>View profile</button><button onClick={logout}>Sign out</button></div>}
+            {openMenu === 'profile' && <div className="action-menu compact profile-menu"><button onClick={() => navigate(ROUTE_PATHS.profile)}>View profile</button><button onClick={logout}>Sign out</button></div>}
           </div>
         </div>
       </header>

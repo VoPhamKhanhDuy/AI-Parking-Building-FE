@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import LoginPage from '../pages/Login/LoginPage'
 import DashboardPage from '../pages/Dashboard/DashboardPage'
 import NotificationsPage from '../pages/Notifications/NotificationsPage'
+import StaffProfilePage from '../pages/StaffProfile/StaffProfilePage'
 import { ROUTE_PATHS } from './routePaths'
 
 function ComingSoonPage() {
@@ -26,6 +27,7 @@ function AppRoutes() {
       <Route path={ROUTE_PATHS.login} element={<LoginPage />} />
       <Route path={ROUTE_PATHS.dashboard} element={<DashboardPage />} />
       <Route path={ROUTE_PATHS.notifications} element={<NotificationsPage />} />
+      <Route path={ROUTE_PATHS.profile} element={<StaffProfilePage />} />
       <Route path="/not-found" element={<ComingSoonPage />} />
       <Route path="/*" element={<ComingSoonPage />} />
       <Route path="*" element={<Navigate to="/not-found" replace />} />
