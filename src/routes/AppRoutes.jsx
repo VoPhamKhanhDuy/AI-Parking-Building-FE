@@ -6,6 +6,7 @@ import StaffProfilePage from '../pages/StaffProfile/StaffProfilePage'
 import SystemLogPage from '../pages/SystemLog/SystemLogPage'
 import VehicleEntryPage from '../pages/VehicleEntry/VehicleEntryPage'
 import ManualSlotPage from '../pages/VehicleEntry/ManualSlotPage'
+import AIRecommendationPage from '../pages/AIRecommendation/AIRecommendationPage'
 import { ROUTE_PATHS } from './routePaths'
 
 function ComingSoonPage() {
@@ -34,6 +35,7 @@ function AppRoutes() {
       <Route path={ROUTE_PATHS.systemLogs} element={<SystemLogPage />} />
       <Route path={ROUTE_PATHS.vehicleEntry} element={<VehicleEntryPage />} />
       <Route path={ROUTE_PATHS.manualSlot} element={<ManualSlotPage />} />
+      <Route path={ROUTE_PATHS.aiRecommendation} element={<AIRecommendationPage />} />
       <Route path="/not-found" element={<ComingSoonPage />} />
       <Route path="/*" element={<ComingSoonPage />} />
       <Route path="*" element={<Navigate to="/not-found" replace />} />

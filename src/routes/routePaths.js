@@ -5,6 +5,7 @@ export const ROUTE_PATHS = {
   profile: '/profile',
   vehicleEntry: '/vehicle-entry',
   manualSlot: '/vehicle-entry/manual-slot',
+  aiRecommendation: '/ai-recommendation',
   vehicleExit: '/vehicle-exit',
   tickets: '/tickets',
   parkingStructure: '/parking-structure',

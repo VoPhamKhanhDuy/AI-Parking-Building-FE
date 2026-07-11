@@ -131,21 +131,15 @@ function VehicleEntryPage() {
       return
     }
 
-    setIsRecommending(true)
-    setAiRecommendation(null)
-
-    setTimeout(() => {
-      const mappedTicketType = ticketType.includes('Monthly') ? 'Monthly Pass' : ticketType.includes('Reservation') ? 'Reservation' : 'Normal'
-      const recommendation = getAIRecommendation(vehicleType, mappedTicketType, slots)
-      
-      setIsRecommending(false)
-      if (recommendation) {
-        setAiRecommendation(recommendation)
-        setSelectedSlotId(recommendation.slotId)
-      } else {
-        setNotification({ type: 'warning', message: 'Không có vị trí đỗ trống khả dụng!' })
+    navigate('/ai-recommendation', {
+      state: {
+        licensePlate,
+        vehicleType,
+        ticketType,
+        checkStatus,
+        plateSource
       }
-    }, 500)
+    })
   }
 
   // Handle click on Manual Slot Selection button -> redirect to page passing current state
