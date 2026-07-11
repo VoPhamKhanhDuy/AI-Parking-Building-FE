@@ -15,3 +15,28 @@
 @keyframes profile-modal-in { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
 @media (max-width: 1000px) { .profile-top-grid, .profile-middle-grid { grid-template-columns: 1fr; } }
 @media (max-width: 600px) { .staff-page-heading h1 { font-size: 23px; }.profile-card { padding: 17px; }.shift-grid { grid-template-columns: 1fr; gap: 20px; }.staff-primary-actions { flex-direction: column; }.profile-toast { right: 14px; bottom: 14px; left: 14px; } }
+
+@media (min-width: 601px) {
+  .staff-profile-page { max-width: 1100px; }
+  .staff-page-heading { margin-bottom: 16px; }
+  .staff-page-heading h1 { font-size: 24px; }
+  .staff-page-heading > p { font-size: 11px; }
+  .profile-top-grid, .profile-middle-grid { margin-bottom: 14px; gap: 14px; }
+  .profile-card { padding: 17px; border-radius: 9px; }
+  .profile-card h2 { margin-bottom: 15px; font-size: 13px; }
+  .staff-identity { margin-bottom: 14px; gap: 11px; }
+  .staff-identity > span { width: 46px; height: 46px; flex-basis: 46px; font-size: 15px; }
+  .staff-identity strong { font-size: 16px; }
+  .staff-identity p { font-size: 10px; }
+  .staff-facts { margin-bottom: 16px; font-size: 9px; }
+  .staff-facts dt, .staff-facts dd { padding: 7px 0; }
+  .staff-primary-actions button { min-height: 34px; }
+  .shift-grid { margin-bottom: 16px; gap: 24px; }
+  .shift-details { gap: 12px; }
+  .security-card dl { margin-bottom: 14px; }
+  .security-card dl div { padding: 7px 0; font-size: 9px; }
+  .permissions-card section + section { margin-top: 14px; }
+  .activity-section { padding: 0; }
+  .activity-section > header { min-height: 46px; padding: 0 17px; }
+  .password-modal { max-width: 380px; }
+}
