@@ -7,7 +7,6 @@ import './MainLayout.css'
 const navigationItems = [
   ['dashboard', 'Dashboard', ROUTE_PATHS.dashboard],
   ['login', 'Vehicle Entry', ROUTE_PATHS.vehicleEntry],
-  ['psychology', 'AI Recommendation', '/ai-recommendation'],
   ['map', 'Parking Map', '/parking-map'],
   ['logout', 'Vehicle Exit', ROUTE_PATHS.vehicleExit],
   ['payments', 'Payment', '/payment'],

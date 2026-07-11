@@ -4,6 +4,8 @@ import DashboardPage from '../pages/Dashboard/DashboardPage'
 import NotificationsPage from '../pages/Notifications/NotificationsPage'
 import StaffProfilePage from '../pages/StaffProfile/StaffProfilePage'
 import SystemLogPage from '../pages/SystemLog/SystemLogPage'
+import VehicleEntryPage from '../pages/VehicleEntry/VehicleEntryPage'
+import ParkingMapPage from '../pages/ParkingMap/ParkingMapPage'
 import { ROUTE_PATHS } from './routePaths'
 
 function ComingSoonPage() {
@@ -30,6 +32,8 @@ function AppRoutes() {
       <Route path={ROUTE_PATHS.notifications} element={<NotificationsPage />} />
       <Route path={ROUTE_PATHS.profile} element={<StaffProfilePage />} />
       <Route path={ROUTE_PATHS.systemLogs} element={<SystemLogPage />} />
+      <Route path={ROUTE_PATHS.vehicleEntry} element={<VehicleEntryPage />} />
+      <Route path="/parking-map" element={<ParkingMapPage />} />
       <Route path="/not-found" element={<ComingSoonPage />} />
       <Route path="/*" element={<ComingSoonPage />} />
       <Route path="*" element={<Navigate to="/not-found" replace />} />
@@ -38,3 +42,4 @@ function AppRoutes() {
 }
 
 export default AppRoutes
+
