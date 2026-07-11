@@ -1,0 +1,72 @@
+.reservation-page { display: flex; flex-direction: column; gap: 18px; }
+.reservation-heading { margin-bottom: 14px; }
+.reservation-heading .breadcrumb { display: flex; align-items: center; gap: 6px; color: #434655; font-size: 10px; margin-bottom: 6px; }
+.reservation-heading .breadcrumb button { padding: 0; border: 0; background: none; color: #737686; cursor: pointer; }
+.reservation-heading .breadcrumb button:hover { color: #004ac6; }
+.reservation-heading .breadcrumb strong { color: #191c1e; }
+.reservation-heading h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: -0.02em; }
+.reservation-heading p { margin: 0; color: #434655; font-size: 13px; max-width: 720px; }
+.reservation-filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 16px; border-radius: 14px; background: white; border: 1px solid rgba(195,198,215,.45); }
+.search-box { position: relative; flex: 1 1 240px; display: flex; align-items: center; gap: 10px; padding: 0 14px; border: 1px solid #c3c6d7; border-radius: 10px; background: #f7f9fc; }
+.search-box .material-symbols-outlined { color: #737686; font-size: 18px; }
+.search-box input { flex: 1; border: 0; outline: none; background: transparent; min-width: 0; font-size: 13px; color: #191c1e; }
+.reservation-filters select { min-width: 150px; height: 40px; padding: 0 12px; border: 1px solid #c3c6d7; border-radius: 10px; background: white; color: #191c1e; font-size: 13px; }
+.reservation-grid { display: grid; grid-template-columns: 1.8fr 1fr; gap: 18px; }
+.queue-card, .action-card, .activity-card { background: white; border: 1px solid rgba(195,198,215,.45); border-radius: 14px; box-shadow: 0 4px 18px rgba(15,23,42,.06); }
+.card-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 18px 20px; border-bottom: 1px solid rgba(195,198,215,.35); }
+.card-title h2 { margin: 0; font-size: 14px; letter-spacing: -.01em; }
+.card-title span { color: #737686; font-size: 12px; }
+.table-wrap { overflow-x: auto; }
+.queue-card table, .activity-card table { width: 100%; border-collapse: collapse; }
+.queue-card th, .queue-card td, .activity-card th, .activity-card td { padding: 14px 16px; text-align: left; white-space: nowrap; font-size: 12px; }
+.queue-card th, .activity-card th { color: #5c6679; font-weight: 700; letter-spacing: .02em; font-size: 11px; text-transform: uppercase; }
+.queue-card tbody tr { cursor: pointer; transition: background .2s, transform .2s; }
+.queue-card tbody tr:hover { background: #f7f9fc; }
+.queue-card tbody tr.selected { background: rgba(219,225,255,.35); box-shadow: inset 3px 0 #004ac6; }
+.empty-state { text-align: center; color: #737686; padding: 28px 0; }
+.upcoming-arrivals { padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 12px; }
+.upcoming-title { font-size: 13px; font-weight: 700; color: #191c1e; }
+.arrival-list { display: flex; flex-wrap: wrap; gap: 10px; }
+.arrival-list span { display: inline-flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 999px; background: #f7f9fc; color: #191c1e; font-size: 11px; }
+.action-panel { display: flex; flex-direction: column; gap: 18px; }
+.action-card { padding: 20px; display: flex; flex-direction: column; gap: 18px; }
+.panel-label { display: inline-flex; padding: 8px 12px; border-radius: 999px; background: #eef4ff; color: #0f3c8f; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.reservation-status-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.reservation-status-row strong { font-size: 18px; }
+.status-badge { padding: 6px 10px; border-radius: 999px; color: white; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.status-badge.pending { background: #f59e0b; }
+.status-badge['checked-in'], .status-badge.checked-in { background: #16a34a; }
+.status-badge.cancelled { background: #dc2626; }
+.reservation-detail-list { display: grid; gap: 10px; margin: 0; padding: 0; }
+.reservation-detail-list dt { color: #737686; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.reservation-detail-list dd { margin: 0 0 0 0; color: #191c1e; font-size: 13px; font-weight: 700; }
+.panel-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.panel-actions button, .cancel-button { padding: 12px 16px; border-radius: 10px; border: 1px solid transparent; cursor: pointer; font-size: 13px; }
+.panel-actions .primary { background: #004ac6; border-color: #004ac6; color: white; }
+.panel-actions button { background: #f7f9fc; color: #191c1e; }
+.panel-actions button:hover { background: #e3eaf9; }
+.cancel-button { width: 100%; border: 1px solid #dc2626; background: white; color: #dc2626; font-weight: 700; }
+.cancel-button:hover { background: #fee2e2; }
+.no-selection { color: #737686; }
+.activity-title { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; gap: 12px; }
+.activity-title h2 { margin: 0; font-size: 14px; }
+.activity-title button { padding: 10px 14px; border: 1px solid #c3c6d7; border-radius: 10px; background: white; color: #191c1e; cursor: pointer; }
+.activity-title button:hover { background: #f7f9fc; }
+.activity-card table th, .activity-card table td { border-bottom: 1px solid rgba(195,198,215,.35); }
+.activity-card tbody tr:hover { background: #fafbff; }
+.activity-status { display: inline-flex; padding: 6px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.activity-status.completed { background: #d1fae5; color: #166534; }
+.activity-status.pending { background: #fef3c7; color: #92400e; }
+.activity-status.cancelled { background: #fee2e2; color: #b91c1c; }
+.reservation-toast { position: fixed; right: 24px; bottom: 24px; display: inline-flex; align-items: center; gap: 10px; padding: 14px 18px; border-radius: 14px; background: #0f3c8f; color: white; box-shadow: 0 18px 40px rgba(15,23,42,.16); z-index: 60; }
+.reservation-toast .material-symbols-outlined { font-size: 18px; }
+@media (max-width: 1100px) {
+  .reservation-grid { grid-template-columns: 1fr; }
+  .action-panel { order: 2; }
+}
+@media (max-width: 720px) {
+  .reservation-filters { flex-direction: column; align-items: stretch; }
+  .reservation-filters select, .search-box { width: 100%; }
+  .reservation-heading h1 { font-size: 24px; }
+  .activity-title { flex-direction: column; align-items: flex-start; }
+}

@@ -1,0 +1,75 @@
+.monthly-pass-page { display: flex; flex-direction: column; gap: 18px; }
+.monthly-pass-heading { margin-bottom: 8px; }
+.monthly-pass-heading .breadcrumb { display: flex; align-items: center; gap: 6px; color: #434655; font-size: 10px; margin-bottom: 6px; }
+.monthly-pass-heading .breadcrumb button { padding: 0; border: 0; background: none; color: #737686; cursor: pointer; }
+.monthly-pass-heading .breadcrumb button:hover { color: #004ac6; }
+.monthly-pass-heading .breadcrumb strong { color: #191c1e; }
+.monthly-pass-heading h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: -0.02em; }
+.monthly-pass-heading p { margin: 0; color: #434655; font-size: 13px; max-width: 760px; }
+.pass-summary-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+.summary-card { padding: 18px 20px; border-radius: 16px; background: white; border: 1px solid rgba(195,198,215,.45); box-shadow: 0 8px 24px rgba(15,23,42,.05); }
+.summary-card small { display: block; color: #737686; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+.summary-card strong { display: flex; align-items: baseline; gap: 6px; font-size: 24px; }
+.summary-card em { font-size: 12px; color: #737686; }
+.pass-controls { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px 18px; border-radius: 16px; background: white; border: 1px solid rgba(195,198,215,.45); }
+.search-box { position: relative; flex: 1 1 280px; display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 10px; border: 1px solid #c3c6d7; background: #f7f9fc; }
+.search-box .material-symbols-outlined { color: #737686; font-size: 18px; }
+.search-box input { flex: 1; border: 0; outline: none; background: transparent; min-width: 0; color: #191c1e; font-size: 13px; }
+.pass-controls select { min-width: 170px; height: 40px; padding: 0 12px; border-radius: 10px; border: 1px solid #c3c6d7; background: white; color: #191c1e; }
+.pass-layout { display: grid; grid-template-columns: 1.7fr 1fr; gap: 18px; }
+.pass-list-card, .pass-detail-card, .activity-card { background: white; border: 1px solid rgba(195,198,215,.45); border-radius: 16px; box-shadow: 0 8px 24px rgba(15,23,42,.05); }
+.card-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 18px 20px; border-bottom: 1px solid rgba(195,198,215,.35); }
+.card-title h2 { margin: 0; font-size: 14px; }
+.card-title span { color: #737686; font-size: 12px; }
+.table-wrap { overflow-x: auto; }
+.pass-table, .activity-table { width: 100%; border-collapse: collapse; }
+.pass-table th, .pass-table td, .activity-table th, .activity-table td { padding: 14px 16px; text-align: left; font-size: 12px; }
+.pass-table th, .activity-table th { color: #5c6679; font-size: 11px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.pass-table tbody tr { cursor: pointer; transition: background .2s; }
+.pass-table tbody tr:hover { background: #f7f9fc; }
+.pass-table tbody tr.selected { background: rgba(219,225,255,.35); box-shadow: inset 3px 0 #004ac6; }
+.status-pill { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+..status-pill.active { background: #d1fae5; color: #166534; }
+.status-pill.expiring-soon { background: #fef3c7; color: #92400e; }
+.status-pill.pending { background: #e2e8f0; color: #1f2937; }
+.status-pill.expired { background: #fee2e2; color: #b91c1c; }
+.empty-state { text-align: center; color: #737686; padding: 24px 0; }
+.pass-detail-card { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.detail-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.detail-tag { display: inline-flex; padding: 8px 12px; border-radius: 999px; background: #eef4ff; color: #0f3c8f; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.detail-status { margin: 4px 0 0; color: #16a34a; font-weight: 700; }
+.detail-summary { display: grid; gap: 12px; padding: 16px 0; border-top: 1px solid rgba(195,198,215,.35); border-bottom: 1px solid rgba(195,198,215,.35); }
+.detail-summary > div { display: flex; flex-direction: column; gap: 4px; }
+.detail-summary strong { font-size: 20px; }
+.detail-summary span, .detail-summary small { color: #737686; font-size: 12px; }
+.detail-list { display: grid; gap: 10px; }
+.detail-list dt { color: #737686; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+.detail-list dd { margin: 0; color: #191c1e; font-size: 13px; font-weight: 700; }
+.detail-actions { display: grid; gap: 10px; }
+.detail-actions button { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid transparent; cursor: pointer; font-size: 13px; }
+.detail-actions .primary { background: #004ac6; color: white; }
+.detail-actions button:hover { opacity: .95; }
+.detail-actions .danger { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+.activity-card { overflow: hidden; }
+.activity-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px; border-bottom: 1px solid rgba(195,198,215,.35); }
+.activity-header h2 { margin: 0; font-size: 14px; }
+.activity-header button { padding: 10px 14px; border-radius: 10px; border: 1px solid #c3c6d7; background: white; cursor: pointer; }
+.activity-header button:hover { background: #f7f9fc; }
+.activity-table td { border-bottom: 1px solid rgba(195,198,215,.35); }
+.activity-table tbody tr:hover { background: #fafbff; }
+.activity-status { display: inline-flex; align-items: center; padding: 6px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.activity-status.active { background: #d1fae5; color: #166534; }
+.activity-status.expiring-soon { background: #fef3c7; color: #92400e; }
+.activity-status.pending { background: #e2e8f0; color: #1f2937; }
+.activity-status.expired { background: #fee2e2; color: #b91c1c; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; }
+@media (max-width: 1120px) {
+  .pass-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pass-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .pass-summary-grid { grid-template-columns: 1fr; }
+  .pass-controls { flex-direction: column; }
+  .pass-controls select, .search-box { width: 100%; }
+  .activity-header { flex-direction: column; align-items: flex-start; }
+}

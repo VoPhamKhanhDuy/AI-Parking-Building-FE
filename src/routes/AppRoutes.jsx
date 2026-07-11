@@ -2,6 +2,8 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import LoginPage from '../pages/Login/LoginPage'
 import DashboardPage from '../pages/Dashboard/DashboardPage'
 import NotificationsPage from '../pages/Notifications/NotificationsPage'
+import MonthlyPassPage from '../pages/MonthlyPass/MonthlyPassPage'
+import ReservationPage from '../pages/Reservation/ReservationPage'
 import StaffProfilePage from '../pages/StaffProfile/StaffProfilePage'
 import SystemLogPage from '../pages/SystemLog/SystemLogPage'
 import { ROUTE_PATHS } from './routePaths'
@@ -28,6 +30,8 @@ function AppRoutes() {
       <Route path={ROUTE_PATHS.login} element={<LoginPage />} />
       <Route path={ROUTE_PATHS.dashboard} element={<DashboardPage />} />
       <Route path={ROUTE_PATHS.notifications} element={<NotificationsPage />} />
+      <Route path={ROUTE_PATHS.monthlyPass} element={<MonthlyPassPage />} />
+      <Route path={ROUTE_PATHS.reservation} element={<ReservationPage />} />
       <Route path={ROUTE_PATHS.profile} element={<StaffProfilePage />} />
       <Route path={ROUTE_PATHS.systemLogs} element={<SystemLogPage />} />
       <Route path="/not-found" element={<ComingSoonPage />} />
