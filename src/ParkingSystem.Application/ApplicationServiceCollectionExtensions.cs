@@ -5,6 +5,8 @@ using ParkingSystem.Application.Auth.Interfaces;
 using ParkingSystem.Application.Auth.Services;
 using ParkingSystem.Application.ParkingStructure.Interfaces;
 using ParkingSystem.Application.ParkingStructure.Services;
+using ParkingSystem.Application.Vehicles.Interfaces;
+using ParkingSystem.Application.Vehicles.Services;
 
 namespace ParkingSystem.Application;
 
@@ -30,6 +32,9 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IFloorService, FloorService>();
         services.AddScoped<IParkingZoneService, ParkingZoneService>();
         services.AddScoped<IParkingSlotService, ParkingSlotService>();
+
+        // Vehicles
+        services.AddScoped<IVehicleService, VehicleService>();
 
         return services;
     }
