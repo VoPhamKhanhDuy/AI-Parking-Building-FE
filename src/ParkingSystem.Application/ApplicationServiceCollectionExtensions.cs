@@ -5,6 +5,8 @@ using ParkingSystem.Application.Auth.Interfaces;
 using ParkingSystem.Application.Auth.Services;
 using ParkingSystem.Application.ParkingStructure.Interfaces;
 using ParkingSystem.Application.ParkingStructure.Services;
+using ParkingSystem.Application.Tickets.Interfaces;
+using ParkingSystem.Application.Tickets.Services;
 using ParkingSystem.Application.Vehicles.Interfaces;
 using ParkingSystem.Application.Vehicles.Services;
 
@@ -35,6 +37,9 @@ public static class ApplicationServiceCollectionExtensions
 
         // Vehicles
         services.AddScoped<IVehicleService, VehicleService>();
+
+        // Tickets (check-in / check-out)
+        services.AddScoped<IParkingTicketService, ParkingTicketService>();
 
         return services;
     }

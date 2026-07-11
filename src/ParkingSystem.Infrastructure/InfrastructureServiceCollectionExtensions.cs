@@ -37,6 +37,9 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IPasswordHasher, BcryptPasswordHasher>();
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
+        // System clock — wrapped so it can be replaced in tests.
+        services.AddSingleton(TimeProvider.System);
+
         // JwtSettings bound from configuration and registered as a singleton so
         // Application services can take it via constructor injection without
         // depending on Microsoft.Extensions.Options.
