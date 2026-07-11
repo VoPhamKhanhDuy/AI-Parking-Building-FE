@@ -211,5 +211,38 @@ if ($slot.status -ne 0) {
 }
 Write-Host "  slot $($slot.slotCode) status=Available"
 
+# ----- Step 11: verify SystemLog audit trail was written -----
+Write-Host "`n== 11. Confirm SystemLog rows were written ==" -ForegroundColor Cyan
+$tmpSql = Join-Path $here ([Guid]::NewGuid().Guid + '.sql')
+Set-Content -Path $tmpSql -Value 'SELECT COUNT(*) FROM "SystemLogs";' -Encoding UTF8
+try {
+    $raw = Get-Content -Raw $tmpSql | & docker exec -i parkingsystem-postgres psql -U parkinguser -d parkingdb -A -t
+} finally {
+    if (Test-Path $tmpSql) { Remove-Item $tmpSql -Force }
+}
+$logCount = 0
+if (-not [int]::TryParse(([string]$raw).Trim(), [ref]$logCount)) {
+    throw "Could not parse SystemLogs COUNT(*) from Postgres: '$raw'"
+}
+if ($logCount -lt 1) {
+    throw "Expected at least 1 row in SystemLogs (audit trail), got $logCount"
+}
+Write-Host "  SystemLogs row count: $logCount  (audit trail active)"
+
+# Spot-check that a row carries the admin's user id.
+$tmpSql2 = Join-Path $here ([Guid]::NewGuid().Guid + '.sql')
+Set-Content -Path $tmpSql2 -Value "SELECT COUNT(*) FROM `"SystemLogs`" WHERE `"UserId`" = '$adminUserId';" -Encoding UTF8
+try {
+    $raw2 = Get-Content -Raw $tmpSql2 | & docker exec -i parkingsystem-postgres psql -U parkinguser -d parkingdb -A -t
+} finally {
+    if (Test-Path $tmpSql2) { Remove-Item $tmpSql2 -Force }
+}
+$adminLogCount = 0
+[void][int]::TryParse(([string]$raw2).Trim(), [ref]$adminLogCount)
+if ($adminLogCount -lt 1) {
+    throw "Expected at least 1 SystemLog row tied to admin ($adminUserId), got $adminLogCount"
+}
+Write-Host "  SystemLogs rows tagged with admin user: $adminLogCount"
+
 Write-Host "`n== ALL SMOKE STEPS PASSED ==" -ForegroundColor Green
 exit 0

@@ -11,6 +11,8 @@ using ParkingSystem.Application.Payments.Interfaces;
 using ParkingSystem.Application.Payments.Services;
 using ParkingSystem.Application.PricingRules.Interfaces;
 using ParkingSystem.Application.PricingRules.Services;
+using ParkingSystem.Application.SystemLogs.Interfaces;
+using ParkingSystem.Application.SystemLogs.Services;
 using ParkingSystem.Application.Tickets.Interfaces;
 using ParkingSystem.Application.Tickets.Services;
 using ParkingSystem.Application.Vehicles.Interfaces;
@@ -53,6 +55,9 @@ public static class ApplicationServiceCollectionExtensions
         // Parking sessions + payments (runtime / billing)
         services.AddScoped<IParkingSessionService, ParkingSessionService>();
         services.AddScoped<IPaymentService, PaymentService>();
+
+        // Audit trail
+        services.AddScoped<ISystemLogService, SystemLogService>();
 
         return services;
     }

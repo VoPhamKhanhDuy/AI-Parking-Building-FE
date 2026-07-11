@@ -112,6 +112,6 @@ Expected output ends with `== ALL SMOKE STEPS PASSED ==` and exits 0.
 6. ✅ AI Slot Recommendation (scoring formula)
 7. ✅ Vehicle check-in / check-out flow
 8. ✅ Pricing & payment
-9. ⏭ SystemLog action filter
+9. ✅ SystemLog action filter (audit trail: per-request `SystemLogs` row with `UserId`, `IpAddress`, `Action`, `Description`, latency, exception)
 10. ✅ Smoke test for the full happy path (`scripts/smoke-test.ps1`)
 

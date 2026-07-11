@@ -50,6 +50,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers(options =>
     {
         options.Filters.AddService<ParkingSystem.API.Validation.FluentValidationFilter>();
+        options.Filters.AddService<ParkingSystem.API.Filters.SystemLogActionFilter>();
     })
     .AddJsonOptions(opt =>
     {
@@ -60,6 +61,9 @@ builder.Services.AddEndpointsApiExplorer();
 
 // FluentValidation: auto-validate request DTOs via an action filter.
 builder.Services.AddScoped<ParkingSystem.API.Validation.FluentValidationFilter>();
+
+// Audit trail: per-request SystemLog row written by the API filter.
+builder.Services.AddScoped<ParkingSystem.API.Filters.SystemLogActionFilter>();
 
 // ---------- Swagger with Bearer support ----------
 builder.Services.AddSwaggerGen(c =>
