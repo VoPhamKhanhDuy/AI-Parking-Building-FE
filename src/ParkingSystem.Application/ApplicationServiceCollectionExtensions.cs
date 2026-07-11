@@ -3,8 +3,14 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using ParkingSystem.Application.Auth.Interfaces;
 using ParkingSystem.Application.Auth.Services;
+using ParkingSystem.Application.ParkingSessions.Interfaces;
+using ParkingSystem.Application.ParkingSessions.Services;
 using ParkingSystem.Application.ParkingStructure.Interfaces;
 using ParkingSystem.Application.ParkingStructure.Services;
+using ParkingSystem.Application.Payments.Interfaces;
+using ParkingSystem.Application.Payments.Services;
+using ParkingSystem.Application.PricingRules.Interfaces;
+using ParkingSystem.Application.PricingRules.Services;
 using ParkingSystem.Application.Tickets.Interfaces;
 using ParkingSystem.Application.Tickets.Services;
 using ParkingSystem.Application.Vehicles.Interfaces;
@@ -40,6 +46,13 @@ public static class ApplicationServiceCollectionExtensions
 
         // Tickets (check-in / check-out)
         services.AddScoped<IParkingTicketService, ParkingTicketService>();
+
+        // Pricing
+        services.AddScoped<IPricingRuleService, PricingRuleService>();
+
+        // Parking sessions + payments (runtime / billing)
+        services.AddScoped<IParkingSessionService, ParkingSessionService>();
+        services.AddScoped<IPaymentService, PaymentService>();
 
         return services;
     }
