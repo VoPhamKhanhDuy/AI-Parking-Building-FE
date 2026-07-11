@@ -22,12 +22,17 @@ function AIRecommendationPage() {
   // Get active layout details
   const activeDetails = mockAIRecommendationDetails[selectedSlotId] || mockAIRecommendationDetails['B2-18']
 
-  // Confirm slot selection and redirect back
+  // Confirm slot selection and redirect to success page
   const handleConfirmSlot = () => {
-    navigate('/vehicle-entry', {
+    const ticketCode = `TCK-2026-${String(Math.floor(100000 + Math.random() * 900000))}`
+    navigate('/vehicle-entry/success', {
       state: {
         ...parentState,
-        selectedSlotId
+        selectedSlotId,
+        ticketCode,
+        entryTime: '14:32:05',
+        method: 'AI Recommended',
+        matchScore: `${activeDetails.score}%`
       }
     })
   }

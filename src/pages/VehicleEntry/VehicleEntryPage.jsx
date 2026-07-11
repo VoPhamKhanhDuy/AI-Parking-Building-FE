@@ -183,26 +183,23 @@ function VehicleEntryPage() {
     // Prepend log entry
     const timeStr = getFormattedCurrentTime().split(' ')[1]
     const cleanPlateInput = licensePlate.toUpperCase().trim()
-    const newEntry = {
-      time: timeStr,
-      licensePlate: cleanPlateInput,
-      vehicleType,
-      ticketType: ticketType.split(' ')[0],
-      assignedSlot: selectedSlotId,
-      status: 'Checked In',
-      statusClass: 'green',
-      isAiAssigned: !!aiRecommendation && aiRecommendation.slotId === selectedSlotId
-    }
-
-    setRecentEntries([newEntry, ...recentEntries])
-    setNotification({ type: 'success', message: `Đã check-in thành công xe ${cleanPlateInput} tại ô ${selectedSlotId}!` })
-
-    // Reset Form fields
-    setLicensePlate('')
-    setReservationCode('')
-    setCheckStatus('Idle')
-    setSelectedSlotId('')
-    setAiRecommendation(null)
+    const ticketCode = `TCK-2026-${String(Math.floor(100000 + Math.random() * 900000))}`
+    
+    // Redirect directly to success page
+    navigate('/vehicle-entry/success', {
+      state: {
+        licensePlate: cleanPlateInput,
+        vehicleType,
+        ticketType: ticketType.split(' ')[0],
+        checkStatus,
+        plateSource,
+        selectedSlotId,
+        ticketCode,
+        entryTime: getFormattedCurrentTime().split(' ')[1],
+        method: !!aiRecommendation ? 'AI Recommended' : 'Manual Selection',
+        matchScore: !!aiRecommendation ? `${aiRecommendation.score}%` : '90%'
+      }
+    })
   }
 
   // Clear Form handler

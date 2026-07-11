@@ -27,12 +27,17 @@ function ManualSlotPage() {
   // Get current slot details for the sidebar panel
   const slotDetails = getSlotDetails(selectedSlotId, selectedFloor)
 
-  // Confirm slot selection and redirect back
+  // Confirm slot selection and redirect to success page
   const handleConfirmSelectedSlot = () => {
-    navigate('/vehicle-entry', {
+    const ticketCode = `TCK-2026-${String(Math.floor(100000 + Math.random() * 900000))}`
+    navigate('/vehicle-entry/success', {
       state: {
         ...parentState,
-        selectedSlotId
+        selectedSlotId,
+        ticketCode,
+        entryTime: '14:32:05',
+        method: 'Manual Selection',
+        matchScore: '90%'
       }
     })
   }
