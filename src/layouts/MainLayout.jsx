@@ -7,8 +7,8 @@ import './MainLayout.css'
 const navigationItems = [
   ['dashboard', 'Dashboard', ROUTE_PATHS.dashboard],
   ['login', 'Vehicle Entry', ROUTE_PATHS.vehicleEntry],
-  ['psychology', 'AI Recommendation', '/ai-recommendation'],
-  ['map', 'Parking Map', '/parking-map'],
+  ['psychology', 'AI Recommendation', ROUTE_PATHS.aiRecommendation],
+  ['map', 'Parking Map', ROUTE_PATHS.parkingMap],
   ['logout', 'Vehicle Exit', ROUTE_PATHS.vehicleExit],
   ['payments', 'Payment', '/payment'],
   ['confirmation_number', 'Tickets', ROUTE_PATHS.tickets],
