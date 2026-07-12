@@ -9,6 +9,11 @@ import ManualSlotPage from '../pages/VehicleEntry/ManualSlotPage'
 import AIRecommendationPage from '../pages/AIRecommendation/AIRecommendationPage'
 import CheckinSuccessPage from '../pages/VehicleEntry/CheckinSuccessPage'
 import ParkingMapPage from '../pages/ParkingMap/ParkingMapPage'
+import VehicleExitPage from '../pages/VehicleExit/VehicleExitPage'
+import ExitSuccessPage from '../pages/VehicleExit/ExitSuccessPage'
+import PaymentPage from '../pages/Payment/PaymentPage'
+import TicketsPage from '../pages/Tickets/TicketsPage'
+import LostTicketPage from '../pages/LostTicket/LostTicketPage'
 import { ROUTE_PATHS } from './routePaths'
 
 function ComingSoonPage() {
@@ -40,6 +45,11 @@ function AppRoutes() {
       <Route path={ROUTE_PATHS.aiRecommendation} element={<AIRecommendationPage />} />
       <Route path={ROUTE_PATHS.checkinSuccess} element={<CheckinSuccessPage />} />
       <Route path={ROUTE_PATHS.parkingMap} element={<ParkingMapPage />} />
+      <Route path={ROUTE_PATHS.vehicleExit} element={<VehicleExitPage />} />
+      <Route path={ROUTE_PATHS.vehicleExitSuccess} element={<ExitSuccessPage />} />
+      <Route path={ROUTE_PATHS.payment} element={<PaymentPage />} />
+      <Route path={ROUTE_PATHS.tickets} element={<TicketsPage />} />
+      <Route path={ROUTE_PATHS.lostTicket} element={<LostTicketPage />} />
       <Route path="/not-found" element={<ComingSoonPage />} />
       <Route path="/*" element={<ComingSoonPage />} />
       <Route path="*" element={<Navigate to="/not-found" replace />} />
