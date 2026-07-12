@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { initialUserKPIs, initialUsersList, rolePermissionMap, initialUserChanges } from './usersRolesService'
 import { ROUTE_PATHS } from '../../routes/routePaths'
+import '../../layouts/MainLayout.css'
 
 function UsersRolesPage() {
   const navigate = useNavigate()
@@ -11,6 +12,7 @@ function UsersRolesPage() {
   const [users, setUsers] = useState(initialUsersList)
   const [userChanges, setUserChanges] = useState(initialUserChanges)
   const [selectedUserEmail, setSelectedUserEmail] = useState('an.nguyen@parking.vn')
+  const [openMenu, setOpenMenu] = useState(null)
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('')
@@ -26,6 +28,26 @@ function UsersRolesPage() {
     status: 'Active',
     lastLogin: 'N/A',
     createdDate: 'N/A'
+  }
+
+  // Professional Modal State
+  const [modal, setModal] = useState({
+    isOpen: false,
+    type: '', // 'addUser' | 'editRole' | 'resetPassword' | 'suspendAccount'
+    inputVal1: '',
+    inputVal2: '',
+    inputVal3: '',
+    inputVal4: ''
+  })
+
+  // Professional Toast State
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type })
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: 'success' })
+    }, 3000)
   }
 
   // Get permissions for active role
@@ -50,65 +72,40 @@ function UsersRolesPage() {
 
   // Action: Add User
   const handleAddUser = () => {
-    const name = window.prompt('Nhập họ tên người dùng mới:')
-    if (!name) return
-    const email = window.prompt('Nhập địa chỉ email:')
-    if (!email) return
-    if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
-      window.alert('Email này đã tồn tại trong danh sách!')
-      return
-    }
-    const role = window.prompt('Nhập vai trò (vd: Parking Staff, Facility Manager, Field Support, Manager):', 'Parking Staff')
-    if (!role) return
-    const area = window.prompt('Nhập khu vực làm việc (vd: Entry Gate A, Building B):', 'Entry Gate A')
-    if (!area) return
-
-    const newUser = {
-      name,
-      email,
-      role,
-      area,
-      status: 'Active',
-      lastLogin: 'Not logged in',
-      createdDate: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
-    }
-
-    setUsers([...users, newUser])
-    setSelectedUserEmail(email)
-    setKpis((prev) => ({
-      ...prev,
-      totalAccounts: prev.totalAccounts + 1,
-      activeAccounts: prev.activeAccounts + 1
-    }))
-
-    addChangeLog('Account Created', name)
-    window.alert(`Đã thêm thành công người dùng ${name}!`)
+    setModal({
+      isOpen: true,
+      type: 'addUser',
+      inputVal1: '',
+      inputVal2: '',
+      inputVal3: 'Parking Staff',
+      inputVal4: 'Entry Gate A'
+    })
   }
 
   // Action: Edit Role
   const handleEditRole = () => {
     if (!selectedUser) return
-    const newRole = window.prompt(`Cập nhật vai trò mới cho ${selectedUser.name} (Vai trò hiện tại: ${selectedUser.role}):`, selectedUser.role)
-    if (!newRole || newRole === selectedUser.role) return
-
-    setUsers((prev) => 
-      prev.map((u) => 
-        u.email === selectedUser.email ? { ...u, role: newRole } : u
-      )
-    )
-
-    addChangeLog('Role Updated', selectedUser.name)
-    window.alert(`Đã cập nhật vai trò của ${selectedUser.name} thành: ${newRole}.`)
+    setModal({
+      isOpen: true,
+      type: 'editRole',
+      inputVal1: selectedUser.role,
+      inputVal2: '',
+      inputVal3: '',
+      inputVal4: ''
+    })
   }
 
   // Action: Reset Password
   const handleResetPassword = () => {
     if (!selectedUser) return
-    const confirm = window.confirm(`Bạn có chắc chắn muốn reset mật khẩu tài khoản ${selectedUser.name}?`)
-    if (!confirm) return
-
-    addChangeLog('Password Reset', selectedUser.name)
-    window.alert(`Đã reset mật khẩu của tài khoản ${selectedUser.name} về mặc định. Mật khẩu tạm thời đã được gửi tới email ${selectedUser.email}.`)
+    setModal({
+      isOpen: true,
+      type: 'resetPassword',
+      inputVal1: '',
+      inputVal2: '',
+      inputVal3: '',
+      inputVal4: ''
+    })
   }
 
   // Action: Suspend Account
@@ -127,34 +124,108 @@ function UsersRolesPage() {
         suspendedAccounts: prev.suspendedAccounts - 1
       }))
       addChangeLog('Status Changed', selectedUser.name)
-      window.alert(`Đã kích hoạt lại tài khoản ${selectedUser.name}.`)
+      showToast(`Đã kích hoạt lại tài khoản ${selectedUser.name}.`, 'success')
       return
     }
 
-    const confirm = window.confirm(`Bạn có chắc chắn muốn tạm khóa tài khoản ${selectedUser.name}?`)
-    if (!confirm) return
-
-    const prevStatus = selectedUser.status
-
-    setUsers((prev) => 
-      prev.map((u) => 
-        u.email === selectedUser.email ? { ...u, status: 'Suspended' } : u
-      )
-    )
-
-    setKpis((prev) => {
-      const activeDec = prevStatus === 'Active' ? 1 : 0
-      const pendingDec = prevStatus === 'Pending' ? 1 : 0
-      return {
-        ...prev,
-        activeAccounts: prev.activeAccounts - activeDec,
-        pendingInvitations: prev.pendingInvitations - pendingDec,
-        suspendedAccounts: prev.suspendedAccounts + 1
-      }
+    setModal({
+      isOpen: true,
+      type: 'suspendAccount',
+      inputVal1: '',
+      inputVal2: '',
+      inputVal3: '',
+      inputVal4: ''
     })
+  }
 
-    addChangeLog('Status Changed', selectedUser.name)
-    window.alert(`Đã khóa tạm thời tài khoản ${selectedUser.name}.`)
+  // Modal Confirm Action handler
+  const handleModalConfirm = () => {
+    if (modal.type === 'addUser') {
+      const name = modal.inputVal1.trim()
+      const email = modal.inputVal2.trim()
+      const role = modal.inputVal3.trim()
+      const area = modal.inputVal4.trim()
+
+      if (!name || !email) {
+        showToast('Vui lòng điền đầy đủ họ tên và email.', 'error')
+        return
+      }
+
+      if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
+        showToast('Email này đã tồn tại trong danh sách!', 'error')
+        return
+      }
+
+      const newUser = {
+        name,
+        email,
+        role,
+        area,
+        status: 'Active',
+        lastLogin: 'Not logged in',
+        createdDate: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+      }
+
+      setUsers([...users, newUser])
+      setSelectedUserEmail(email)
+      setKpis((prev) => ({
+        ...prev,
+        totalAccounts: prev.totalAccounts + 1,
+        activeAccounts: prev.activeAccounts + 1
+      }))
+
+      addChangeLog('Account Created', name)
+      setModal({ ...modal, isOpen: false })
+      showToast(`Đã thêm thành công người dùng ${name}!`, 'success')
+    }
+
+    else if (modal.type === 'editRole') {
+      const newRole = modal.inputVal1.trim()
+      if (!newRole) {
+        showToast('Vui lòng điền vai trò hợp lệ.', 'error')
+        return
+      }
+
+      setUsers((prev) => 
+        prev.map((u) => 
+          u.email === selectedUser.email ? { ...u, role: newRole } : u
+        )
+      )
+
+      addChangeLog('Role Updated', selectedUser.name)
+      setModal({ ...modal, isOpen: false })
+      showToast(`Đã cập nhật vai trò của ${selectedUser.name} thành: ${newRole}.`, 'success')
+    }
+
+    else if (modal.type === 'resetPassword') {
+      addChangeLog('Password Reset', selectedUser.name)
+      setModal({ ...modal, isOpen: false })
+      showToast(`Đã reset mật khẩu của tài khoản ${selectedUser.name} về mặc định.`, 'success')
+    }
+
+    else if (modal.type === 'suspendAccount') {
+      const prevStatus = selectedUser.status
+      setUsers((prev) => 
+        prev.map((u) => 
+          u.email === selectedUser.email ? { ...u, status: 'Suspended' } : u
+        )
+      )
+
+      setKpis((prev) => {
+        const activeDec = prevStatus === 'Active' ? 1 : 0
+        const pendingDec = prevStatus === 'Pending' ? 1 : 0
+        return {
+          ...prev,
+          activeAccounts: prev.activeAccounts - activeDec,
+          pendingInvitations: prev.pendingInvitations - pendingDec,
+          suspendedAccounts: prev.suspendedAccounts + 1
+        }
+      })
+
+      addChangeLog('Status Changed', selectedUser.name)
+      setModal({ ...modal, isOpen: false })
+      showToast(`Đã khóa tạm thời tài khoản ${selectedUser.name}.`, 'success')
+    }
   }
 
   // Filter user list
@@ -206,7 +277,7 @@ function UsersRolesPage() {
                 <span className="material-symbols-outlined text-[20px]">group</span>
                 <span className="font-body-md text-body-md font-medium">Users &amp; Roles</span>
               </a>
-              <a className="flex items-center gap-3 px-4 py-2 text-slate-300 hover:text-white transition-colors duration-200 hover:bg-white/5 rounded-lg mx-2 cursor-pointer" onClick={() => window.alert('Mở lịch sử kiểm toán log')}>
+              <a className="flex items-center gap-3 px-4 py-2 text-slate-300 hover:text-white transition-colors duration-200 hover:bg-white/5 rounded-lg mx-2 cursor-pointer" onClick={() => navigate(ROUTE_PATHS.auditLogs)}>
                 <span className="material-symbols-outlined text-[20px]">list_alt</span>
                 <span className="font-body-md text-body-md">Audit Logs</span>
               </a>
@@ -245,22 +316,35 @@ function UsersRolesPage() {
               <span>System Status: Online</span>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <button className="text-on-surface-variant hover:bg-surface-container p-2 rounded-full transition-colors relative">
-              <span className="material-symbols-outlined text-[22px]">notifications</span>
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500"></span>
-            </button>
-            <button className="text-on-surface-variant hover:bg-surface-container p-2 rounded-full transition-colors">
-              <span className="material-symbols-outlined text-[22px]">settings</span>
-            </button>
-            <div className="flex items-center gap-3 pl-4 border-l border-outline-variant">
-              <div className="text-right hidden sm:block">
-                <p className="text-body-sm font-bold text-on-surface leading-tight">Nguyễn Văn Admin</p>
-                <p className="text-[10px] text-primary font-bold uppercase">System Administrator</p>
-              </div>
-              <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center">
-                <span className="material-symbols-outlined text-slate-500">person</span>
-              </div>
+          <div className="topbar-actions">
+            <div className="menu-anchor">
+              <button className="icon-button" aria-label="Notifications" onClick={() => navigate(ROUTE_PATHS.adminNotifications)}>
+                <span className="material-symbols-outlined">notifications</span>
+                <i className="notification-dot" />
+              </button>
+            </div>
+            <div className="menu-anchor">
+              <button className="icon-button" aria-label="Settings" onClick={() => setOpenMenu(openMenu === 'settings' ? null : 'settings')}>
+                <span className="material-symbols-outlined">settings</span>
+              </button>
+              {openMenu === 'settings' && (
+                <div className="action-menu compact">
+                  <button onClick={() => navigate(ROUTE_PATHS.adminProfile)}>Account settings</button>
+                </div>
+              )}
+            </div>
+            <span className="top-divider" />
+            <div className="menu-anchor">
+              <button className="profile-button" onClick={() => setOpenMenu(openMenu === 'profile' ? null : 'profile')}>
+                <span><strong>Nguyễn Văn Admin</strong><small>System Admin</small></span>
+                <b>A</b>
+              </button>
+              {openMenu === 'profile' && (
+                <div className="action-menu compact profile-menu">
+                  <button onClick={() => navigate(ROUTE_PATHS.adminProfile)}>View profile</button>
+                  <button onClick={() => navigate(ROUTE_PATHS.login)}>Sign out</button>
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -545,6 +629,82 @@ function UsersRolesPage() {
         </div>
 
       </main>
+
+      {modal.isOpen && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden border border-outline-variant">
+            <header className="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-slate-50">
+              <h3 className="font-body-lg font-bold text-on-surface">
+                {modal.type === 'addUser' && 'Thêm thành viên hệ thống mới'}
+                {modal.type === 'editRole' && 'Cập nhật vai trò thành viên'}
+                {modal.type === 'resetPassword' && 'Reset mật khẩu thành viên'}
+                {modal.type === 'suspendAccount' && 'Tạm khóa tài khoản'}
+              </h3>
+              <button className="text-on-surface-variant hover:bg-slate-200 p-1.5 rounded-full" onClick={() => setModal({ ...modal, isOpen: false })}>
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </header>
+            
+            <div className="p-6 space-y-4">
+              {modal.type === 'addUser' && (
+                <>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase">Họ và tên</label>
+                    <input className="w-full px-3.5 py-2 border border-outline-variant rounded text-body-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary" value={modal.inputVal1} onChange={(e) => setModal({...modal, inputVal1: e.target.value})} placeholder="Họ và tên..." />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase">Email</label>
+                    <input className="w-full px-3.5 py-2 border border-outline-variant rounded text-body-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary" value={modal.inputVal2} onChange={(e) => setModal({...modal, inputVal2: e.target.value})} placeholder="email@parking.vn..." />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase">Vai trò</label>
+                    <input className="w-full px-3.5 py-2 border border-outline-variant rounded text-body-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary" value={modal.inputVal3} onChange={(e) => setModal({...modal, inputVal3: e.target.value})} placeholder="Parking Staff..." />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase">Khu vực làm việc</label>
+                    <input className="w-full px-3.5 py-2 border border-outline-variant rounded text-body-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary" value={modal.inputVal4} onChange={(e) => setModal({...modal, inputVal4: e.target.value})} placeholder="Entry Gate A..." />
+                  </div>
+                </>
+              )}
+
+              {modal.type === 'editRole' && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-on-surface-variant uppercase">Nhập vai trò mới cho {selectedUser.name}</label>
+                  <input className="w-full px-3.5 py-2 border border-outline-variant rounded text-body-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary" value={modal.inputVal1} onChange={(e) => setModal({...modal, inputVal1: e.target.value})} placeholder="Parking Staff..." />
+                </div>
+              )}
+
+              {modal.type === 'resetPassword' && (
+                <p className="text-body-sm text-on-surface-variant font-medium">
+                  Bạn có chắc chắn muốn reset mật khẩu của tài khoản **{selectedUser.name}** về mặc định? Mật khẩu tạm thời sẽ được gửi tới email của họ.
+                </p>
+              )}
+
+              {modal.type === 'suspendAccount' && (
+                <p className="text-body-sm text-on-surface-variant font-medium">
+                  Bạn có chắc chắn muốn tạm khóa tài khoản của thành viên **{selectedUser.name}**? Họ sẽ không thể đăng nhập cho tới khi được kích hoạt lại.
+                </p>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button className="px-4 py-2 border border-outline-variant text-on-surface rounded text-body-sm font-semibold hover:bg-slate-50" onClick={() => setModal({ ...modal, isOpen: false })}>
+                  Hủy bỏ
+                </button>
+                <button className="px-4 py-2 bg-primary hover:bg-blue-700 text-white rounded text-body-sm font-bold" onClick={handleModalConfirm}>
+                  Xác nhận
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toast.show && (
+        <div className="profile-toast-custom animate-fadeIn">
+          <span className="material-symbols-outlined text-green-500">check_circle</span>
+          <span>{toast.message}</span>
+        </div>
+      )}
 
     </div>
   )
