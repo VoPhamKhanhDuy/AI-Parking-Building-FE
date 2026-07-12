@@ -411,24 +411,24 @@ function VehicleEntryPage() {
                 </div>
 
                 {/* Form Action Buttons */}
-                <div className="flex flex-col sm:flex-row items-center justify-end gap-4 mt-8 pt-6 border-t border-outline-variant/30">
+                <div className="entry-action-bar flex flex-col sm:flex-row items-center justify-end gap-4 mt-8 pt-6 border-t border-outline-variant/30">
                   <button 
                     type="button" 
-                    className="w-full sm:w-auto px-6 py-2.5 border border-outline-variant text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-container-low transition-colors duration-200 active:scale-[0.98]"
+                    className="entry-action-clear w-full sm:w-auto px-6 py-2.5 border border-outline-variant text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-container-low transition-colors duration-200 active:scale-[0.98]"
                     onClick={handleClearForm}
                   >
                     Clear Form
                   </button>
                   <button 
                     type="button" 
-                    className="w-full sm:w-auto px-6 py-2.5 border border-primary text-primary font-label-md text-label-md rounded-lg hover:bg-primary-fixed transition-colors duration-200 active:scale-[0.98] flex items-center justify-center gap-2"
+                    className="entry-action-check w-full sm:w-auto px-6 py-2.5 border border-primary text-primary font-label-md text-label-md rounded-lg hover:bg-primary-fixed transition-colors duration-200 active:scale-[0.98] flex items-center justify-center gap-2"
                     onClick={handleCheckInfo}
                   >
                     <span className="material-symbols-outlined text-[18px]">search</span>
                     Check Info
                   </button>
-                  <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
-                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <div className="entry-action-main flex flex-col items-end gap-2 w-full sm:w-auto">
+                    <div className="entry-action-main-buttons flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                       <button 
                         className="w-full sm:w-auto px-6 py-2.5 border border-outline-variant text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-container-low transition-colors duration-200 active:scale-[0.98] flex items-center justify-center gap-2" 
                         type="button"
@@ -446,7 +446,7 @@ function VehicleEntryPage() {
                         Request AI Slot Recommendation
                       </button>
                     </div>
-                    <p className="text-[11px] text-outline text-right max-w-[400px]">
+                    <p className="entry-action-hint text-[11px] text-outline text-right max-w-[400px]">
                       Staff can use AI recommendation or manually select an available slot from the parking map. AI suggests while staff confirms.
                     </p>
                   </div>

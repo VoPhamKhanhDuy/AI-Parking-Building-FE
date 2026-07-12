@@ -976,6 +976,37 @@
   font-size: 8px !important;
 }
 
+.entry-action-bar {
+  display: grid !important;
+  grid-template-columns: 96px 112px minmax(160px, 1fr) minmax(220px, 1.35fr);
+  align-items: start !important;
+  gap: 10px !important;
+}
+
+.entry-action-bar > button,
+.entry-action-main-buttons > button {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 42px !important;
+  padding: 7px 10px !important;
+  line-height: 1.2;
+  white-space: normal;
+}
+
+.entry-action-main,
+.entry-action-main-buttons {
+  display: contents !important;
+}
+
+.entry-action-hint {
+  grid-column: 3 / 5;
+  width: 100%;
+  max-width: none !important;
+  margin: -2px 0 0 !important;
+  text-align: right;
+  line-height: 1.35;
+}
+
 .entry-form-ui form > .mt-4 {
   margin-top: 0 !important;
   padding-top: 11px !important;
@@ -1091,5 +1122,23 @@
 
   .entry-side-ui {
     grid-template-columns: 1fr;
+  }
+
+  .entry-action-bar {
+    display: flex !important;
+  }
+
+  .entry-action-main,
+  .entry-action-main-buttons {
+    display: flex !important;
+    width: 100%;
+  }
+
+  .entry-action-main-buttons {
+    flex-direction: column;
+  }
+
+  .entry-action-hint {
+    text-align: left;
   }
 }
