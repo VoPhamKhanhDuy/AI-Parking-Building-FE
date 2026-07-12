@@ -11,10 +11,24 @@ import {
 } from './reportsService'
 import './ReportsPage.css'
 
+const defaultSummaryFill = [70, 85, 75, 73]
+
+function getSummaryFill(value, index) {
+  const match = typeof value === 'string' ? value.match(/(\d+(?:\.\d+)?)\s*%/) : null
+  if (match) return Number(match[1])
+  return defaultSummaryFill[index % defaultSummaryFill.length]
+}
+
+function getReportAction(report) {
+  if (report.type === 'Daily Operations') return 'View Detail'
+  if (report.type === 'Revenue Report') return 'Export'
+  return 'View'
+}
+
 const dateOptions = ['Today', 'Yesterday', 'Last 7 Days']
 const buildingOptions = ['Building A', 'Building B']
 const floorOptions = ['All Floors', 'Floor 1', 'Floor 2', 'Floor 3']
-const typeOptions = ['All Types', 'Daily Operations', 'Revenue Report', 'Occupancy Report', 'Ticket Activity', 'Payment Report', 'Lost Ticket Report', 'Reservation Report', 'Monthly Pass Report']
+const typeOptions = ['Daily Operations', 'Revenue Report']
 
 function ReportsPage() {
   const navigate = useNavigate()
@@ -27,19 +41,19 @@ function ReportsPage() {
   const [reportType, setReportType] = useState(typeOptions[0])
   const [building, setBuilding] = useState(buildingOptions[0])
   const [floor, setFloor] = useState(floorOptions[0])
-  const [query, setQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState(categories[0])
   const [selectedReportId, setSelectedReportId] = useState(reports[0]?.id)
 
   const filteredReports = useMemo(
-    () => filterReports(reports, { query, type: reportType === 'All Types' ? selectedCategory : reportType }),
-    [reports, query, reportType, selectedCategory],
+    () => filterReports(reports, { query: '', type: selectedCategory }),
+    [reports, selectedCategory],
   )
 
-  const selectedReport = filteredReports.find((item) => item.id === selectedReportId) || filteredReports[0] || reports[0]
+  const displayedReports = filteredReports.slice(0, 5)
+  const selectedReport = displayedReports.find((item) => item.id === selectedReportId) || displayedReports[0] || reports[0]
 
   const reportMetadata = {
-    reportName: selectedReport?.name || detail.metadata.reportName,
+    reportName: selectedReport?.type || selectedCategory,
     dateRange: selectedReport?.range || detail.metadata.dateRange,
     building,
     generatedBy: selectedReport?.generatedBy || detail.metadata.generatedBy,
@@ -49,15 +63,55 @@ function ReportsPage() {
       : detail.metadata.status,
   }
 
+  const [exportHistory, setExportHistory] = useState(detail.exportHistory || [])
+
+  const addExportEntry = (reportName, action, staff = 'Parking Staff', status = 'Success') => {
+    const now = new Date()
+    const time = now.toLocaleTimeString('en-GB')
+    setExportHistory((prev) => [{ time, report: reportName, action, staff, status }, ...prev])
+  }
+
+  const handleDownloadPdf = () => {
+    addExportEntry(reportMetadata.reportName, 'Exported PDF')
+  }
+
+  const handleExportExcel = () => {
+    addExportEntry(reportMetadata.reportName, 'Exported Excel')
+  }
+
+  const handleViewDetail = () => {
+    if (selectedReport?.type === 'Daily Operations') {
+      navigate(ROUTE_PATHS.dailyOperationsReport)
+    }
+  }
+
+  const handleReportAction = (report) => {
+    if (report.type === 'Daily Operations') {
+      navigate(ROUTE_PATHS.dailyOperationsReport)
+      return
+    }
+    if (report.type === 'Revenue Report') {
+      addExportEntry(report.name, 'Exported PDF', report.generatedBy)
+    }
+  }
+
+  const keyNotes = [
+    'Revenue increased compared to yesterday',
+    'Lost ticket cases require review',
+    'Manual overrides should be monitored',
+  ]
+
   return (
     <MainLayout>
       <div className="reports-page">
-        <div className="reports-header">
-          <div className="reports-heading">
-            <div className="reports-label">Reports</div>
-            <h1>Reports Management</h1>
-            <p>Generate operational reports, revenue summaries, ticket activity reports, and system performance logs.</p>
-          </div>
+        <div className="reports-page-header">
+          <nav className="reports-breadcrumb" aria-label="Breadcrumb">
+            <button type="button" onClick={() => navigate(ROUTE_PATHS.dashboard)}>Dashboard</button>
+            <span className="material-symbols-outlined">chevron_right</span>
+            <strong>Reports</strong>
+          </nav>
+          <h1>Reports Management</h1>
+          <p>Generate operational reports, revenue summaries, ticket activity reports, and system performance logs.</p>
         </div>
 
         <section className="reports-filter-card">
@@ -70,7 +124,13 @@ function ReportsPage() {
             </div>
             <div className="filter-item">
               <label>Report Type</label>
-              <select value={reportType} onChange={(event) => setReportType(event.target.value)}>
+              <select
+                value={reportType}
+                onChange={(event) => {
+                  setReportType(event.target.value)
+                  setSelectedCategory(event.target.value)
+                }}
+              >
                 {typeOptions.map((option) => <option key={option}>{option}</option>)}
               </select>
             </div>
@@ -86,61 +146,56 @@ function ReportsPage() {
                 {floorOptions.map((option) => <option key={option}>{option}</option>)}
               </select>
             </div>
-            <div className="filter-actions">
-              <button type="button" className="button-secondary">Export PDF</button>
-              <button type="button" className="button-secondary">Export Excel</button>
-            </div>
+          </div>
+          <div className="filter-actions">
+            <button type="button" className="button-secondary" onClick={handleDownloadPdf}>
+              <span className="material-symbols-outlined">picture_as_pdf</span>
+              Export PDF
+            </button>
+            <button type="button" className="button-secondary" onClick={handleExportExcel}>
+              <span className="material-symbols-outlined">description</span>
+              Export Excel
+            </button>
           </div>
         </section>
 
         <section className="reports-summary-grid">
-          {overview.map((item) => (
+          {overview.map((item, index) => (
             <article key={item.label} className="summary-card">
-              <div>
-                <small>{item.label}</small>
-                <strong>{item.value}</strong>
+              <small>{item.label}</small>
+              <strong>{item.value}</strong>
+              <div className="summary-bar">
+                <span className="summary-bar-fill" style={{ width: `${getSummaryFill(item.value, index)}%` }} />
               </div>
-              <div className="summary-bar" />
             </article>
           ))}
         </section>
 
-        <section className="reports-top-card">
-          <div className="reports-top-grid">
-            <aside className="reports-sidebar-card">
-              <div className="sidebar-title">Report Categories</div>
-              <div className="category-list">
-                {categories.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    className={`category-item ${item === selectedCategory ? 'active' : ''}`}
-                    onClick={() => {
-                      setSelectedCategory(item)
-                      setReportType('All Types')
-                    }}
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-            </aside>
+        <section className="reports-main-layout">
+          <aside className="reports-categories-card">
+            <div className="categories-title">Report Categories</div>
+            <div className="category-list">
+              {categories.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  className={`category-item ${item === selectedCategory ? 'active' : ''}`}
+                  onClick={() => {
+                    setSelectedCategory(item)
+                    if (typeOptions.includes(item)) setReportType(item)
+                  }}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </aside>
 
+          <div className="reports-main-content">
             <div className="reports-table-card">
               <div className="table-card-header">
-                <div>
-                  <h2>Generated Reports Overview</h2>
-                  <p>Showing {Math.min(filteredReports.length, 5)} recent reports</p>
-                </div>
-                <div className="table-search">
-                  <span className="material-symbols-outlined">search</span>
-                  <input
-                    type="text"
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search reports..."
-                  />
-                </div>
+                <h2>Generated Reports Overview</h2>
+                <span className="table-card-subtitle">Showing {displayedReports.length} recent reports</span>
               </div>
 
               <div className="table-wrap">
@@ -156,34 +211,34 @@ function ReportsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredReports.map((report) => (
+                    {displayedReports.map((report) => (
                       <tr
                         key={report.id}
                         className={selectedReport?.id === report.id ? 'selected-row' : ''}
                         onClick={() => setSelectedReportId(report.id)}
                       >
-                        <td>{report.name}</td>
+                        <td className="report-name-cell">{report.name}</td>
                         <td>{report.range}</td>
                         <td>{report.generatedBy}</td>
                         <td>{report.updatedAt}</td>
-                        <td><span className={`status-pill ${report.status.toLowerCase()}`}>{report.status}</span></td>
+                        <td>
+                          <span className={`status-pill ${report.status.toLowerCase()}`}>{report.status}</span>
+                        </td>
                         <td>
                           <button
                             type="button"
                             className="text-action"
                             onClick={(event) => {
                               event.stopPropagation()
-                              if (report.type === 'Daily Operations') {
-                                navigate(ROUTE_PATHS.dailyOperationsReport)
-                              }
+                              handleReportAction(report)
                             }}
                           >
-                            {report.type === 'Revenue Report' ? 'Export' : 'View'}
+                            {getReportAction(report)}
                           </button>
                         </td>
                       </tr>
                     ))}
-                    {!filteredReports.length && (
+                    {!displayedReports.length && (
                       <tr>
                         <td colSpan="6" className="empty-state">No reports match the current filters.</td>
                       </tr>
@@ -192,44 +247,49 @@ function ReportsPage() {
                 </table>
               </div>
             </div>
-          </div>
-        </section>
 
-        <section className="reports-bottom-card">
-          <div className="reports-bottom-grid">
-            <div className="reports-metadata-card">
-              <div className="metadata-top">
-                <div>
-                  <p className="meta-label">Selected Report Metadata</p>
-                  <h2>{reportMetadata.reportName}</h2>
+            <div className="reports-metadata-panel">
+              <div className="metadata-column">
+                <h3>Selected Report Metadata</h3>
+                <div className="metadata-rows">
+                  <div className="metadata-row">
+                    <span>Selected Report</span>
+                    <strong>{reportMetadata.reportName}</strong>
+                  </div>
+                  <div className="metadata-row">
+                    <span>Date Range</span>
+                    <strong>{reportMetadata.dateRange}</strong>
+                  </div>
+                  <div className="metadata-row">
+                    <span>Building</span>
+                    <strong>{reportMetadata.building}</strong>
+                  </div>
+                  <div className="metadata-row">
+                    <span>Generated By</span>
+                    <strong>{reportMetadata.generatedBy}</strong>
+                  </div>
+                  <div className="metadata-row">
+                    <span>Generated At</span>
+                    <strong>{reportMetadata.generatedAt}</strong>
+                  </div>
+                  <div className="metadata-row">
+                    <span>Status</span>
+                    <strong className="metadata-status-value">{reportMetadata.status}</strong>
+                  </div>
                 </div>
-                <div className="meta-status">{reportMetadata.status}</div>
               </div>
 
-              <div className="metadata-grid">
-                <div><span>Selected Report</span><strong>{reportMetadata.reportName}</strong></div>
-                <div><span>Date Range</span><strong>{reportMetadata.dateRange}</strong></div>
-                <div><span>Building</span><strong>{reportMetadata.building}</strong></div>
-                <div><span>Generated By</span><strong>{reportMetadata.generatedBy}</strong></div>
-                <div><span>Generated At</span><strong>{reportMetadata.generatedAt}</strong></div>
-                <div><span>Status</span><strong>{reportMetadata.status}</strong></div>
-              </div>
-            </div>
-
-            <div className="reports-keynotes-card">
-              <div className="key-notes">
-                <div className="key-notes-title">Key Notes</div>
-                <ul>
-                  {detail.keyFindings.map((note) => (
-                    <li key={note}>{note}</li>
-                  ))}
+              <div className="metadata-column">
+                <h3>Key Notes</h3>
+                <ul className="key-notes-list">
+                  {keyNotes.map((note) => <li key={note}>{note}</li>)}
                 </ul>
               </div>
 
               <div className="metadata-actions">
-                <button type="button" className="button-primary">View Report Detail</button>
-                <button type="button" className="button-secondary">Download PDF</button>
-                <button type="button" className="button-secondary">Export Excel</button>
+                <button type="button" className="button-primary" onClick={handleViewDetail}>View Report Detail</button>
+                <button type="button" className="button-secondary" onClick={handleDownloadPdf}>Download PDF</button>
+                <button type="button" className="button-secondary" onClick={handleExportExcel}>Export Excel</button>
               </div>
             </div>
           </div>
@@ -252,15 +312,22 @@ function ReportsPage() {
                 </tr>
               </thead>
               <tbody>
-                {detail.exportHistory.map((entry) => (
-                  <tr key={entry.time}>
+                {exportHistory.map((entry) => (
+                  <tr key={`${entry.time}-${entry.report}-${entry.action}`}>
                     <td>{entry.time}</td>
-                    <td>{entry.report}</td>
+                    <td className="report-name-cell">{entry.report}</td>
                     <td>{entry.action}</td>
                     <td>{entry.staff}</td>
-                    <td><span className={`status-text ${entry.status.toLowerCase()}`}>{entry.status}</span></td>
+                    <td>
+                      <span className={`status-text ${entry.status.toLowerCase()}`}>{entry.status}</span>
+                    </td>
                   </tr>
                 ))}
+                {!exportHistory.length && (
+                  <tr>
+                    <td colSpan="5" className="empty-state">No export activity yet.</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
