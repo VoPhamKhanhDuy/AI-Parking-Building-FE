@@ -1,5 +1,5 @@
 export const demoUsers = [
-  { role: 'Admin', icon: 'admin_panel_settings', target: '/users' },
+  { role: 'Admin', icon: 'admin_panel_settings', target: '/admin-dashboard' },
   { role: 'Manager', icon: 'manage_accounts', target: '/dashboard' },
   { role: 'Parking Staff', icon: 'badge', target: '/vehicle-entry', featured: true },
 ]

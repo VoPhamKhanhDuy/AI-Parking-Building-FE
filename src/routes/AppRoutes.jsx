@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import LoginPage from '../pages/Login/LoginPage'
 import DashboardPage from '../pages/Dashboard/DashboardPage'
+import AdminDashboardPage from '../pages/Dashboard/AdminDashboardPage'
 import NotificationsPage from '../pages/Notifications/NotificationsPage'
 import StaffProfilePage from '../pages/StaffProfile/StaffProfilePage'
 import SystemLogPage from '../pages/SystemLog/SystemLogPage'
@@ -37,6 +38,7 @@ function AppRoutes() {
     <Routes>
       <Route path={ROUTE_PATHS.login} element={<LoginPage />} />
       <Route path={ROUTE_PATHS.dashboard} element={<DashboardPage />} />
+      <Route path={ROUTE_PATHS.adminDashboard} element={<AdminDashboardPage />} />
       <Route path={ROUTE_PATHS.notifications} element={<NotificationsPage />} />
       <Route path={ROUTE_PATHS.profile} element={<StaffProfilePage />} />
       <Route path={ROUTE_PATHS.systemLogs} element={<SystemLogPage />} />

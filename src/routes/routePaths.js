@@ -1,6 +1,7 @@
 export const ROUTE_PATHS = {
   login: '/',
   dashboard: '/dashboard',
+  adminDashboard: '/admin-dashboard',
   notifications: '/notifications',
   profile: '/profile',
   vehicleEntry: '/vehicle-entry',
