@@ -15,5 +15,7 @@ export const ROUTE_PATHS = {
   monthlyPass: '/monthly-pass',
   reservation: '/reservation',
   lostTicket: '/lost-ticket',
+  reports: '/reports',
+  dailyOperationsReport: '/reports/daily-operations',
   systemLogs: '/system-logs',
 }

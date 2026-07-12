@@ -13,6 +13,8 @@ import CheckinSuccessPage from '../pages/VehicleEntry/CheckinSuccessPage'
 import ParkingMapPage from '../pages/ParkingMap/ParkingMapPage'
 import ParkingStructurePage from '../pages/ParkingStructure/ParkingStructurePage'
 import PricingRulesPage from '../pages/PricingRules/PricingRulesPage'
+import ReportsPage from '../pages/Reports/ReportsPage'
+import DailyOperationsReportPage from '../pages/Reports/DailyOperationsReportPage'
 import { ROUTE_PATHS } from './routePaths'
 
 function ComingSoonPage() {
@@ -48,6 +50,8 @@ function AppRoutes() {
       <Route path={ROUTE_PATHS.parkingMap} element={<ParkingMapPage />} />
       <Route path={ROUTE_PATHS.parkingStructure} element={<ParkingStructurePage />} />
       <Route path={ROUTE_PATHS.pricing} element={<PricingRulesPage />} />
+      <Route path={ROUTE_PATHS.reports} element={<ReportsPage />} />
+      <Route path={ROUTE_PATHS.dailyOperationsReport} element={<DailyOperationsReportPage />} />
       <Route path="/not-found" element={<ComingSoonPage />} />
       <Route path="/*" element={<ComingSoonPage />} />
       <Route path="*" element={<Navigate to="/not-found" replace />} />
