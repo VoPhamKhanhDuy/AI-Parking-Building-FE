@@ -28,7 +28,11 @@ function LoginPage() {
     const result = login(form)
     setMessage(result.success ? 'Login successful.' : result.message)
     if (result.success) {
-      navigate(ROUTE_PATHS.dashboard)
+      if (result.user?.role === 'Admin') {
+        navigate(ROUTE_PATHS.adminDashboard)
+      } else {
+        navigate(ROUTE_PATHS.dashboard)
+      }
     }
   }
 

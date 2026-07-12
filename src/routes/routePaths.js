@@ -1,6 +1,11 @@
 export const ROUTE_PATHS = {
   login: '/',
   dashboard: '/dashboard',
+  adminDashboard: '/admin-dashboard',
+  users: '/users',
+  auditLogs: '/admin/audit-logs',
+  adminNotifications: '/admin/notifications',
+  adminProfile: '/admin/profile',
   notifications: '/notifications',
   profile: '/profile',
   vehicleEntry: '/vehicle-entry',
