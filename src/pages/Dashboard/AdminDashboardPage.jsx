@@ -148,7 +148,7 @@ function AdminDashboardPage() {
           <div>
             <div className="px-4 mb-2 text-slate-500 text-[10px] font-bold uppercase tracking-widest">Admin Control</div>
             <div className="space-y-1">
-              <a className="flex items-center gap-3 px-4 py-2 text-slate-300 hover:text-white transition-colors duration-200 hover:bg-white/5 rounded-lg mx-2 cursor-pointer" onClick={() => window.alert('Mở danh sách quản lý quyền tài khoản')}>
+              <a className="flex items-center gap-3 px-4 py-2 text-slate-300 hover:text-white transition-colors duration-200 hover:bg-white/5 rounded-lg mx-2 cursor-pointer" onClick={() => navigate(ROUTE_PATHS.users)}>
                 <span className="material-symbols-outlined text-[20px]">group</span>
                 <span className="font-body-md text-body-md">Users &amp; Roles</span>
               </a>
