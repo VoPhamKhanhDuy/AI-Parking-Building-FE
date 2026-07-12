@@ -6,6 +6,9 @@ export const mockExitSessions = [
     vehicleType: 'Car',
     entryTime: '2026-07-12 08:15:00',
     slotId: 'B2-18',
+    ticketType: 'Normal (Visitor)',
+    entryGate: 'Entry Gate A',
+    zone: 'Floor 2 · Zone B',
     baseFee: 30000,
     surcharge: 5000,
     status: 'PendingPayment',
@@ -21,6 +24,9 @@ export const mockExitSessions = [
     vehicleType: 'Car',
     entryTime: '2026-07-12 07:45:00',
     slotId: 'A1-45',
+    ticketType: 'Monthly Pass',
+    entryGate: 'Entry Gate A',
+    zone: 'Floor 1 · Zone A',
     baseFee: 22000,
     surcharge: 0,
     status: 'Completed',
@@ -36,6 +42,9 @@ export const mockExitSessions = [
     vehicleType: 'Electric Vehicle',
     entryTime: '2026-07-12 09:20:00',
     slotId: 'EV-04',
+    ticketType: 'Reservation',
+    entryGate: 'Entry Gate B',
+    zone: 'Floor 1 · EV Charging',
     baseFee: 45000,
     surcharge: 12000,
     status: 'PendingPayment',
@@ -112,6 +121,13 @@ export const mockPaymentHistory = [
     status: 'Completed',
     paidAt: '2026-07-12 13:15:00'
   }
+]
+
+export const mockRecentExits = [
+  { id: 1, time: '17:48:20', licensePlate: '51A-12345', vehicleType: 'Car', ticketType: 'Normal', paidAmount: 25000, status: 'Pending Payment' },
+  { id: 2, time: '17:32:10', licensePlate: '29B-87654', vehicleType: 'Car', ticketType: 'Monthly', paidAmount: 0, status: 'Exited' },
+  { id: 3, time: '17:18:45', licensePlate: '61C-23111', vehicleType: 'Motorcycle', ticketType: 'Normal', paidAmount: 10000, status: 'Paid' },
+  { id: 4, time: '16:55:30', licensePlate: '30A-99887', vehicleType: 'Electric Vehicle', ticketType: 'Reservation', paidAmount: 20000, status: 'Completed' },
 ]
 
 export const mockLostTicketCases = [
