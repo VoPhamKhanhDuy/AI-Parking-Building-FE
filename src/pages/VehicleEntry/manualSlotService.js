@@ -1,124 +1,60 @@
-/**
- * Service dealing with manual slot selection map layouts and slot properties.
- */
+import axios from 'axios'
+import { manualSlotLayouts } from '../../mock-data/slots'
 
-// Initial mock slots status database for the map
-export const mockMapSlots = {
-  'Floor 2': {
-    motorcycle: Array.from({ length: 32 }, (_, i) => {
-      const id = `M${String(i + 1).padStart(2, '0')}`
-      let status = 'Available'
-      if (['M03', 'M06', 'M13', 'M20'].includes(id)) status = 'Occupied'
-      if (['M08', 'M17'].includes(id)) status = 'Reserved'
-      return { id, type: 'Motorcycle', status }
-    }),
-    car: Array.from({ length: 24 }, (_, i) => {
-      const id = `C${String(i + 1).padStart(2, '0')}`
-      let status = 'Available'
-      if (['C03', 'C04', 'C10', 'C15', 'C22'].includes(id)) status = 'Occupied'
-      if (['C06', 'C19'].includes(id)) status = 'Reserved'
-      if (['C09'].includes(id)) status = 'Maintenance'
-      return { id, type: 'Car', status }
-    }),
-    ev: Array.from({ length: 6 }, (_, i) => {
-      const id = `EV${String(i + 1).padStart(2, '0')}`
-      let status = 'Available'
-      if (['EV03'].includes(id)) status = 'Occupied'
-      if (['EV04'].includes(id)) status = 'Reserved'
-      return { id, type: 'EV', status }
-    })
-  },
-  'Floor 1': {
-    motorcycle: Array.from({ length: 20 }, (_, i) => ({
-      id: `M1-${String(i + 1).padStart(2, '0')}`,
-      type: 'Motorcycle',
-      status: i % 4 === 0 ? 'Occupied' : 'Available'
-    })),
-    car: Array.from({ length: 20 }, (_, i) => ({
-      id: `C1-${String(i + 1).padStart(2, '0')}`,
-      type: 'Car',
-      status: i % 3 === 0 ? 'Occupied' : i % 7 === 0 ? 'Reserved' : 'Available'
-    })),
-    ev: Array.from({ length: 8 }, (_, i) => ({
-      id: `EV1-${String(i + 1).padStart(2, '0')}`,
-      type: 'EV',
-      status: i % 2 === 0 ? 'Occupied' : 'Available'
-    }))
-  },
-  'Basement': {
-    motorcycle: Array.from({ length: 40 }, (_, i) => ({
-      id: `MB-${String(i + 1).padStart(2, '0')}`,
-      type: 'Motorcycle',
-      status: i % 5 === 0 ? 'Occupied' : 'Available'
-    })),
-    car: Array.from({ length: 15 }, (_, i) => ({
-      id: `CB-${String(i + 1).padStart(2, '0')}`,
-      type: 'Car',
-      status: i % 2 === 0 ? 'Occupied' : 'Available'
-    })),
-    ev: []
-  },
-  'Floor 3': {
-    motorcycle: [],
-    car: Array.from({ length: 30 }, (_, i) => ({
-      id: `C3-${String(i + 1).padStart(2, '0')}`,
-      type: 'Car',
-      status: i % 6 === 0 ? 'Occupied' : 'Available'
-    })),
-    ev: []
-  }
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  timeout: 8000,
+  headers: { 'Content-Type': 'application/json' },
+})
+
+const useMockData = import.meta.env.VITE_USE_MOCK_DATA !== 'false'
+const wait = (value, delay = 250) => new Promise((resolve) => setTimeout(() => resolve(value), delay))
+
+const normalizeFloor = (floor) => ({
+  ...floor,
+  slots: floor.slots.map((slot) => ({ ...slot })),
+})
+
+export async function getParkingFloors() {
+  if (useMockData) return wait(manualSlotLayouts.map(normalizeFloor))
+  const { data } = await api.get('/parking/floors', { params: { includeSlots: true } })
+  return data.data || data
 }
 
-/**
- * Get occupancy statistics for a given floor
- */
-export const getFloorOccupancy = (floorName) => {
-  const layout = mockMapSlots[floorName]
-  if (!layout) return '0%'
-  const allSlots = [...(layout.motorcycle || []), ...(layout.car || []), ...(layout.ev || [])]
-  if (!allSlots.length) return '0%'
-  const occupiedCount = allSlots.filter((s) => s.status === 'Occupied').length
-  return `${Math.round((occupiedCount / allSlots.length) * 100)}%`
+export async function assignParkingSlot({ slotId, licensePlate, vehicleType, ticketType }) {
+  if (useMockData) {
+    const slot = manualSlotLayouts.flatMap((floor) => floor.slots).find((item) => item.id === slotId)
+    if (!slot || slot.status !== 'available') throw new Error('Chỗ đỗ này không còn khả dụng.')
+    return wait({
+      assignmentId: `ASN-${Date.now()}`,
+      ticketCode: `TCK-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
+      entryTime: new Date().toISOString(),
+      slotId,
+      licensePlate,
+      vehicleType,
+      ticketType,
+    }, 400)
+  }
+
+  const { data } = await api.post('/parking/slot-assignments', {
+    slotId,
+    licensePlate,
+    vehicleType,
+    ticketType,
+    assignmentMethod: 'MANUAL',
+  })
+  return data.data || data
 }
 
-/**
- * Fetch detailed metrics for a given slot node
- */
-export const getSlotDetails = (slotId, floorName) => {
-  if (!slotId) return null
-  
-  // Parse zone
-  let zone = 'B'
-  if (slotId.startsWith('M')) zone = 'A'
-  if (slotId.startsWith('EV')) zone = 'C'
+export function getFloorStats(floor) {
+  const total = floor.slots.length
+  const unavailable = floor.slots.filter((slot) => slot.status !== 'available').length
+  return { total, available: total - unavailable, occupancy: total ? Math.round((unavailable / total) * 100) : 0 }
+}
 
-  // Determine type
-  let type = 'Car'
-  if (slotId.startsWith('M')) type = 'Motorcycle'
-  if (slotId.startsWith('EV')) type = 'EV'
-
-  // Get status
-  let status = 'Available for Allocation'
-  let color = 'text-emerald-600'
-  let dotColor = 'bg-emerald-500'
-
-  // Distances mock
-  const index = parseInt(slotId.replace(/[^0-9]/g, '')) || 1
-  const distExit = 30 + index * 2
-  const distElevator = 8 + (index % 5) * 3
-
-  return {
-    id: slotId,
-    floor: floorName.replace('Floor ', ''),
-    zone,
-    statusText: status,
-    statusColor: color,
-    statusDotColor: dotColor,
-    vehicleTypeRequired: type,
-    slotCompatibility: type,
-    reservationConflict: 'None',
-    readiness: 'Ready',
-    distExit: `${distExit}m`,
-    distElevator: `${distElevator}m`
-  }
+export function isCompatible(slot, vehicleType) {
+  const normalized = vehicleType?.toLowerCase() || 'car'
+  if (normalized.includes('motor')) return slot.type === 'motorcycle'
+  if (normalized.includes('electric') || normalized === 'ev') return slot.type === 'ev' || slot.type === 'car'
+  return slot.type === 'car' || slot.type === 'ev'
 }
