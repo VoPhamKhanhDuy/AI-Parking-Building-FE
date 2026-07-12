@@ -9,6 +9,7 @@ import {
   getAIRecommendation,
   getFormattedCurrentTime
 } from './vehicleEntryService'
+import './VehicleEntryPage.css'
 
 function VehicleEntryPage() {
   const navigate = useNavigate()
@@ -251,7 +252,7 @@ function VehicleEntryPage() {
         </div>
 
         {/* Dynamic Preset Scan Helper for Dev demo */}
-        <div className="bg-surface-container-low border border-outline-variant/30 rounded-xl p-4 mb-6">
+        <div className="entry-preset-scanner bg-surface-container-low border border-outline-variant/30 rounded-xl p-4 mb-6">
           <span className="text-xs font-semibold text-outline uppercase tracking-wider block mb-2">Simulate License Plate Scanner (Presets)</span>
           <div className="flex flex-wrap gap-2">
             <button className="px-3 py-1.5 bg-white border border-outline-variant rounded-lg text-xs font-medium hover:bg-surface-container-high transition-colors" onClick={() => handlePresetScan('51A-12345', 'Car', 'Normal (Visitor)')}>
@@ -270,11 +271,11 @@ function VehicleEntryPage() {
         </div>
 
         {/* Two Column Grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-lg mb-lg">
+        <div className="entry-main-grid grid grid-cols-1 xl:grid-cols-12 gap-lg mb-lg">
           
           {/* Left Column: Vehicle Entry Form */}
           <div className="xl:col-span-8">
-            <div className="bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(15,23,42,0.05)] border border-outline-variant/30 p-6 relative overflow-hidden h-full">
+            <div className="entry-form-ui bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(15,23,42,0.05)] border border-outline-variant/30 p-6 relative overflow-hidden h-full">
               
               <h3 className="font-headline-md text-[20px] font-semibold text-on-surface mb-6 flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary">directions_car</span>
@@ -470,10 +471,10 @@ function VehicleEntryPage() {
           </div>
 
           {/* Right Column: Live Status */}
-          <div className="xl:col-span-4 flex flex-col gap-6">
+          <div className="entry-side-ui xl:col-span-4 flex flex-col gap-6">
             
             {/* AI Module Status */}
-            <div className="bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(15,23,42,0.05)] border border-outline-variant/30 p-5">
+            <div className="entry-engine-ui bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(15,23,42,0.05)] border border-outline-variant/30 p-5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-headline-md text-[18px] font-semibold text-on-surface flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary">memory</span>
@@ -526,7 +527,7 @@ function VehicleEntryPage() {
             </div>
 
             {/* Slot Metrics */}
-            <div className="bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(15,23,42,0.05)] border border-outline-variant/30 p-5 flex-grow">
+            <div className="entry-facility-ui bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(15,23,42,0.05)] border border-outline-variant/30 p-5 flex-grow">
               <h3 className="font-headline-md text-[18px] font-semibold text-on-surface mb-5">Facility Status</h3>
               <div className="mb-4 flex items-center justify-between bg-primary/5 p-3 rounded-lg border border-primary/10">
                 <span className="text-body-sm font-medium text-primary">Occupancy Rate</span>
@@ -577,7 +578,7 @@ function VehicleEntryPage() {
         </div>
 
         {/* Bottom Section: Recent Entries Table */}
-        <div className="bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(15,23,42,0.05)] border border-outline-variant/30 overflow-hidden">
+        <div className="entry-recent-ui bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(15,23,42,0.05)] border border-outline-variant/30 overflow-hidden">
           <div className="px-6 py-5 border-b border-outline-variant/30 flex items-center justify-between">
             <h3 className="font-headline-md text-[18px] font-semibold text-on-surface">Recent Vehicle Entries</h3>
             <a href="/reports" className="text-primary hover:text-primary-container transition-colors text-body-sm font-medium flex items-center gap-1">
