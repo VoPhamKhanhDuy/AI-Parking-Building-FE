@@ -1,0 +1,364 @@
+.daily-report-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Header */
+.daily-report-header {
+  margin-bottom: 0;
+}
+
+.daily-report-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #434655;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.daily-report-breadcrumb button {
+  border: none;
+  background: none;
+  color: #434655;
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.daily-report-breadcrumb button:hover {
+  color: #004ac6;
+}
+
+.daily-report-breadcrumb .material-symbols-outlined {
+  font-size: 16px;
+  color: #434655;
+}
+
+.daily-report-breadcrumb strong {
+  color: #191c1e;
+  font-weight: 600;
+}
+
+.daily-report-header h1 {
+  margin: 0;
+  font-size: 32px;
+  line-height: 1.25;
+  font-weight: 700;
+  color: #191c1e;
+}
+
+.daily-report-header p {
+  margin: 4px 0 0;
+  color: #434655;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+/* Metadata card */
+.daily-report-meta-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid rgba(195, 198, 215, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.meta-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  width: 100%;
+}
+
+.meta-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meta-field span:first-child {
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #737686;
+  letter-spacing: 0.05em;
+}
+
+.meta-field strong {
+  font-size: 14px;
+  font-weight: 500;
+  color: #191c1e;
+}
+
+.status-ready-pill {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.meta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+  justify-content: flex-end;
+}
+
+.button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #c3c6d7;
+  background: transparent;
+  color: #191c1e;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.button-secondary:hover {
+  background: #f2f4f7;
+}
+
+.button-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: #004ac6;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.button-primary:hover {
+  opacity: 0.9;
+}
+
+/* Main grid: metrics + insights */
+.daily-report-main-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+.daily-report-metrics-card,
+.daily-report-card {
+  background: #ffffff;
+  border: 1px solid rgba(195, 198, 215, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+  overflow: hidden;
+}
+
+.daily-report-insights-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.insight-card {
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid rgba(195, 198, 215, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.insight-card h3 {
+  margin: 0 0 16px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #191c1e;
+}
+
+.insight-list {
+  margin: 0;
+  padding-left: 20px;
+  color: #434655;
+  font-size: 14px;
+  line-height: 1.45;
+  list-style-type: disc;
+}
+
+.insight-list li {
+  margin-bottom: 12px;
+}
+
+.insight-list li:last-child {
+  margin-bottom: 0;
+}
+
+.section-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(195, 198, 215, 0.3);
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #191c1e;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 14px;
+}
+
+.detail-table thead {
+  background: #f2f4f7;
+}
+
+.detail-table th {
+  padding: 12px 24px;
+  color: #434655;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(195, 198, 215, 0.2);
+}
+
+.detail-table td {
+  padding: 20px 24px;
+  color: #191c1e;
+  border-bottom: 1px solid rgba(195, 198, 215, 0.2);
+}
+
+.detail-table tbody tr {
+  transition: background 0.2s ease;
+}
+
+.detail-table tbody tr:hover {
+  background: rgba(236, 238, 241, 0.3);
+}
+
+.cell-metric {
+  font-weight: 500;
+}
+
+/* Change column colors */
+.change-positive {
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.change-warning {
+  color: #eab308;
+  font-weight: 500;
+}
+
+.change-high {
+  color: #ba1a1a;
+  font-weight: 500;
+}
+
+/* Status text colors */
+.status-text {
+  font-weight: 700;
+}
+
+.status-improved,
+.status-active {
+  color: #16a34a;
+}
+
+.status-normal {
+  color: #737686;
+}
+
+.status-warning {
+  color: #eab308;
+}
+
+.status-error {
+  color: #ba1a1a;
+}
+
+.status-reviewed {
+  color: #004ac6;
+}
+
+/* Bottom grid */
+.daily-report-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .meta-fields {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .daily-report-meta-card {
+    flex-direction: row;
+  }
+
+  .meta-fields {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    width: auto;
+    flex: 1;
+  }
+
+  .meta-actions {
+    width: auto;
+    flex-shrink: 0;
+  }
+
+  .daily-report-main-grid {
+    grid-template-columns: 7fr 3fr;
+  }
+
+  .daily-report-bottom-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .meta-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .meta-actions {
+    flex-direction: column;
+  }
+
+  .meta-actions .button-primary,
+  .meta-actions .button-secondary {
+    width: 100%;
+  }
+}
