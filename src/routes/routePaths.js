@@ -9,6 +9,8 @@ export const ROUTE_PATHS = {
   checkinSuccess: '/vehicle-entry/success',
   parkingMap: '/parking-map',
   vehicleExit: '/vehicle-exit',
+  vehicleExitSuccess: '/vehicle-exit/success',
+  payment: '/payment',
   tickets: '/tickets',
   parkingStructure: '/parking-structure',
   pricing: '/pricing',
