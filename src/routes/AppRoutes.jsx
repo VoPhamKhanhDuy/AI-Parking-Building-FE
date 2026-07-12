@@ -6,6 +6,11 @@ import MonthlyPassPage from '../pages/MonthlyPass/MonthlyPassPage'
 import ReservationPage from '../pages/Reservation/ReservationPage'
 import StaffProfilePage from '../pages/StaffProfile/StaffProfilePage'
 import SystemLogPage from '../pages/SystemLog/SystemLogPage'
+import VehicleEntryPage from '../pages/VehicleEntry/VehicleEntryPage'
+import ManualSlotPage from '../pages/VehicleEntry/ManualSlotPage'
+import AIRecommendationPage from '../pages/AIRecommendation/AIRecommendationPage'
+import CheckinSuccessPage from '../pages/VehicleEntry/CheckinSuccessPage'
+import ParkingMapPage from '../pages/ParkingMap/ParkingMapPage'
 import { ROUTE_PATHS } from './routePaths'
 
 function ComingSoonPage() {
@@ -34,6 +39,11 @@ function AppRoutes() {
       <Route path={ROUTE_PATHS.reservation} element={<ReservationPage />} />
       <Route path={ROUTE_PATHS.profile} element={<StaffProfilePage />} />
       <Route path={ROUTE_PATHS.systemLogs} element={<SystemLogPage />} />
+      <Route path={ROUTE_PATHS.vehicleEntry} element={<VehicleEntryPage />} />
+      <Route path={ROUTE_PATHS.manualSlot} element={<ManualSlotPage />} />
+      <Route path={ROUTE_PATHS.aiRecommendation} element={<AIRecommendationPage />} />
+      <Route path={ROUTE_PATHS.checkinSuccess} element={<CheckinSuccessPage />} />
+      <Route path={ROUTE_PATHS.parkingMap} element={<ParkingMapPage />} />
       <Route path="/not-found" element={<ComingSoonPage />} />
       <Route path="/*" element={<ComingSoonPage />} />
       <Route path="*" element={<Navigate to="/not-found" replace />} />
