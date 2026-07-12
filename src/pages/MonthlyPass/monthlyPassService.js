@@ -5,7 +5,7 @@ export const getMonthlyPasses = () => monthlyPassList
 export const getMonthlyPassDetail = () => defaultMonthlyPassDetail
 export const getMonthlyPassActivity = () => monthlyPassActivities
 
-export const filterMonthlyPasses = (items, { query, status, type }) => {
+export const filterMonthlyPasses = (items, { query, status, type, payment }) => {
   const keyword = query.trim().toLowerCase()
 
   return items.filter((item) => {
@@ -13,7 +13,8 @@ export const filterMonthlyPasses = (items, { query, status, type }) => {
       .some((value) => value.toLowerCase().includes(keyword))
     const matchesStatus = status === 'All Statuses' || item.status === status
     const matchesType = type === 'All Types' || item.type === type
+    const matchesPayment = payment === 'All Payments' || item.payment === payment
 
-    return matchesSearch && matchesStatus && matchesType
+    return matchesSearch && matchesStatus && matchesType && matchesPayment
   })
 }

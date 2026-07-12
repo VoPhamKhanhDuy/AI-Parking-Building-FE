@@ -7,11 +7,11 @@ export const monthlyPassOverview = [
 ]
 
 export const monthlyPassList = [
-  { id: 1, passCode: 'MP-2026-00128', plate: '51A-12345', driver: 'Nguyen Van A', validUntil: '2026-07-31', status: 'Active', location: 'Floor 2, Zone B', type: 'Monthly Car Pass' },
-  { id: 2, passCode: 'MP-2026-00129', plate: '61C-23111', driver: 'Le Hoang C', validUntil: '2026-07-25', status: 'Expiring Soon', location: 'Floor 1, Zone C', type: 'Monthly Motorcycle Pass' },
-  { id: 3, passCode: 'MP-2026-00130', plate: '30A-99887', driver: 'Tran Minh B', validUntil: '2026-08-15', status: 'Active', location: 'Floor 3, Zone A', type: 'Monthly EV Pass' },
-  { id: 4, passCode: 'MP-2026-00131', plate: '59A-77123', driver: 'Pham Gia Huy', validUntil: '2026-07-10', status: 'Pending', location: 'Floor 2, Zone B', type: 'Monthly Car Pass' },
-  { id: 5, passCode: 'MP-2026-00132', plate: '43A-11229', driver: 'Do Minh Khang', validUntil: '2026-06-30', status: 'Expired', location: 'Floor 1, Zone A', type: 'Monthly Car Pass' },
+  { id: 1, passCode: 'MP-2026-00128', plate: '51A-12345', driver: 'Nguyen Van A', validUntil: '2026-07-31', status: 'Active', payment: 'Paid', location: 'Floor 2, Zone B', type: 'Monthly Car Pass' },
+  { id: 2, passCode: 'MP-2026-00129', plate: '61C-23111', driver: 'Le Hoang C', validUntil: '2026-07-25', status: 'Expiring Soon', payment: 'Paid', location: 'Floor 1, Zone C', type: 'Monthly Motorcycle Pass' },
+  { id: 3, passCode: 'MP-2026-00130', plate: '30A-99887', driver: 'Tran Minh B', validUntil: '2026-08-15', status: 'Active', payment: 'Paid', location: 'Floor 3, Zone A', type: 'Monthly EV Pass' },
+  { id: 4, passCode: 'MP-2026-00131', plate: '59A-77123', driver: 'Pham Gia Huy', validUntil: '2026-07-10', status: 'Pending', payment: 'Unpaid', location: 'Floor 2, Zone B', type: 'Monthly Car Pass' },
+  { id: 5, passCode: 'MP-2026-00132', plate: '43A-11229', driver: 'Do Minh Khang', validUntil: '2026-06-30', status: 'Expired', payment: 'Unpaid', location: 'Floor 1, Zone A', type: 'Monthly Car Pass' },
 ]
 
 export const monthlyPassActivities = [

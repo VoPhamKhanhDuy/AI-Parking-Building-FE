@@ -13,6 +13,17 @@ import './MonthlyPassPage.css'
 
 const statusOptions = ['All Statuses', 'Active', 'Expiring Soon', 'Pending', 'Expired']
 const typeOptions = ['All Types', 'Monthly Car Pass', 'Monthly Motorcycle Pass', 'Monthly EV Pass']
+const paymentOptions = ['All Payments', 'Paid', 'Unpaid']
+
+const getStatusDetail = (status) => {
+  switch (status) {
+    case 'Active': return 'Active / Paid'
+    case 'Expiring Soon': return 'Expiring Soon / Paid'
+    case 'Pending': return 'Pending / Unpaid'
+    case 'Expired': return 'Expired / Expired'
+    default: return status
+  }
+}
 
 function MonthlyPassPage() {
   const navigate = useNavigate()
@@ -24,14 +35,25 @@ function MonthlyPassPage() {
   const [query, setQuery] = useState('')
   const [status, setStatus] = useState('All Statuses')
   const [type, setType] = useState('All Types')
+  const [payment, setPayment] = useState('All Payments')
   const [selectedPass, setSelectedPass] = useState(passes[0]?.id)
 
   const filteredPasses = useMemo(
-    () => filterMonthlyPasses(passes, { query, status, type }),
-    [passes, query, status, type],
+    () => filterMonthlyPasses(passes, { query, status, type, payment }),
+    [passes, query, status, type, payment],
   )
 
   const selected = filteredPasses.find((item) => item.id === selectedPass) || filteredPasses[0] || passes[0]
+  const selectedDetail = {
+    ...detail,
+    passCode: selected.passCode,
+    plate: selected.plate,
+    driver: selected.driver,
+    type: selected.type,
+    validity: detail.validity || `2026-07-01 to ${selected.validUntil}`,
+    status: getStatusDetail(selected.status),
+    location: selected.location,
+  }
 
   return (
     <MainLayout>
@@ -51,25 +73,29 @@ function MonthlyPassPage() {
           ))}
         </section>
 
-        <section className="pass-controls">
-          <label className="search-box">
-            <span className="material-symbols-outlined">search</span>
-            <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search passes, plates, drivers..." />
-          </label>
-          <select value={status} onChange={(event) => setStatus(event.target.value)}>
-            {statusOptions.map((option) => <option key={option}>{option}</option>)}
-          </select>
-          <select value={type} onChange={(event) => setType(event.target.value)}>
-            {typeOptions.map((option) => <option key={option}>{option}</option>)}
-          </select>
-        </section>
-
         <div className="pass-layout">
           <section className="pass-list-card">
+            <div className="pass-list-filter">
+              <label className="search-box">
+                <span className="material-symbols-outlined">search</span>
+                <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search passes, plates, drivers..." />
+              </label>
+              <select value={status} onChange={(event) => setStatus(event.target.value)}>
+                {statusOptions.map((option) => <option key={option}>{option}</option>)}
+              </select>
+              <select value={type} onChange={(event) => setType(event.target.value)}>
+                {typeOptions.map((option) => <option key={option}>{option}</option>)}
+              </select>
+              <select value={payment} onChange={(event) => setPayment(event.target.value)}>
+                {paymentOptions.map((option) => <option key={option}>{option}</option>)}
+              </select>
+            </div>
+
             <div className="card-title">
               <h2>Monthly Pass List</h2>
               <span>Showing {filteredPasses.length} of {passes.length} entries</span>
             </div>
+
             <div className="table-wrap">
               <table className="pass-table">
                 <thead>
@@ -99,41 +125,53 @@ function MonthlyPassPage() {
                 </tbody>
               </table>
             </div>
+
+            <div className="pass-pagination">
+              <span>Showing 1 to {filteredPasses.length} of {passes.length} entries</span>
+              <div className="pagination-actions">
+                <button disabled className="pagination-button">Previous</button>
+                <button className="pagination-button">Next</button>
+              </div>
+            </div>
           </section>
 
           <aside className="pass-detail-card">
             <div className="detail-card-header">
               <div>
                 <span className="detail-tag">Monthly Pass Detail</span>
-                <p className="detail-status">{detail.status}</p>
+                <p className="detail-status">{selectedDetail.status}</p>
               </div>
-              <strong>{detail.passCode}</strong>
+              <strong>{selectedDetail.passCode}</strong>
             </div>
+
             <div className="detail-summary">
               <div>
-                <strong>{detail.plate}</strong>
-                <span>{detail.driver}</span>
+                <strong>{selectedDetail.plate}</strong>
+                <span>{selectedDetail.driver}</span>
               </div>
               <div>
-                <small>{detail.type}</small>
-                <strong>{detail.location}</strong>
+                <small>{selectedDetail.type}</small>
+                <strong>{selectedDetail.location}</strong>
               </div>
             </div>
+
             <dl className="detail-list">
-              <dt>Pass Code</dt><dd>{detail.passCode}</dd>
-              <dt>Driver</dt><dd>{detail.driver}</dd>
-              <dt>Type</dt><dd>{detail.type}</dd>
-              <dt>Validity</dt><dd>{detail.validity}</dd>
-              <dt>Status</dt><dd>{detail.status}</dd>
-              <dt>Location</dt><dd>{detail.location}</dd>
-              <dt>Assigned Gate</dt><dd>{detail.assignedGate}</dd>
-              <dt>Vehicle Model</dt><dd>{detail.vehicleModel}</dd>
-              <dt>Renewal Date</dt><dd>{detail.renewalDate}</dd>
+              <div className="detail-row"><dt>Pass Code</dt><dd>{selectedDetail.passCode}</dd></div>
+              <div className="detail-row"><dt>Driver</dt><dd>{selectedDetail.driver}</dd></div>
+              <div className="detail-row"><dt>Type</dt><dd>{selectedDetail.type}</dd></div>
+              <div className="detail-row"><dt>Validity</dt><dd>{selectedDetail.validity}</dd></div>
+              <div className="detail-row"><dt>Status</dt><dd>{selectedDetail.status}</dd></div>
+              <div className="detail-row"><dt>Location</dt><dd>{selectedDetail.location}</dd></div>
+              <div className="detail-row"><dt>Assigned Gate</dt><dd>{selectedDetail.assignedGate}</dd></div>
+              <div className="detail-row"><dt>Vehicle Model</dt><dd>{selectedDetail.vehicleModel}</dd></div>
+              <div className="detail-row"><dt>Renewal Date</dt><dd>{selectedDetail.renewalDate}</dd></div>
             </dl>
+
             <div className="detail-actions">
               <button className="primary">Renew Pass</button>
               <button>Update Vehicle</button>
               <button className="danger">Suspend Pass</button>
+              <button className="link-button">View Entry History <span className="material-symbols-outlined">arrow_forward</span></button>
             </div>
           </aside>
         </div>
@@ -141,7 +179,7 @@ function MonthlyPassPage() {
         <section className="activity-card">
           <div className="activity-header">
             <h2>Recent Monthly Pass Activity</h2>
-            <button onClick={() => navigate(ROUTE_PATHS.systemLogs)}>View Full Log</button>
+            <button className="secondary-button" onClick={() => navigate(ROUTE_PATHS.systemLogs)}>View Full Log</button>
           </div>
           <div className="table-wrap">
             <table className="activity-table">
