@@ -282,8 +282,8 @@ function AdminDashboardPage() {
             <span className="top-divider" />
             <div className="menu-anchor">
               <button className="profile-button" onClick={() => setOpenMenu(openMenu === 'profile' ? null : 'profile')}>
-                <span><strong>Nguyễn Văn Admin</strong><small>System Admin</small></span>
-                <b>A</b>
+                <span><strong>Trần Thanh Vân</strong><small>System Admin</small></span>
+                <b>TV</b>
               </button>
               {openMenu === 'profile' && (
                 <div className="action-menu compact profile-menu">

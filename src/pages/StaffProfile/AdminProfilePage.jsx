@@ -130,9 +130,9 @@ function AdminProfilePage() {
         </nav>
         <div className="p-6 mt-auto border-t border-slate-700/50">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded bg-primary/20 text-primary flex items-center justify-center font-bold text-sm">NA</div>
+            <div className="w-9 h-9 rounded bg-primary/20 text-primary flex items-center justify-center font-bold text-sm">{profile.initials}</div>
             <div>
-              <p className="text-white text-body-sm font-medium">Nguyễn Văn Admin</p>
+              <p className="text-white text-body-sm font-medium">{profile.name}</p>
               <p className="text-slate-500 text-[11px] uppercase tracking-tight">System Admin</p>
             </div>
           </div>
@@ -180,8 +180,8 @@ function AdminProfilePage() {
             <span className="top-divider" />
             <div className="menu-anchor">
               <button className="profile-button" onClick={() => setOpenMenu(openMenu === 'profile' ? null : 'profile')}>
-                <span><strong>Nguyễn Văn Admin</strong><small>System Admin</small></span>
-                <b>A</b>
+                <span><strong>{profile.name}</strong><small>System Admin</small></span>
+                <b>{profile.initials}</b>
               </button>
               {openMenu === 'profile' && (
                 <div className="action-menu compact profile-menu">

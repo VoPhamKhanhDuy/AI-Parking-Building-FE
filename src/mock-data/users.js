@@ -11,7 +11,7 @@ export const demoUsers = [
 ]
 
 export const mockUsers = [
-  { id: 1, email: 'sysadmin.parking@gmail.com', password: 'Admin@2026', name: 'Nguyễn Văn Admin', role: 'Admin' },
+  { id: 1, email: 'sysadmin.parking@gmail.com', password: 'Admin@2026', name: 'Trần Thanh Vân', role: 'Admin' },
   { id: 2, email: 'security.admin.parking@gmail.com', password: 'Admin@2026', name: 'Trần Quốc Bảo', role: 'Admin' },
   { id: 3, email: 'support.admin.parking@gmail.com', password: 'Admin@2026', name: 'Lê Minh Hưng', role: 'Admin' },
 

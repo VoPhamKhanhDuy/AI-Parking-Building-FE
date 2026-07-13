@@ -108,7 +108,7 @@ function AdminNotificationsPage() {
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded bg-primary/20 text-primary flex items-center justify-center font-bold text-sm">NA</div>
             <div>
-              <p className="text-white text-body-sm font-medium">Nguyễn Văn Admin</p>
+              <p className="text-white text-body-sm font-medium">Trần Thanh Vân</p>
               <p className="text-slate-500 text-[11px] uppercase tracking-tight">System Admin</p>
             </div>
           </div>
@@ -156,8 +156,8 @@ function AdminNotificationsPage() {
             <span className="top-divider" />
             <div className="menu-anchor">
               <button className="profile-button" onClick={() => setOpenMenu(openMenu === 'profile' ? null : 'profile')}>
-                <span><strong>Nguyễn Văn Admin</strong><small>System Admin</small></span>
-                <b>A</b>
+                <span><strong>Trần Thanh Vân</strong><small>System Admin</small></span>
+                <b>TV</b>
               </button>
               {openMenu === 'profile' && (
                 <div className="action-menu compact profile-menu">

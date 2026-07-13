@@ -1,5 +1,5 @@
 export const managerProfileData = {
-  initials: 'M',
+  initials: 'NM',
   name: 'Nguyễn Hoàng Minh',
   role: 'Parking Facility Manager',
   title: 'Operations Manager',
