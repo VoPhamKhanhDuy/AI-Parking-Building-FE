@@ -1,0 +1,53 @@
+export const dailyOperationsReportData = {
+  report: { id: 'RPT-2026-00012', type: 'Daily Operations', facility: 'Building A', date: 'Today', time: '17:30', generatedBy: 'Manager', status: 'Ready' },
+  executiveSummary: 'Today’s parking operation remained stable. Vehicle flow increased compared to yesterday, with Zone B reaching high occupancy during peak hours. Pending payment and lost ticket cases require manager review before closing the report.',
+  kpis: [
+    { label: 'Total Revenue', value: '12,850,000 VND' },
+    { label: 'Vehicle Entries', value: '284' },
+    { label: 'Vehicle Exits', value: '271' },
+    { label: 'Occupancy Rate', value: '76%' },
+    { label: 'Pending Reviews', value: '3', tone: 'warning' },
+  ],
+  operations: [
+    { metric: 'Vehicle Entries', today: '284', yesterday: '251', change: '+13%', status: 'Increased' },
+    { metric: 'Vehicle Exits', today: '271', yesterday: '263', change: '+3%', status: 'Stable' },
+    { metric: 'Active Tickets', today: '128', yesterday: '119', change: '+8%', status: 'Normal' },
+    { metric: 'Lost Ticket Cases', today: '2', yesterday: '1', change: '+1 case', status: 'Review' },
+    { metric: 'Pending Payments', today: '3', yesterday: '2', change: '+1 case', status: 'Review' },
+    { metric: 'Average Parking Duration', today: '3h 10m', yesterday: '2h 55m', change: '+15m', status: 'Normal' },
+  ],
+  revenue: [
+    { label: 'Total Revenue', value: '12,850,000 VND' },
+    { label: 'Cash Payment', value: '3,200,000 VND' },
+    { label: 'QR Payment', value: '6,750,000 VND' },
+    { label: 'Card Payment', value: '2,100,000 VND' },
+    { label: 'Pending Payment', value: '800,000 VND' },
+  ],
+  zones: [
+    { zone: 'Zone A', type: 'Motorcycle', total: 120, occupied: 82, available: 38, occupancy: '68%', status: 'Normal' },
+    { zone: 'Zone B', type: 'Car', total: 180, occupied: 146, available: 34, occupancy: '81%', status: 'High' },
+    { zone: 'Zone C', type: 'EV Charging', total: 80, occupied: 61, available: 19, occupancy: '76%', status: 'Normal' },
+    { zone: 'Zone D', type: 'Reserved / VIP', total: 40, occupied: 18, available: 22, occupancy: '45%', status: 'Normal' },
+  ],
+  tickets: [
+    { type: 'Standard Parking', count: 221, completed: 214, pending: 5, issues: 2 },
+    { type: 'Monthly Pass', count: 38, completed: 36, pending: 2, issues: 0 },
+    { type: 'Reservation', count: 18, completed: 16, pending: 1, issues: 1 },
+    { type: 'Lost Ticket', count: 2, completed: 1, pending: 1, issues: 2 },
+  ],
+  findings: ['Zone B reached high occupancy during peak hours.', 'Lost ticket cases increased compared to yesterday.', 'Pending payments should be reviewed before closing report.', 'EV charging zone remained stable but requires maintenance monitoring.'],
+  issues: [
+    { issue: '3 pending payment cases', detail: 'Review before shift closing', priority: 'Medium' },
+    { issue: '2 lost ticket cases', detail: 'Verify against ticket activity logs', priority: 'High' },
+    { issue: 'Zone B high occupancy', detail: 'Peak-hour utilization reached 81%', priority: 'High' },
+    { issue: 'EV charging maintenance', detail: 'Continue maintenance monitoring', priority: 'Low' },
+  ],
+  managerNote: 'Pending payment cases should be reviewed before shift closing. Lost ticket records must be verified with ticket activity logs.',
+  reviewActions: ['Review pending payment cases', 'Confirm lost ticket handling records', 'Check Zone B high occupancy period', 'Verify export before submitting report'],
+  activities: [
+    { time: 'Today 17:20', activity: 'Lost ticket case submitted', reference: 'LT-00008', staff: 'Parking Staff', status: 'Pending Review' },
+    { time: 'Today 16:45', activity: 'Payment pending confirmation', reference: 'PAY-000129', staff: 'Phạm Thu Hà', status: 'Pending' },
+    { time: 'Today 15:30', activity: 'Zone B high occupancy alert', reference: 'Zone B', staff: 'System', status: 'Resolved' },
+    { time: 'Today 14:10', activity: 'Daily report generated', reference: 'RPT-2026-00012', staff: 'Manager', status: 'Ready' },
+  ],
+}

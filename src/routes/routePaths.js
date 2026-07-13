@@ -21,6 +21,8 @@ export const ROUTE_PATHS = {
   parkingStructure: '/parking-structure',
   pricing: '/pricing',
   reports: '/reports',
+  dailyOperationsReport: '/reports/daily-operations',
+  staffActivity: '/staff-activity',
   monthlyPass: '/monthly-pass',
   reservation: '/reservation',
   lostTicket: '/lost-ticket',

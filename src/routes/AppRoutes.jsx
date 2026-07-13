@@ -6,6 +6,8 @@ import ManagerDashboardPage from '../pages/ManagerDashboard/ManagerDashboardPage
 import ParkingStructurePage from '../pages/ParkingStructure/ParkingStructurePage'
 import PricingRulesPage from '../pages/Pricing/PricingRulesPage'
 import ReportsManagementPage from '../pages/Reports/ReportsManagementPage'
+import DailyOperationsReportPage from '../pages/Reports/DailyOperationsReportPage'
+import StaffActivityPage from '../pages/StaffActivity/StaffActivityPage'
 import NotificationsPage from '../pages/Notifications/NotificationsPage'
 import UsersRolesPage from '../pages/Users/UsersRolesPage'
 import AuditLogsPage from '../pages/AuditLogs/AuditLogsPage'
@@ -52,6 +54,8 @@ function AppRoutes() {
       <Route path={ROUTE_PATHS.parkingStructure} element={<ParkingStructurePage />} />
       <Route path={ROUTE_PATHS.pricing} element={<PricingRulesPage />} />
       <Route path={ROUTE_PATHS.reports} element={<ReportsManagementPage />} />
+      <Route path={ROUTE_PATHS.dailyOperationsReport} element={<DailyOperationsReportPage />} />
+      <Route path={ROUTE_PATHS.staffActivity} element={<StaffActivityPage />} />
       <Route path={ROUTE_PATHS.users} element={<UsersRolesPage />} />
       <Route path={ROUTE_PATHS.auditLogs} element={<AuditLogsPage />} />
       <Route path={ROUTE_PATHS.adminNotifications} element={<AdminNotificationsPage />} />
