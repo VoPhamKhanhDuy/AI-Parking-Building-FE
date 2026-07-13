@@ -12,13 +12,10 @@ const navigationItems = [
   ['logout', 'Vehicle Exit', ROUTE_PATHS.vehicleExit],
   ['payments', 'Payment', '/payment'],
   ['confirmation_number', 'Tickets', ROUTE_PATHS.tickets],
-  ['apartment', 'Parking Structure', ROUTE_PATHS.parkingStructure],
-  ['account_balance_wallet', 'Pricing Rules', ROUTE_PATHS.pricing],
   ['calendar_month', 'Monthly Pass', ROUTE_PATHS.monthlyPass],
   ['event_available', 'Reservation', ROUTE_PATHS.reservation],
   ['find_replace', 'Lost Ticket', ROUTE_PATHS.lostTicket],
   ['assessment', 'Reports', '/reports'],
-  ['group', 'Users & Roles', '/users'],
   ['history', 'System Logs', ROUTE_PATHS.systemLogs],
 ]
 

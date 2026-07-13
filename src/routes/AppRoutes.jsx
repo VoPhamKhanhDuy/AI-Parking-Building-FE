@@ -19,6 +19,7 @@ import ExitSuccessPage from '../pages/VehicleExit/ExitSuccessPage'
 import PaymentPage from '../pages/Payment/PaymentPage'
 import TicketsPage from '../pages/Tickets/TicketsPage'
 import LostTicketPage from '../pages/LostTicket/LostTicketPage'
+import ReservationPage from '../pages/Reservation/ReservationPage'
 import { ROUTE_PATHS } from './routePaths'
 
 function ComingSoonPage() {
@@ -60,6 +61,7 @@ function AppRoutes() {
       <Route path={ROUTE_PATHS.payment} element={<PaymentPage />} />
       <Route path={ROUTE_PATHS.tickets} element={<TicketsPage />} />
       <Route path={ROUTE_PATHS.lostTicket} element={<LostTicketPage />} />
+      <Route path={ROUTE_PATHS.reservation} element={<ReservationPage />} />
       <Route path="/not-found" element={<ComingSoonPage />} />
       <Route path="/*" element={<ComingSoonPage />} />
       <Route path="*" element={<Navigate to="/not-found" replace />} />

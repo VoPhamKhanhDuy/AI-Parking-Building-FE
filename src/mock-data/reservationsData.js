@@ -1,0 +1,10 @@
+export const reservations = [
+  { id:45, code:'RSV-2026-00045', driver:'Nguyen Van A', phone:'0901 234 567', plate:'51A-12345', vehicleType:'Car', slot:'B2-18', floorZone:'Floor 2 · Zone B', window:'14:30–15:00', status:'Pending Check-in', payment:'Paid', amount:25000 },
+  { id:46, code:'RSV-2026-00046', driver:'Tran Minh B', phone:'0912 556 778', plate:'30A-99887', vehicleType:'Electric Vehicle', slot:'EV-04', floorZone:'Floor 1 · EV Charging', window:'15:00–15:30', status:'Checked In', payment:'Paid', amount:30000 },
+  { id:47, code:'RSV-2026-00047', driver:'Le Hoang C', phone:'0988 223 110', plate:'61C-23111', vehicleType:'Motorcycle', slot:'M-12', floorZone:'Basement · Zone A', window:'16:00–16:30', status:'Waiting', payment:'Pending', amount:10000 },
+  { id:48, code:'RSV-2026-00048', driver:'Pham Gia Huy', phone:'0903 445 667', plate:'59A-77123', vehicleType:'Car', slot:'B1-09', floorZone:'Floor 1 · Zone B', window:'16:30–17:00', status:'Late Arrival', payment:'Paid', amount:25000 },
+  { id:49, code:'RSV-2026-00049', driver:'Do Minh Khang', phone:'0938 119 002', plate:'43A-11229', vehicleType:'Car', slot:'B3-22', floorZone:'Floor 3 · Zone B', window:'17:00–17:30', status:'Paid', payment:'Paid', amount:25000 },
+  { id:50, code:'RSV-2026-00050', driver:'Hoang Minh Duc', phone:'0977 440 221', plate:'88A-44512', vehicleType:'Car', slot:'B2-24', floorZone:'Floor 2 · Zone B', window:'17:30–18:00', status:'Waiting', payment:'Pending', amount:25000 },
+  { id:51, code:'RSV-2026-00051', driver:'Vo Thanh Lam', phone:'0918 660 112', plate:'77C-90211', vehicleType:'Motorcycle', slot:'M-18', floorZone:'Basement · Zone A', window:'18:00–18:30', status:'Paid', payment:'Paid', amount:10000 },
+]
+export const reservationActivities=[{id:1,time:'14:15:22',code:'RSV-2026-00046',plate:'30A-99887',action:'Checked In',staff:'System',status:'Completed'},{id:2,time:'14:05:33',code:'RSV-2026-00045',plate:'51A-12345',action:'Reminder Sent',staff:'Parking Staff',status:'Pending'},{id:3,time:'13:50:05',code:'RSV-2026-00042',plate:'59A-77123',action:'Cancelled by Driver',staff:'System',status:'Cancelled'}]
