@@ -257,7 +257,7 @@ function UsersRolesPage() {
       `}} />
 
       {/* SideNavBar (Professional Dark) */}
-      <aside className="fixed left-0 top-0 h-full w-[280px] z-40 overflow-y-auto bg-[#1e293b] flex flex-col">
+      <aside className="fixed left-0 top-0 h-full w-[240px] z-40 overflow-y-auto bg-[#1e293b] flex flex-col">
         <div className="px-6 py-8 mb-4">
           <h1 className="text-headline-md font-headline-md font-bold text-white mb-1">AI Command Center</h1>
           <p className="text-slate-400 text-label-md font-label-md">System Administrator Portal</p>
@@ -284,19 +284,10 @@ function UsersRolesPage() {
             </div>
           </div>
         </nav>
-        <div className="p-6 mt-auto border-t border-slate-700/50">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded bg-primary/20 text-primary flex items-center justify-center font-bold text-sm">NA</div>
-            <div>
-              <p className="text-white text-body-sm font-medium">Nguyễn Văn Admin</p>
-              <p className="text-slate-500 text-[11px] uppercase tracking-tight">System Admin</p>
-            </div>
-          </div>
-        </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 ml-[280px] flex flex-col min-w-0">
+      <main className="flex-1 ml-[240px] flex flex-col min-w-0">
         
         {/* TopNavBar */}
         <header className="h-14 flex items-center justify-between px-8 bg-white border-b border-outline-variant sticky top-0 z-30">
@@ -333,28 +324,15 @@ function UsersRolesPage() {
                 </div>
               )}
             </div>
-            <span className="top-divider" />
-            <div className="menu-anchor">
-              <button className="profile-button" onClick={() => setOpenMenu(openMenu === 'profile' ? null : 'profile')}>
-                <span><strong>Nguyễn Văn Admin</strong><small>System Admin</small></span>
-                <b>A</b>
-              </button>
-              {openMenu === 'profile' && (
-                <div className="action-menu compact profile-menu">
-                  <button onClick={() => navigate(ROUTE_PATHS.adminProfile)}>View profile</button>
-                  <button onClick={() => navigate(ROUTE_PATHS.login)}>Sign out</button>
-                </div>
-              )}
-            </div>
           </div>
         </header>
 
         {/* Content Canvas */}
-        <div className="p-6 space-y-4 max-w-[1600px] mx-auto w-full">
+        <div className="p-4 space-y-4 max-w-[1280px] mx-auto w-full">
           
           {/* Page Header */}
           <section>
-            <h2 className="font-headline-lg text-headline-lg text-on-surface">Users &amp; Roles Management</h2>
+            <h2 className="font-headline-md text-headline-md text-on-surface">Users &amp; Roles Management</h2>
             <p className="font-body-md text-body-md text-on-surface-variant mt-0.5">Manage staff accounts, role assignments, account status, and permission levels.</p>
           </section>
 
