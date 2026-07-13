@@ -7,7 +7,8 @@ export const login = ({ email, password }) => {
     return { success: false, message: 'Please enter your email and password.' }
   }
 
-  const user = mockUsers.find((item) => item.email.toLowerCase() === email.toLowerCase() && item.password === password)
+  const normalizedEmail = email.trim().toLowerCase()
+  const user = mockUsers.find((item) => item.email.toLowerCase() === normalizedEmail && item.password === password)
 
   if (!user) {
     return { success: false, message: 'Invalid email or password.' }

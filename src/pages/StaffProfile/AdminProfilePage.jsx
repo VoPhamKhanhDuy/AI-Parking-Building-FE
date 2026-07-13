@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { adminProfileData } from '../../mock-data/adminProfile'
+import { ROLE_CREDENTIALS } from '../../mock-data/users'
 import { ROUTE_PATHS } from '../../routes/routePaths'
 import '../../layouts/MainLayout.css'
 
@@ -8,7 +9,7 @@ const emptyPasswordForm = { currentPassword: '', newPassword: '', confirmPasswor
 
 function AdminProfilePage() {
   const navigate = useNavigate()
-  const [profile, setProfile] = useState(adminProfileData)
+  const [profile] = useState(adminProfileData)
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
   const [passwordForm, setPasswordForm] = useState(emptyPasswordForm)
   const [formError, setFormError] = useState('')
@@ -36,7 +37,7 @@ function AdminProfilePage() {
 
   const submitPassword = (event) => {
     event.preventDefault()
-    if (passwordForm.currentPassword !== '123456') {
+    if (passwordForm.currentPassword !== ROLE_CREDENTIALS.Admin.password) {
       setFormError('Mật khẩu hiện tại không chính xác.')
       return
     }

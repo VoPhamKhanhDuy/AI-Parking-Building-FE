@@ -6,7 +6,7 @@ export const managerProfileData = {
   managerId: 'MGR-2026-001',
   facility: 'Building A',
   department: 'Facility Operations',
-  email: 'manager@parking.com',
+  email: 'facility.manager.a@gmail.com',
   phone: '0901 234 568',
   status: 'Active',
   lastLogin: 'Today 11:20',
