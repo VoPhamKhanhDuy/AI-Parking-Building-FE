@@ -1,95 +1,44 @@
-import { useLocation, useNavigate } from 'react-router-dom'
-import { useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
-import { getPaymentHistory } from './paymentService'
-import { getPaymentSummary, processPayment } from '../VehicleExit/vehicleExitService'
-import '../VehicleExit/VehicleExitPage.css'
+import { formatPaymentAmount, getPaymentManagement, requestPaymentRefund } from './paymentService'
+import './PaymentPage.css'
+
+const STATUS_OPTIONS = ['All Statuses', 'PAID', 'PENDING', 'FAILED', 'REFUND_PENDING']
+function Status({ value }) { return <span className={`payment-badge ${value.toLowerCase()}`}>{value.replace('_', ' ')}</span> }
 
 function PaymentPage() {
   const navigate = useNavigate()
-  const location = useLocation()
-  const session = location.state?.session
-  const [selectedMethod, setSelectedMethod] = useState('Card')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [data, setData] = useState({ stats: {}, transactions: [], activities: [] })
+  const [selectedId, setSelectedId] = useState(null)
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('All Statuses')
+  const [method, setMethod] = useState('All Methods')
+  const [type, setType] = useState('All Types')
+  const [loading, setLoading] = useState(true)
+  const [message, setMessage] = useState('')
 
-  const summary = useMemo(() => getPaymentSummary(session), [session])
-  const history = getPaymentHistory()
+  useEffect(() => { let active = true; const timer = setTimeout(() => getPaymentManagement({ search, status, method, type }).then((result) => { if (!active) return; setData(result); setSelectedId((current) => current || result.transactions[0]?.id || null) }).catch(() => active && setMessage('Unable to load payment transactions.')).finally(() => active && setLoading(false)), 180); return () => { active = false; clearTimeout(timer) } }, [search, status, method, type])
+  const selected = data.transactions.find((item) => item.id === selectedId) || data.transactions[0]
 
-  const handlePayment = async () => {
-    if (!session) return
-    setIsSubmitting(true)
-    const updatedSession = await processPayment(session.id, selectedMethod)
-    setIsSubmitting(false)
-    navigate(ROUTE_PATHS.vehicleExitSuccess, { state: { session: updatedSession || { ...session, status: 'Paid', paymentStatus: 'Paid' }, mode: 'payment' } })
+  const refund = async () => {
+    if (!selected) return
+    try { const updated = await requestPaymentRefund(selected.id); setData((current) => ({ ...current, transactions: current.transactions.map((item) => item.id === updated.id ? updated : item) })); setMessage(`Refund request created for ${updated.receiptId}.`) }
+    catch (error) { setMessage(error.message) }
   }
 
-  return (
-    <MainLayout>
-      <div className="vehicle-exit-page">
-        <header className="page-heading">
-          <div className="page-breadcrumb">
-            <button onClick={() => navigate(ROUTE_PATHS.dashboard)}>Dashboard</button>
-            <span className="material-symbols-outlined">chevron_right</span>
-            <strong>Payment</strong>
-          </div>
-          <h1>Payment</h1>
-          <p>Finalize the parking fee with a mock payment flow and review recent payment history.</p>
-        </header>
+  const stats = [['Today revenue', formatPaymentAmount(data.stats.todayRevenue)], ['Paid transactions', data.stats.paidTransactions], ['Pending payments', data.stats.pendingPayments], ['Failed payments', data.stats.failedPayments], ['Refund requests', data.stats.refundRequests]]
 
-        <div className="page-grid">
-          <section className="card">
-            <div className="card-title">
-              <h2>Payment Details</h2>
-              <span className="status-pill">Mock Checkout</span>
-            </div>
-            {session ? (
-              <>
-                <div className="session-summary">
-                  <div className="summary-row"><span>License Plate</span><strong>{session.licensePlate}</strong></div>
-                  <div className="summary-row"><span>Ticket Code</span><strong>{session.ticketCode}</strong></div>
-                  <div className="summary-row"><span>Base Fee</span><strong>{summary?.baseFee}</strong></div>
-                  <div className="summary-row"><span>Surcharge</span><strong>{summary?.surcharge}</strong></div>
-                  <div className="summary-row total"><span>Total Due</span><strong>{summary?.formattedTotal}</strong></div>
-                </div>
-                <div className="method-list">
-                  {['Card', 'Cash', 'QR Payment'].map((method) => (
-                    <button key={method} className={`method-card ${selectedMethod === method ? 'active' : ''}`} onClick={() => setSelectedMethod(method)}>
-                      {method}
-                    </button>
-                  ))}
-                </div>
-                <div className="button-row">
-                  <button className="primary" onClick={handlePayment} disabled={isSubmitting}>{isSubmitting ? 'Submitting...' : `Pay with ${selectedMethod}`}</button>
-                  <button className="secondary" onClick={() => navigate(ROUTE_PATHS.vehicleExit)}>Cancel</button>
-                </div>
-              </>
-            ) : (
-              <div className="empty-card">No pending payment session selected.</div>
-            )}
-          </section>
-
-          <section className="card">
-            <div className="card-title">
-              <h2>Recent Payments</h2>
-              <span className="status-pill muted">History</span>
-            </div>
-            <div className="session-list">
-              {history.map((entry) => (
-                <div key={entry.id} className="session-item" style={{ justifyContent: 'space-between' }}>
-                  <div>
-                    <strong>{entry.ticketCode}</strong>
-                    <p>{entry.licensePlate}</p>
-                  </div>
-                  <span>{entry.amount.toLocaleString('vi-VN')} VND</span>
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
-      </div>
-    </MainLayout>
-  )
+  return <MainLayout><div className="payment-page">
+    <nav className="payment-breadcrumb"><button onClick={() => navigate(ROUTE_PATHS.dashboard)}>Dashboard</button><span>/</span><b>Payment</b></nav>
+    <header className="payment-heading"><div><h1>Payment Processing</h1><p>Review transactions, confirm parking payments and handle payment issues.</p></div><span><i />Staff workspace</span></header>
+    <section className="payment-stats">{stats.map(([label,value]) => <div className={label.toLowerCase().replace(' ','-')} key={label}><small>{label}</small><strong>{value ?? '—'}</strong></div>)}</section>
+    <section className="payment-filters"><label><span className="material-symbols-outlined">search</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search ticket, license plate or receipt ID"/></label><select value={status} onChange={(event) => setStatus(event.target.value)}>{STATUS_OPTIONS.map((item) => <option key={item}>{item}</option>)}</select><select value={method} onChange={(event) => setMethod(event.target.value)}><option>All Methods</option><option>QR Payment</option><option>Cash</option><option>Card</option><option>Monthly Pass</option></select><select value={type} onChange={(event) => setType(event.target.value)}><option>All Types</option><option>Parking Fee</option><option>Reservation</option><option>Pass Validation</option></select><select><option>Today</option><option>Last 7 days</option><option>This month</option></select></section>
+    {message && <div className="payment-message">{message}</div>}
+    <div className="payment-layout"><section className="transactions-card"><div className="payment-card-header"><h2>Payment Transactions</h2><span>{data.transactions.length} records</span></div>{loading ? <div className="payment-loading">Loading transactions…</div> : <div className="payment-table-wrap"><table><thead><tr><th>Receipt</th><th>Ticket / Plate</th><th>Amount</th><th>Method</th><th>Type</th><th>Status</th><th /></tr></thead><tbody>{data.transactions.map((item) => <tr className={item.id === selected?.id ? 'selected' : ''} key={item.id} onClick={() => setSelectedId(item.id)}><td><b>{item.receiptId}</b><small>{item.time}</small></td><td><b>{item.ticketCode}</b><small>{item.licensePlate}</small></td><td>{formatPaymentAmount(item.amount)}</td><td>{item.method}</td><td>{item.type}</td><td><Status value={item.status}/></td><td><button aria-label="View payment"><span className="material-symbols-outlined">chevron_right</span></button></td></tr>)}</tbody></table></div>}<div className="payment-pagination"><span>Showing 1–{data.transactions.length} of {data.transactions.length}</span><div><button disabled>Prev</button><button className="active">1</button><button>2</button><button>Next</button></div></div></section>
+    <aside className="payment-detail"><div className="payment-card-header"><h2>Payment Detail</h2>{selected && <Status value={selected.status}/>}</div>{selected ? <><div className="detail-amount"><small>Total amount</small><strong>{formatPaymentAmount(selected.amount)}</strong><span>{selected.status === 'PAID' ? `Paid via ${selected.method}` : selected.method}</span></div><dl><div><dt>Receipt ID</dt><dd>{selected.receiptId}</dd></div><div><dt>Ticket code</dt><dd>{selected.ticketCode}</dd></div><div><dt>License plate</dt><dd>{selected.licensePlate}</dd></div><div><dt>Vehicle</dt><dd>{selected.vehicleType}</dd></div><div><dt>Payment type</dt><dd>{selected.type}</dd></div><div><dt>Processed at</dt><dd>{selected.paidAt || '—'}</dd></div><div><dt>Staff</dt><dd>{selected.staff}</dd></div></dl><div className="payment-detail-actions"><button className="primary" onClick={() => window.print()}><span className="material-symbols-outlined">print</span>Print receipt</button><div><button onClick={() => navigate(ROUTE_PATHS.tickets)}>View ticket</button><button onClick={() => navigate(ROUTE_PATHS.vehicleExit)}>View session</button></div><button className="refund" disabled={selected.status !== 'PAID'} onClick={refund}>Process refund</button></div></> : <div className="payment-empty">Select a transaction to view details.</div>}</aside></div>
+    <section className="payment-activity"><div><h2>Recent Payment Activity</h2><button>View all activity →</button></div><table><thead><tr><th>Time</th><th>Receipt ID</th><th>License plate</th><th>Amount</th><th>Method</th><th>Status</th></tr></thead><tbody>{data.activities.map((item) => <tr key={item.id}><td>{item.time}</td><td><b>{item.receiptId}</b></td><td>{item.licensePlate}</td><td>{formatPaymentAmount(item.amount)}</td><td>{item.method}</td><td><Status value={item.status}/></td></tr>)}</tbody></table></section>
+  </div></MainLayout>
 }
-
 export default PaymentPage

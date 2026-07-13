@@ -1,53 +1,29 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
-import { searchTicketRecords } from './ticketsService'
-import '../VehicleExit/VehicleExitPage.css'
+import { getTickets, markTicketLost } from './ticketsService'
+import './TicketsPage.css'
 
+function Badge({ value }) { return <span className={`ticket-badge ${value.toLowerCase().replaceAll(' ', '-')}`}>{value}</span> }
 function TicketsPage() {
   const navigate = useNavigate()
-  const [searchValue, setSearchValue] = useState('')
-  const filtered = searchTicketRecords(searchValue)
-
-  return (
-    <MainLayout>
-      <div className="vehicle-exit-page">
-        <header className="page-heading">
-          <div className="page-breadcrumb">
-            <button onClick={() => navigate(ROUTE_PATHS.dashboard)}>Dashboard</button>
-            <span className="material-symbols-outlined">chevron_right</span>
-            <strong>Tickets</strong>
-          </div>
-          <h1>Tickets</h1>
-          <p>Review active and completed tickets for the mock parking operations.</p>
-        </header>
-
-        <div className="card">
-          <div className="card-title">
-            <h2>Ticket Search</h2>
-            <span className="status-pill muted">Mock Records</span>
-          </div>
-          <div className="search-row">
-            <input value={searchValue} onChange={(event) => setSearchValue(event.target.value)} placeholder="Search by ticket code or plate" />
-            <button className="secondary" onClick={() => setSearchValue('')}>Clear</button>
-          </div>
-
-          <div className="session-list">
-            {filtered.map((record) => (
-              <div key={record.id} className="session-item" style={{ justifyContent: 'space-between' }}>
-                <div>
-                  <strong>{record.ticketCode}</strong>
-                  <p>{record.licensePlate} • {record.vehicleType}</p>
-                </div>
-                <span>{record.status}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </MainLayout>
-  )
+  const [data, setData] = useState({ stats: {}, tickets: [], activities: [] })
+  const [selectedId, setSelectedId] = useState(null)
+  const [search, setSearch] = useState('')
+  const [type, setType] = useState('All Types')
+  const [status, setStatus] = useState('All Statuses')
+  const [message, setMessage] = useState('')
+  useEffect(() => { let active = true; const timer = setTimeout(() => getTickets({ search, type, status }).then((result) => { if (!active) return; setData(result); setSelectedId((current) => current || result.tickets[0]?.id) }).catch(() => active && setMessage('Unable to load tickets.')), 180); return () => { active = false; clearTimeout(timer) } }, [search, type, status])
+  const selected = data.tickets.find((item) => item.id === selectedId) || data.tickets[0]
+  const markLost = async () => { if (!selected) return; try { const updated = await markTicketLost(selected.id); setData((current) => ({ ...current, tickets: current.tickets.map((item) => item.id === updated.id ? updated : item) })); setMessage(`${updated.ticketCode} marked as lost ticket.`) } catch (error) { setMessage(error.message) } }
+  const stats = [['Active Tickets', data.stats.activeTickets], ['Closed Today', data.stats.closedToday], ['Lost Ticket Cases', data.stats.lostTicketCases], ['Reservation Tickets', data.stats.reservationTickets], ['Monthly Tickets', data.stats.monthlyTickets]]
+  return <MainLayout><div className="tickets-page"><nav className="tickets-breadcrumb"><button onClick={() => navigate(ROUTE_PATHS.dashboard)}>Dashboard</button><span>/</span><b>Tickets</b></nav><header className="tickets-heading"><h1>Tickets</h1><p>Manage parking tickets, active sessions, ticket status and vehicle parking records.</p></header>
+    <section className="tickets-stats">{stats.map(([label,value]) => <div key={label}><small>{label}</small><strong>{value ?? '—'}</strong></div>)}</section>
+    <section className="tickets-filters"><label><span className="material-symbols-outlined">search</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search ticket code or license plate"/></label><select value={type} onChange={(event) => setType(event.target.value)}><option>All Types</option><option>Normal</option><option>Monthly</option><option>Reservation</option><option>Lost Ticket</option></select><select value={status} onChange={(event) => setStatus(event.target.value)}><option>All Statuses</option><option>Active</option><option>Pending Exit</option><option>Pending Payment</option><option>Closed</option></select><select><option>All Floors</option><option>Basement</option><option>Floor 1</option><option>Floor 2</option></select><select><option>Today</option><option>Last 7 days</option></select></section>{message && <div className="tickets-message">{message}</div>}
+    <div className="tickets-layout"><section className="ticket-list-card"><div className="ticket-card-header"><h2>Ticket List</h2><span>Showing {data.tickets.length} tickets</span></div><table><thead><tr><th>Ticket</th><th>Type</th><th>Slot</th><th>Entry time</th><th>Status</th><th>Action</th></tr></thead><tbody>{data.tickets.map((item) => <tr className={item.id === selected?.id ? 'selected' : ''} key={item.id} onClick={() => setSelectedId(item.id)}><td><b>{item.ticketCode}</b><small>{item.licensePlate}</small></td><td>{item.ticketType}</td><td><b>{item.slotId}</b></td><td>{item.entryTime}</td><td><Badge value={item.status}/></td><td><button>{item.status.startsWith('Pending') ? 'Review' : 'View'}</button></td></tr>)}</tbody></table></section>
+      <aside className="ticket-detail"><div className="ticket-card-header"><h2>Ticket Detail</h2>{selected && <Badge value={selected.status}/>}</div>{selected ? <><div className="ticket-identity"><h3>{selected.ticketCode}</h3><strong>{selected.licensePlate}</strong><div><span><i className="material-symbols-outlined">local_parking</i>{selected.slotId}</span><b>{selected.paymentStatus}</b></div></div><dl><div><dt>Vehicle type</dt><dd>{selected.vehicleType}</dd></div><div><dt>Ticket type</dt><dd>{selected.ticketType}</dd></div><div><dt>Floor / Zone</dt><dd>{selected.floorZone}</dd></div><div><dt>Entry gate</dt><dd>{selected.entryGate}</dd></div><div><dt>Entry time</dt><dd>{selected.entryTime}</dd></div><div><dt>Method</dt><dd>{selected.method}</dd></div><div><dt>Staff</dt><dd>{selected.staff}</dd></div></dl><div className="ticket-actions"><button className="primary">View session detail</button><button onClick={() => navigate(ROUTE_PATHS.vehicleExit)}>Process vehicle exit</button><button className="danger" disabled={selected.ticketType === 'Lost Ticket'} onClick={markLost}>Mark as lost ticket</button><button onClick={() => window.print()}>Print ticket</button></div></> : <div className="ticket-empty">Select a ticket to view details.</div>}</aside></div>
+    <section className="ticket-activity"><div><h2>Recent Ticket Activity</h2><button>View full activity log →</button></div><table><thead><tr><th>Time</th><th>Ticket code</th><th>License plate</th><th>Action</th><th>Staff</th><th>Status</th></tr></thead><tbody>{data.activities.map((item) => <tr key={item.id}><td>{item.time}</td><td><b>{item.ticketCode}</b></td><td>{item.licensePlate}</td><td>{item.action}</td><td>{item.staff}</td><td><Badge value={item.status}/></td></tr>)}</tbody></table></section>
+  </div></MainLayout>
 }
-
 export default TicketsPage

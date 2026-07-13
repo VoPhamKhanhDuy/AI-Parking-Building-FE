@@ -30,6 +30,8 @@ function LoginPage() {
     if (result.success) {
       if (result.user?.role === 'Admin') {
         navigate(ROUTE_PATHS.adminDashboard)
+      } else if (result.user?.role === 'Manager') {
+        navigate(ROUTE_PATHS.managerDashboard)
       } else {
         navigate(ROUTE_PATHS.dashboard)
       }
@@ -88,10 +90,19 @@ function LoginPage() {
             <p className="quick-title">Quick Access Demo</p>
             <div className="demo-list">
               {demoUsers.map((user) => (
-                <a key={user.role} href={user.target} className={`demo-user${user.featured ? ' featured' : ''}`}>
+                <button
+                  type="button"
+                  key={user.role}
+                  title={`${user.email} / ${user.password}`}
+                  className={`demo-user${user.featured ? ' featured' : ''}`}
+                  onClick={() => {
+                    setForm({ email: user.email, password: user.password, remember: false })
+                    setMessage(`${user.role} demo account selected.`)
+                  }}
+                >
                   <span className="demo-info"><span className="demo-icon"><Icon>{user.icon}</Icon></span><strong>{user.role}</strong>{user.featured && <small>Main Demo</small>}</span>
                   <Icon>chevron_right</Icon>
-                </a>
+                </button>
               ))}
             </div>
           </section>

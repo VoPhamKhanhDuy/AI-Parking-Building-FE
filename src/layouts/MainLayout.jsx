@@ -12,13 +12,9 @@ const navigationItems = [
   ['logout', 'Vehicle Exit', ROUTE_PATHS.vehicleExit],
   ['payments', 'Payment', '/payment'],
   ['confirmation_number', 'Tickets', ROUTE_PATHS.tickets],
-  ['apartment', 'Parking Structure', ROUTE_PATHS.parkingStructure],
-  ['account_balance_wallet', 'Pricing Rules', ROUTE_PATHS.pricing],
   ['calendar_month', 'Monthly Pass', ROUTE_PATHS.monthlyPass],
   ['event_available', 'Reservation', ROUTE_PATHS.reservation],
   ['find_replace', 'Lost Ticket', ROUTE_PATHS.lostTicket],
-  ['assessment', 'Reports', '/reports'],
-  ['group', 'Users & Roles', '/users'],
   ['history', 'System Logs', ROUTE_PATHS.systemLogs],
 ]
 
@@ -63,7 +59,7 @@ function MainLayout({ children }) {
           </div>
           <div className="menu-anchor">
             <button className="icon-button" aria-label="Settings" onClick={() => setOpenMenu(openMenu === 'settings' ? null : 'settings')}><span className="material-symbols-outlined">settings</span></button>
-            {openMenu === 'settings' && <div className="action-menu compact"><button onClick={() => navigate('/settings')}>System settings</button><button onClick={() => navigate(ROUTE_PATHS.profile)}>Account settings</button></div>}
+            {openMenu === 'settings' && <div className="action-menu compact staff-settings-menu"><button onClick={() => navigate(ROUTE_PATHS.profile)}><span className="material-symbols-outlined">person</span><span>View profile</span></button><button onClick={() => navigate(`${ROUTE_PATHS.profile}#account-security`)}><span className="material-symbols-outlined">manage_accounts</span><span>Account settings</span></button><button className="staff-settings-signout" onClick={logout}><span className="material-symbols-outlined">logout</span><span>Sign out</span></button></div>}
           </div>
           <span className="top-divider" />
           <div className="menu-anchor">

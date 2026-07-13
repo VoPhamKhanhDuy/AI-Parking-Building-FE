@@ -1,138 +1,53 @@
-export const mockExitSessions = [
-  {
-    id: 1,
-    ticketCode: 'TCK-2026-100001',
-    licensePlate: '51A-12345',
-    vehicleType: 'Car',
-    entryTime: '2026-07-12 08:15:00',
-    slotId: 'B2-18',
-    baseFee: 30000,
-    surcharge: 5000,
-    status: 'PendingPayment',
-    paymentStatus: 'Pending',
-    paymentMethod: 'Card',
-    isLostTicket: false,
-    exitTime: null
-  },
-  {
-    id: 2,
-    ticketCode: 'TCK-2026-100002',
-    licensePlate: '29B-87654',
-    vehicleType: 'Car',
-    entryTime: '2026-07-12 07:45:00',
-    slotId: 'A1-45',
-    baseFee: 22000,
-    surcharge: 0,
-    status: 'Completed',
-    paymentStatus: 'Paid',
-    paymentMethod: 'Cash',
-    isLostTicket: false,
-    exitTime: '2026-07-12 12:10:00'
-  },
-  {
-    id: 3,
-    ticketCode: 'TCK-2026-100003',
-    licensePlate: '30A-99887',
-    vehicleType: 'Electric Vehicle',
-    entryTime: '2026-07-12 09:20:00',
-    slotId: 'EV-04',
-    baseFee: 45000,
-    surcharge: 12000,
-    status: 'PendingPayment',
-    paymentStatus: 'Pending',
-    paymentMethod: 'Card',
-    isLostTicket: false,
-    exitTime: null
-  }
-]
+import { getOperationalSession, getOperationalVehicle, operationalPayments, operationalSessions } from './operationalRecords.js'
 
-export const mockTicketRecords = [
-  {
-    id: 1,
-    ticketCode: 'TCK-2026-100001',
-    licensePlate: '51A-12345',
-    vehicleType: 'Car',
-    status: 'Pending Payment',
-    entryTime: '2026-07-12 08:15:00',
-    exitTime: '—',
-    amountDue: 35000,
-    paymentStatus: 'Pending'
-  },
-  {
-    id: 2,
-    ticketCode: 'TCK-2026-100002',
-    licensePlate: '29B-87654',
-    vehicleType: 'Car',
-    status: 'Completed',
-    entryTime: '2026-07-12 07:45:00',
-    exitTime: '2026-07-12 12:10:00',
-    amountDue: 22000,
-    paymentStatus: 'Paid'
-  },
-  {
-    id: 3,
-    ticketCode: 'TCK-2026-100003',
-    licensePlate: '30A-99887',
-    vehicleType: 'Electric Vehicle',
-    status: 'Pending Payment',
-    entryTime: '2026-07-12 09:20:00',
-    exitTime: '—',
-    amountDue: 57000,
-    paymentStatus: 'Pending'
-  },
-  {
-    id: 4,
-    ticketCode: 'TCK-2026-100004',
-    licensePlate: '59A-11111',
-    vehicleType: 'Motorcycle',
-    status: 'Completed',
-    entryTime: '2026-07-12 06:50:00',
-    exitTime: '2026-07-12 13:15:00',
-    amountDue: 18000,
-    paymentStatus: 'Paid'
-  }
-]
+const exitSessionIds = new Set([128, 126, 124, 123])
 
-export const mockPaymentHistory = [
-  {
-    id: 1,
-    ticketCode: 'TCK-2026-100002',
-    licensePlate: '29B-87654',
-    amount: 22000,
-    method: 'Cash',
-    status: 'Completed',
-    paidAt: '2026-07-12 12:10:00'
-  },
-  {
-    id: 2,
-    ticketCode: 'TCK-2026-100004',
-    licensePlate: '59A-11111',
-    amount: 18000,
-    method: 'Card',
-    status: 'Completed',
-    paidAt: '2026-07-12 13:15:00'
-  }
-]
+export const mockExitSessions = operationalSessions.filter((session) => exitSessionIds.has(session.id)).map((session) => ({
+  ...session,
+  vehicleType: getOperationalVehicle(session.licensePlate).vehicleType,
+  ticketType: session.ticketType === 'Normal' ? 'Normal (Visitor)' : session.ticketType,
+  zone: session.floorZone.replace(', ', ' · '),
+  paymentMethod: operationalPayments.find((payment) => payment.ticketCode === session.ticketCode)?.method || 'Cash',
+  isLostTicket: session.ticketType === 'Lost Ticket',
+}))
+
+export const mockTicketRecords = operationalSessions.map((session) => ({
+  id: session.id,
+  ticketCode: session.ticketCode,
+  licensePlate: session.licensePlate,
+  vehicleType: getOperationalVehicle(session.licensePlate).vehicleType,
+  status: session.status,
+  entryTime: session.entryTime,
+  exitTime: session.exitTime || '—',
+  amountDue: session.baseFee + session.surcharge,
+  paymentStatus: session.paymentStatus,
+}))
+
+export const mockPaymentHistory = operationalPayments.filter((payment) => payment.status === 'PAID').map((payment) => ({
+  id: payment.id,
+  ticketCode: payment.ticketCode,
+  licensePlate: payment.licensePlate,
+  amount: payment.amount,
+  method: payment.method,
+  status: 'Completed',
+  paidAt: payment.paidAt,
+}))
+
+export const mockRecentExits = operationalPayments.slice(0, 4).map((payment) => {
+  const session = getOperationalSession(payment.ticketCode)
+  return { id: payment.id, time: payment.time, licensePlate: payment.licensePlate, vehicleType: getOperationalVehicle(payment.licensePlate).vehicleType, ticketType: session.ticketType, paidAmount: payment.amount, status: session.status === 'Closed' ? 'Completed' : session.status }
+})
 
 export const mockLostTicketCases = [
-  {
-    id: 1,
-    caseCode: 'LT-1001',
-    licensePlate: '29B-87654',
-    ticketCode: 'TCK-2026-100002',
-    submittedAt: '2026-07-12 11:50:00',
-    status: 'Under Review',
-    note: 'Customer reported the paper ticket was misplaced at the gate.',
-    fee: 40000
-  },
-  {
-    id: 2,
-    caseCode: 'LT-1002',
-    licensePlate: '51A-12345',
-    ticketCode: 'TCK-2026-100001',
-    submittedAt: '2026-07-12 12:05:00',
-    status: 'Pending Review',
-    note: 'Ticket was not found in the vehicle glovebox.',
-    fee: 35000
-  }
+  { id: 1, caseCode: 'LT-00008', licensePlate: '59A-77123', ticketCode: 'TCK-2026-000124', submittedAt: '2026-07-13 17:20:00', status: 'Pending Review', note: 'Customer reported the parking ticket was lost.', fee: 50000 },
+]
+
+export const mockMonthlyPasses = operationalSessions.filter((session) => session.ticketType === 'Monthly').map((session) => {
+  const vehicle = getOperationalVehicle(session.licensePlate)
+  return { licensePlate: session.licensePlate, ownerName: vehicle.ownerName, vehicleType: vehicle.vehicleType, status: 'Active', expiryDate: session.id === 127 ? '2026-07-31' : '2026-07-25' }
+})
+
+export const mockReservations = [
+  { code: 'RSV-2026-00046', licensePlate: '30A-99887', vehicleType: 'Electric Vehicle', name: 'Trần Minh B', slotId: 'EV04', status: 'Checked In' },
+  { code: 'RSV-2026-00049', licensePlate: '43A-11229', vehicleType: 'Car', name: 'Đỗ Minh Khang', slotId: 'B3-22', status: 'Confirmed' },
 ]

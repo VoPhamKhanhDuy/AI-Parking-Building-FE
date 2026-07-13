@@ -829,3 +829,316 @@
   background: #f1f5f9;
   color: #475569;
 }
+
+/* Vehicle Entry page sizing and visual balance */
+.vehicle-entry-page {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 16px 26px;
+  gap: 14px;
+}
+
+.vehicle-entry-page > .mb-lg {
+  margin-bottom: 4px;
+}
+
+.vehicle-entry-page > .mb-lg h2 {
+  margin: 0;
+  font-size: 25px;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.entry-preset-scanner {
+  margin-bottom: 6px !important;
+  padding: 11px 13px !important;
+  border-radius: 7px !important;
+  background: #f2f4f7 !important;
+}
+
+.entry-preset-scanner > span {
+  margin-bottom: 7px !important;
+  font-size: 9px !important;
+  letter-spacing: 0.04em !important;
+}
+
+.entry-preset-scanner button {
+  padding: 5px 9px !important;
+  border-radius: 5px !important;
+  font-size: 9px !important;
+}
+
+.entry-main-grid {
+  grid-template-columns: minmax(0, 1.85fr) 300px !important;
+  gap: 16px !important;
+  margin-bottom: 6px !important;
+}
+
+.entry-form-ui,
+.entry-engine-ui,
+.entry-facility-ui,
+.entry-recent-ui {
+  border-color: #dfe4eb !important;
+  border-radius: 8px !important;
+  box-shadow: 0 3px 12px rgba(27, 39, 60, 0.045) !important;
+}
+
+.entry-form-ui {
+  padding: 18px !important;
+}
+
+.entry-form-ui > h3 {
+  margin-bottom: 15px !important;
+  font-size: 16px !important;
+}
+
+.entry-form-ui > h3 .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.entry-form-ui form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px !important;
+}
+
+.entry-form-ui form > .grid {
+  gap: 14px 18px !important;
+}
+
+.entry-form-ui label {
+  margin-bottom: 4px !important;
+  font-size: 10px !important;
+  letter-spacing: 0.01em;
+}
+
+.entry-form-ui input,
+.entry-form-ui select,
+.entry-form-ui form .h-\[42px\] {
+  min-height: 37px;
+  height: 37px !important;
+  padding-top: 7px !important;
+  padding-bottom: 7px !important;
+  border-radius: 5px !important;
+  font-size: 12px !important;
+}
+
+.entry-form-ui .absolute .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.entry-form-ui form > .mt-6 {
+  margin-top: 2px !important;
+  padding: 12px !important;
+  border-radius: 6px !important;
+}
+
+.entry-form-ui form > .mt-6 h4 {
+  margin-bottom: 9px !important;
+  font-size: 9px !important;
+}
+
+.entry-form-ui form > .mt-6 > .grid {
+  gap: 10px !important;
+}
+
+.entry-form-ui form > .mt-6 > .grid > div {
+  gap: 8px !important;
+}
+
+.entry-form-ui form > .mt-6 > .grid .material-symbols-outlined {
+  font-size: 17px !important;
+}
+
+.entry-form-ui form > .mt-6 > .grid .font-medium {
+  font-size: 11px;
+}
+
+.entry-form-ui form > .mt-6 > .grid .text-\[11px\] {
+  font-size: 8px !important;
+}
+
+.entry-form-ui form > .flex.flex-col.sm\:flex-row {
+  margin-top: 2px !important;
+  padding-top: 14px !important;
+  gap: 9px !important;
+}
+
+.entry-form-ui form > .flex.flex-col.sm\:flex-row button {
+  padding: 7px 12px !important;
+  border-radius: 5px !important;
+  font-size: 9px !important;
+}
+
+.entry-form-ui form > .flex.flex-col.sm\:flex-row p {
+  max-width: 330px !important;
+  font-size: 8px !important;
+}
+
+.entry-action-bar {
+  display: grid !important;
+  grid-template-columns: 96px 112px minmax(160px, 1fr) minmax(220px, 1.35fr);
+  align-items: start !important;
+  gap: 10px !important;
+}
+
+.entry-action-bar > button,
+.entry-action-main-buttons > button {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 42px !important;
+  padding: 7px 10px !important;
+  line-height: 1.2;
+  white-space: normal;
+}
+
+.entry-action-main,
+.entry-action-main-buttons {
+  display: contents !important;
+}
+
+.entry-action-hint {
+  grid-column: 3 / 5;
+  width: 100%;
+  max-width: none !important;
+  margin: -2px 0 0 !important;
+  text-align: right;
+  line-height: 1.35;
+}
+
+.entry-form-ui form > .mt-4 {
+  margin-top: 0 !important;
+  padding-top: 11px !important;
+}
+
+.entry-form-ui form > .mt-4 button {
+  padding: 9px !important;
+  border-radius: 5px !important;
+  font-size: 11px !important;
+  box-shadow: none !important;
+}
+
+.entry-side-ui {
+  gap: 14px !important;
+}
+
+.entry-engine-ui,
+.entry-facility-ui {
+  padding: 16px !important;
+}
+
+.entry-engine-ui h3,
+.entry-facility-ui h3 {
+  font-size: 15px !important;
+}
+
+.entry-engine-ui > div:first-child {
+  margin-bottom: 12px !important;
+}
+
+.entry-engine-ui .space-y-2 {
+  font-size: 10px !important;
+}
+
+.entry-engine-ui .mt-4 {
+  margin-top: 11px !important;
+  padding: 11px !important;
+  border-radius: 6px !important;
+}
+
+.entry-engine-ui .mt-4 .w-10 {
+  width: 34px !important;
+  height: 34px !important;
+}
+
+.entry-facility-ui > h3 {
+  margin-bottom: 13px !important;
+}
+
+.entry-facility-ui > .mb-4 {
+  margin-bottom: 10px !important;
+  padding: 10px !important;
+  border-radius: 6px !important;
+}
+
+.entry-facility-ui > .grid {
+  gap: 10px !important;
+  margin-bottom: 14px !important;
+}
+
+.entry-facility-ui > .grid > div {
+  padding: 10px !important;
+  border-radius: 6px !important;
+}
+
+.entry-facility-ui .space-y-3 {
+  gap: 8px;
+  font-size: 10px !important;
+}
+
+.entry-facility-ui > .mt-6 {
+  margin-top: 14px !important;
+  padding-top: 12px !important;
+}
+
+.entry-recent-ui > div:first-child {
+  padding: 13px 18px !important;
+}
+
+.entry-recent-ui h3 {
+  font-size: 14px !important;
+}
+
+.entry-recent-ui a {
+  font-size: 9px !important;
+}
+
+.entry-recent-ui th {
+  padding: 9px 18px !important;
+  font-size: 8px;
+}
+
+.entry-recent-ui td {
+  padding: 10px 18px !important;
+  font-size: 9px;
+}
+
+@media (max-width: 1080px) {
+  .entry-main-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .entry-side-ui {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .vehicle-entry-page {
+    padding-inline: 8px;
+  }
+
+  .entry-side-ui {
+    grid-template-columns: 1fr;
+  }
+
+  .entry-action-bar {
+    display: flex !important;
+  }
+
+  .entry-action-main,
+  .entry-action-main-buttons {
+    display: flex !important;
+    width: 100%;
+  }
+
+  .entry-action-main-buttons {
+    flex-direction: column;
+  }
+
+  .entry-action-hint {
+    text-align: left;
+  }
+}
