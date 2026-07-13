@@ -41,6 +41,15 @@
 .action-menu.compact { width: 180px; padding: 6px; }
 .action-menu button { width: 100%; padding: 9px 10px; border: 0; border-radius: 6px; background: transparent; text-align: left; cursor: pointer; }
 .action-menu button:hover { background: #f2f4f7; }
+.action-menu.profile-menu { top: calc(100% + 7px); width: 164px; padding: 5px; border-color: #d9e0e9; border-radius: 8px; box-shadow: 0 10px 24px rgba(15,23,42,.14); }
+.action-menu.profile-menu button { display: flex; min-height: 34px; padding: 7px 9px; align-items: center; gap: 9px; border-radius: 5px; color: #344054; font-family: inherit; font-size: 11px; font-weight: 600; line-height: 1.2; }
+.action-menu.profile-menu button + button { margin-top: 2px; border-top: 1px solid #edf0f4; border-radius: 0 0 5px 5px; }
+.action-menu.profile-menu button:hover { background: #f2f6fb; color: #174f91; }
+.action-menu.profile-menu button:last-child { color: #9f2d26; }
+.action-menu.profile-menu button:last-child:hover { background: #fff2f1; color: #b42318; }
+.action-menu.profile-menu:not(.manager-account-menu) button::before { width: 17px; flex: 0 0 17px; font-family: 'Material Symbols Outlined'; font-size: 17px; font-weight: 400; line-height: 1; }
+.action-menu.profile-menu:not(.manager-account-menu) button:first-child::before { content: 'person'; }
+.action-menu.profile-menu:not(.manager-account-menu) button:last-child::before { content: 'logout'; }
 .layout-content { max-width: 1460px; margin-left: 260px; padding: 84px 26px 30px; }
 .mobile-menu { display: none; }
 .sidebar-overlay { display: none; }
