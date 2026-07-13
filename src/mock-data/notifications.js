@@ -1,6 +1,6 @@
 export const notificationItems = [
   {
-    id: 1, time: '17:48', fullTime: '17:48:20', type: 'Payment', message: 'Payment pending confirmation', reference: 'PAY-000128', priority: 'High', status: 'Unread', ticketCode: 'TCK-000128', licensePlate: '51A-12345', staff: 'Parking Staff', gate: 'Entry Gate A', currentShift: true,
+    id: 1, time: '17:48', fullTime: '17:48:20', type: 'Payment', message: 'Payment pending confirmation', reference: 'PAY-000128', priority: 'High', status: 'Unread', ticketCode: 'TCK-2026-000128', licensePlate: '51A-12345', staff: 'Parking Staff', gate: 'Exit Gate B', currentShift: true,
     description: 'Payment was initiated but confirmation has not been received from the payment gateway. Please review before vehicle exit is finalized.',
   },
   {
@@ -12,7 +12,7 @@ export const notificationItems = [
     description: 'Floor 1 has exceeded the recommended occupancy threshold. Direct new vehicles to another floor.',
   },
   {
-    id: 4, time: '15:35', fullTime: '15:35:44', type: 'Lost Ticket', message: 'Lost ticket case updated', reference: 'LT-00005', priority: 'High', status: 'Unread', ticketCode: 'TCK-000105', licensePlate: '29B-87654', staff: 'Parking Staff', gate: 'Exit Gate B', currentShift: true,
+    id: 4, time: '17:20', fullTime: '17:20:00', type: 'Lost Ticket', message: 'Lost ticket case submitted', reference: 'LT-00008', priority: 'High', status: 'Unread', ticketCode: 'TCK-2026-000124', licensePlate: '59A-77123', staff: 'Parking Staff', gate: 'Exit Gate B', currentShift: true,
     description: 'The lost ticket case has new verification information and is waiting for staff review.',
   },
   {

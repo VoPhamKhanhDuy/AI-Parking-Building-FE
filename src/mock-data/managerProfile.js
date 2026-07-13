@@ -35,7 +35,7 @@ export const managerProfileData = {
   activities: [
     ['Today 17:35', 'Daily operations report exported', 'RPT-2026-00012', 'Completed'],
     ['Today 17:30', 'Daily operations report reviewed', 'RPT-2026-00012', 'Completed'],
-    ['Today 16:45', 'Pending payment case reviewed', 'PAY-000129', 'Pending'],
+    ['Today 17:48', 'Pending payment case reviewed', 'PAY-000128', 'Pending'],
     ['Today 15:20', 'Zone B capacity checked', 'Zone B', 'Completed'],
   ],
 }

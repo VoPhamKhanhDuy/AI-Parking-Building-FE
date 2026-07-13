@@ -5,7 +5,7 @@ import { ROUTE_PATHS } from '../../routes/routePaths'
 import { formatPaidAmount, getExitCompletion } from './exitSuccessService'
 import './ExitSuccessPage.css'
 
-const DEFAULT_SESSION = { id: 1, licensePlate: '51A-12345', ticketCode: 'TCK-2026-000128', slotId: 'B2-18', entryTime: '2026-07-13 14:32:05', exitTime: '2026-07-13 17:48:20', baseFee: 25000, surcharge: 0, paymentMethod: 'QR Payment' }
+const DEFAULT_SESSION = { id: 125, licensePlate: '30A-99887', ticketCode: 'TCK-2026-000125', slotId: 'EV04', entryTime: '2026-07-13 14:25:33', exitTime: '2026-07-13 16:55:30', baseFee: 20000, surcharge: 0, paymentMethod: 'QR Payment' }
 function Pair({ label, value, accent }) { return <div><dt>{label}</dt><dd className={accent || ''}>{value}</dd></div> }
 
 function ExitSuccessPage() {

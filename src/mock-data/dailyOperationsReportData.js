@@ -19,15 +19,15 @@ export const dailyOperationsReportData = {
   revenue: [
     { label: 'Total Revenue', value: '12,850,000 VND' },
     { label: 'Cash Payment', value: '3,200,000 VND' },
-    { label: 'QR Payment', value: '6,750,000 VND' },
+    { label: 'QR Payment', value: '7,550,000 VND' },
     { label: 'Card Payment', value: '2,100,000 VND' },
     { label: 'Pending Payment', value: '800,000 VND' },
   ],
   zones: [
-    { zone: 'Zone A', type: 'Motorcycle', total: 120, occupied: 82, available: 38, occupancy: '68%', status: 'Normal' },
-    { zone: 'Zone B', type: 'Car', total: 180, occupied: 146, available: 34, occupancy: '81%', status: 'High' },
-    { zone: 'Zone C', type: 'EV Charging', total: 80, occupied: 61, available: 19, occupancy: '76%', status: 'Normal' },
-    { zone: 'Zone D', type: 'Reserved / VIP', total: 40, occupied: 18, available: 22, occupancy: '45%', status: 'Normal' },
+    { zone: 'Zone A', type: 'Motorcycle', total: 120, occupied: 82, available: 31, occupancy: '68%', status: 'Normal' },
+    { zone: 'Zone B', type: 'Car', total: 284, occupied: 220, available: 45, occupancy: '77%', status: 'High' },
+    { zone: 'Zone C', type: 'EV Charging', total: 80, occupied: 30, available: 30, occupancy: '38%', status: 'Maintenance' },
+    { zone: 'Zone D', type: 'Reserved / VIP', total: 40, occupied: 11, available: 17, occupancy: '28%', status: 'Normal' },
   ],
   tickets: [
     { type: 'Standard Parking', count: 221, completed: 214, pending: 5, issues: 2 },
@@ -39,14 +39,14 @@ export const dailyOperationsReportData = {
   issues: [
     { issue: '3 pending payment cases', detail: 'Review before shift closing', priority: 'Medium' },
     { issue: '2 lost ticket cases', detail: 'Verify against ticket activity logs', priority: 'High' },
-    { issue: 'Zone B high occupancy', detail: 'Peak-hour utilization reached 81%', priority: 'High' },
+    { issue: 'Zone B high occupancy', detail: 'Peak-hour utilization reached 77%', priority: 'High' },
     { issue: 'EV charging maintenance', detail: 'Continue maintenance monitoring', priority: 'Low' },
   ],
   managerNote: 'Pending payment cases should be reviewed before shift closing. Lost ticket records must be verified with ticket activity logs.',
   reviewActions: ['Review pending payment cases', 'Confirm lost ticket handling records', 'Check Zone B high occupancy period', 'Verify export before submitting report'],
   activities: [
     { time: 'Today 17:20', activity: 'Lost ticket case submitted', reference: 'LT-00008', staff: 'Parking Staff', status: 'Pending Review' },
-    { time: 'Today 16:45', activity: 'Payment pending confirmation', reference: 'PAY-000129', staff: 'Phạm Thu Hà', status: 'Pending' },
+    { time: 'Today 17:48', activity: 'Payment pending confirmation', reference: 'PAY-000128', staff: 'Phạm Thu Hà', status: 'Pending' },
     { time: 'Today 15:30', activity: 'Zone B high occupancy alert', reference: 'Zone B', staff: 'System', status: 'Resolved' },
     { time: 'Today 14:10', activity: 'Daily report generated', reference: 'RPT-2026-00012', staff: 'Manager', status: 'Ready' },
   ],

@@ -25,15 +25,15 @@ export const staffActivityData = {
     { area: 'Zone B Support', value: 22, label: '22 handled sessions' },
   ],
   pendingReviews: [
-    { reference: 'PAY-000129', text: 'Payment pending confirmation by Phạm Thu Hà', priority: 'High' },
+    { reference: 'PAY-000128', text: 'Payment pending confirmation by Phạm Thu Hà', priority: 'High' },
     { reference: 'LT-00008', text: 'Lost ticket case submitted by Parking Staff', priority: 'Medium' },
     { reference: 'Zone B', text: 'High occupancy alert handled by Trần Minh Đức', priority: 'Low' },
   ],
   activities: [
     { time: 'Today 17:20', staff: 'Parking Staff', activity: 'Lost ticket case submitted', reference: 'LT-00008', area: 'Exit Gate B', status: 'Pending Review' },
-    { time: 'Today 16:45', staff: 'Phạm Thu Hà', activity: 'Payment pending confirmation', reference: 'PAY-000129', area: 'Exit Gate B', status: 'Pending' },
+    { time: 'Today 17:48', staff: 'Phạm Thu Hà', activity: 'Payment pending confirmation', reference: 'PAY-000128', area: 'Exit Gate B', status: 'Pending' },
     { time: 'Today 15:30', staff: 'Trần Minh Đức', activity: 'Zone B high occupancy handled', reference: 'Zone B', area: 'Zone B', status: 'Resolved' },
-    { time: 'Today 14:20', staff: 'Nguyễn Văn An', activity: 'Vehicle entry processed', reference: 'TCK-000128', area: 'Entry Gate A', status: 'Completed' },
+    { time: 'Today 14:32', staff: 'Nguyễn Văn An', activity: 'Vehicle entry processed', reference: 'TCK-2026-000128', area: 'Entry Gate A', status: 'Completed' },
     { time: 'Today 13:45', staff: 'Lê Hoàng Nam', activity: 'Shift coverage checked', reference: 'SHIFT-001', area: 'Building A', status: 'Completed' },
   ],
   managerNote: 'Staff activity is stable. Pending payment and lost ticket cases should be reviewed before shift closing. Exit Gate B workload is higher than other areas.',

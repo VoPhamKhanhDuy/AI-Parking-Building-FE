@@ -18,8 +18,8 @@ export const staffProfileData = {
     denied: ['Pricing Rules', 'Users & Roles'],
   },
   activities: [
-    ['17:48:20', 'Payment completed', 'PAY-000128 / 51A-12345', 'Completed'],
-    ['17:45:10', 'Vehicle exit processed', 'TCK-000128 / 51A-12345', 'Completed'],
-    ['14:32:05', 'Ticket created', 'TCK-000128 / 51A-12345', 'Created'],
+    ['17:48:20', 'Payment pending confirmation', 'PAY-000128 / 51A-12345', 'Pending'],
+    ['14:32:05', 'Ticket created', 'TCK-2026-000128 / 51A-12345', 'Created'],
+    ['14:32:05', 'Slot B2-18 assigned', 'TCK-2026-000128 / 51A-12345', 'Completed'],
   ],
 }

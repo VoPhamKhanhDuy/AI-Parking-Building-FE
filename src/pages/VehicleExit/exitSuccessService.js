@@ -12,7 +12,7 @@ export async function getExitCompletion(session) {
   const exitTime = session.exitTime || new Date().toLocaleString('vi-VN', { hour12: false })
   return wait({
     session: { ...session, exitTime, paymentStatus: 'Paid', status: 'Completed' },
-    receipt: { id: `PAY-${new Date().getFullYear()}-${String(session.id || 1).padStart(6, '0')}`, baseFee: money(session.baseFee), surcharge: money(session.surcharge), discount: '0 VND', totalPaid: money(amount), method: session.paymentMethod || 'QR Payment', staff: 'Parking Staff' },
+    receipt: { id: session.paymentId || `PAY-${String(session.id || 1).padStart(6, '0')}`, baseFee: money(session.baseFee), surcharge: money(session.surcharge), discount: '0 VND', totalPaid: money(amount), method: session.paymentMethod || 'QR Payment', staff: 'Parking Staff' },
     slotRelease: { slotId: session.slotId, previousStatus: 'Occupied', newStatus: 'Available', sessionStatus: 'Closed', logStatus: 'Saved' },
     checks: ['Ticket verified', 'Fee calculated', 'Payment completed', 'Vehicle exit confirmed', `Slot ${session.slotId} released`, 'Session closed', 'Transaction log saved'],
     recentExits: mockRecentExits.filter((item) => ['Exited', 'Completed', 'Paid'].includes(item.status)).slice(0, 3),

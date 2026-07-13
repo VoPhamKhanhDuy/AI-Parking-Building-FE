@@ -264,8 +264,8 @@ function VehicleEntryPage() {
             <button className="px-3 py-1.5 bg-white border border-outline-variant rounded-lg text-xs font-medium hover:bg-surface-container-high transition-colors" onClick={() => handlePresetScan('30A-99887', 'Electric Vehicle', 'Reservation')}>
               ⚡ 30A-99887 (Reserved EV)
             </button>
-            <button className="px-3 py-1.5 bg-white border border-outline-variant rounded-lg text-xs font-medium hover:bg-surface-container-high transition-colors" onClick={() => handlePresetScan('59A-11111', 'Motorcycle', 'Monthly Pass')}>
-              🏍️ 59A-11111 (Monthly Motorbike)
+            <button className="px-3 py-1.5 bg-white border border-outline-variant rounded-lg text-xs font-medium hover:bg-surface-container-high transition-colors" onClick={() => handlePresetScan('77C-90211', 'Motorcycle', 'Monthly Pass')}>
+              🏍️ 77C-90211 (Monthly Motorbike)
             </button>
           </div>
         </div>
