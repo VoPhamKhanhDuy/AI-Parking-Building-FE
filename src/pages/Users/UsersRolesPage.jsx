@@ -354,7 +354,7 @@ function UsersRolesPage() {
           
           {/* Page Header */}
           <section>
-            <h2 className="font-headline-lg text-headline-lg text-on-surface">Users &amp; Roles Management</h2>
+            <h2 className="font-headline-md text-headline-md text-on-surface">Users &amp; Roles Management</h2>
             <p className="font-body-md text-body-md text-on-surface-variant mt-0.5">Manage staff accounts, role assignments, account status, and permission levels.</p>
           </section>
 
