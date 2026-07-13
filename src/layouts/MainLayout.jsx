@@ -15,7 +15,6 @@ const navigationItems = [
   ['calendar_month', 'Monthly Pass', ROUTE_PATHS.monthlyPass],
   ['event_available', 'Reservation', ROUTE_PATHS.reservation],
   ['find_replace', 'Lost Ticket', ROUTE_PATHS.lostTicket],
-  ['assessment', 'Reports', '/reports'],
   ['history', 'System Logs', ROUTE_PATHS.systemLogs],
 ]
 

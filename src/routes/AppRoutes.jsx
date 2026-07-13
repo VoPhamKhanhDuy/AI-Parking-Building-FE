@@ -25,6 +25,7 @@ import VehicleExitPage from '../pages/VehicleExit/VehicleExitPage'
 import ExitSuccessPage from '../pages/VehicleExit/ExitSuccessPage'
 import PaymentPage from '../pages/Payment/PaymentPage'
 import TicketsPage from '../pages/Tickets/TicketsPage'
+import MonthlyPassPage from '../pages/MonthlyPass/MonthlyPassPage'
 import LostTicketPage from '../pages/LostTicket/LostTicketPage'
 import ReservationPage from '../pages/Reservation/ReservationPage'
 import { ROUTE_PATHS } from './routePaths'
@@ -74,6 +75,7 @@ function AppRoutes() {
       <Route path={ROUTE_PATHS.vehicleExitSuccess} element={<ExitSuccessPage />} />
       <Route path={ROUTE_PATHS.payment} element={<PaymentPage />} />
       <Route path={ROUTE_PATHS.tickets} element={<TicketsPage />} />
+      <Route path={ROUTE_PATHS.monthlyPass} element={<MonthlyPassPage />} />
       <Route path={ROUTE_PATHS.lostTicket} element={<LostTicketPage />} />
       <Route path={ROUTE_PATHS.reservation} element={<ReservationPage />} />
       <Route path="/not-found" element={<ComingSoonPage />} />
