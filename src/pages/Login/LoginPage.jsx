@@ -30,6 +30,8 @@ function LoginPage() {
     if (result.success) {
       if (result.user?.role === 'Admin') {
         navigate(ROUTE_PATHS.adminDashboard)
+      } else if (result.user?.role === 'Manager') {
+        navigate(ROUTE_PATHS.managerDashboard)
       } else {
         navigate(ROUTE_PATHS.dashboard)
       }
