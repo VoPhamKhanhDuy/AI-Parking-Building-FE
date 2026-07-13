@@ -101,7 +101,7 @@ function AdminProfilePage() {
       `}} />
 
       {/* SideNavBar (Professional Dark) */}
-      <aside className="fixed left-0 top-0 h-full w-[280px] z-40 overflow-y-auto bg-[#1e293b] flex flex-col">
+      <aside className="fixed left-0 top-0 h-full w-[240px] z-40 overflow-y-auto bg-[#1e293b] flex flex-col">
         <div className="px-6 py-8 mb-4">
           <h1 className="text-headline-md font-headline-md font-bold text-white mb-1">AI Command Center</h1>
           <p className="text-slate-400 text-label-md font-label-md">System Administrator Portal</p>
@@ -140,7 +140,7 @@ function AdminProfilePage() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 ml-[280px] flex flex-col min-w-0 bg-[#f7f9fc]">
+      <main className="flex-1 ml-[240px] flex flex-col min-w-0 bg-[#f7f9fc]">
         
         {/* TopNavBar */}
         <header className="h-14 flex items-center justify-between px-8 bg-white border-b border-outline-variant sticky top-0 z-30">
@@ -194,7 +194,7 @@ function AdminProfilePage() {
         </header>
 
         {/* Content Canvas */}
-        <div className="p-6 space-y-6 max-w-[1600px] mx-auto w-full">
+        <div className="p-4 space-y-4 max-w-[1280px] mx-auto w-full">
           
           {/* Breadcrumb heading */}
           <header className="space-y-1">
@@ -203,17 +203,17 @@ function AdminProfilePage() {
               <span className="material-symbols-outlined text-[16px] text-on-surface-variant">chevron_right</span>
               <strong className="text-on-surface font-semibold text-body-sm">Admin Profile</strong>
             </div>
-            <h2 className="font-headline-lg text-headline-lg text-on-surface">Admin Profile</h2>
-            <p className="font-body-md text-body-md text-on-surface-variant mt-0.5">Manage administrative credentials, IT system access clearances, and logs overview.</p>
+            <h2 className="font-headline-md text-headline-md font-bold text-on-surface">Admin Profile</h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Manage administrative credentials, IT system access clearances, and logs overview.</p>
           </header>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
             
             {/* Left: General Facts & Shift Status */}
-            <div className="lg:col-span-8 space-y-6">
+            <div className="lg:col-span-8 space-y-4">
               
               {/* Profile Main Card */}
-              <div className="glass-card rounded-lg p-5 bg-white space-y-6">
+              <div className="glass-card rounded-lg p-4 bg-white space-y-4">
                 <h3 className="font-body-lg font-bold text-on-surface m-0 border-b border-outline-variant pb-3">Admin Information</h3>
                 
                 <div className="flex items-center gap-4">
@@ -260,7 +260,7 @@ function AdminProfilePage() {
               </div>
 
               {/* Shift and checks */}
-              <div className="glass-card rounded-lg p-5 bg-white space-y-4">
+              <div className="glass-card rounded-lg p-4 bg-white space-y-4">
                 <h3 className="font-body-lg font-bold text-on-surface m-0 border-b border-outline-variant pb-3">Active Shift Security Checks</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-3 bg-slate-50 p-4 rounded border border-slate-100">
@@ -292,10 +292,10 @@ function AdminProfilePage() {
             </div>
 
             {/* Right: Security & Permissions */}
-            <div className="lg:col-span-4 space-y-6">
+            <div className="lg:col-span-4 space-y-4">
               
               {/* Security info card */}
-              <div className="glass-card rounded-lg p-5 bg-white space-y-4">
+              <div className="glass-card rounded-lg p-4 bg-white space-y-4">
                 <h3 className="font-body-lg font-bold text-on-surface m-0 border-b border-outline-variant pb-2">IT Security Policies</h3>
                 <div className="space-y-3 text-body-sm">
                   {profile.security.map(([label, val]) => (
@@ -308,7 +308,7 @@ function AdminProfilePage() {
               </div>
 
               {/* Clearance Levels */}
-              <div className="glass-card rounded-lg p-5 bg-white space-y-4">
+              <div className="glass-card rounded-lg p-4 bg-white space-y-4">
                 <h3 className="font-body-lg font-bold text-on-surface m-0 border-b border-outline-variant pb-2">Clearence Access Permissions</h3>
                 
                 <div className="space-y-3">

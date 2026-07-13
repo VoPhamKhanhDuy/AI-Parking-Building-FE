@@ -300,8 +300,8 @@ function AdminDashboardPage() {
           
           {/* Page Header */}
           <section>
-            <h2 className="font-headline-lg text-headline-lg text-on-surface">Admin Dashboard</h2>
-            <p className="font-body-md text-body-md text-on-surface-variant mt-0.5">Monitor system users, account status, security alerts, and administrative activity.</p>
+            <h2 className="font-headline-md text-headline-md font-bold text-on-surface">Admin Dashboard</h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Monitor system users, account status, security alerts, and administrative activity.</p>
           </section>
 
           {/* KPI Row */}
