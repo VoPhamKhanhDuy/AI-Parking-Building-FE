@@ -3,6 +3,7 @@ import LoginPage from '../pages/Login/LoginPage'
 import DashboardPage from '../pages/Dashboard/DashboardPage'
 import AdminDashboardPage from '../pages/Dashboard/AdminDashboardPage'
 import ManagerDashboardPage from '../pages/ManagerDashboard/ManagerDashboardPage'
+import ManagerProfilePage from '../pages/ManagerProfile/ManagerProfilePage'
 import ParkingStructurePage from '../pages/ParkingStructure/ParkingStructurePage'
 import PricingRulesPage from '../pages/Pricing/PricingRulesPage'
 import ReportsManagementPage from '../pages/Reports/ReportsManagementPage'
@@ -51,6 +52,7 @@ function AppRoutes() {
       <Route path={ROUTE_PATHS.dashboard} element={<DashboardPage />} />
       <Route path={ROUTE_PATHS.adminDashboard} element={<AdminDashboardPage />} />
       <Route path={ROUTE_PATHS.managerDashboard} element={<ManagerDashboardPage />} />
+      <Route path={ROUTE_PATHS.managerProfile} element={<ManagerProfilePage />} />
       <Route path={ROUTE_PATHS.parkingStructure} element={<ParkingStructurePage />} />
       <Route path={ROUTE_PATHS.pricing} element={<PricingRulesPage />} />
       <Route path={ROUTE_PATHS.reports} element={<ReportsManagementPage />} />

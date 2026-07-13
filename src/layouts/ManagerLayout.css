@@ -1,4 +1,11 @@
 .manager-nav-label{padding:14px 13px 5px;color:rgba(255,255,255,.38);font-size:8px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.manager-layout .gate-pill{min-width:100px}.manager-layout .shift-info strong{color:#172033}
 .manager-layout .sidebar{width:220px}.manager-layout .topbar{left:220px}.manager-layout .layout-content{margin-left:220px}.manager-layout .brand{padding-right:14px;padding-left:16px}.manager-layout .brand strong{font-size:15px}.manager-layout .side-nav{padding-right:8px;padding-left:8px}.manager-layout .side-nav a{padding-right:11px;padding-left:11px}
 .manager-layout .layout-content{max-width:none}
+.manager-layout .manager-account-menu{top:calc(100% + 7px);width:164px;padding:5px;border-color:#d9e0e9;border-radius:8px;box-shadow:0 10px 24px rgba(15,23,42,.14)}
+.manager-layout .manager-account-menu button{display:flex;min-height:34px;padding:7px 9px;align-items:center;gap:9px;border-radius:5px;color:#344054;font-family:inherit;font-size:11px;font-weight:600;line-height:1.2}
+.manager-layout .manager-account-menu button+button{margin-top:2px;border-top:1px solid #edf0f4;border-radius:0 0 5px 5px}
+.manager-layout .manager-account-menu button:hover{background:#f2f6fb;color:#174f91}
+.manager-layout .manager-account-menu .material-symbols-outlined{width:17px;font-size:17px;font-weight:400}
+.manager-layout .manager-account-menu .manager-sign-out{color:#9f2d26}
+.manager-layout .manager-account-menu .manager-sign-out:hover{background:#fff2f1;color:#b42318}
 @media(max-width:767px){.manager-layout .sidebar{width:220px}.manager-layout .topbar{left:0}.manager-layout .layout-content{margin-left:0}}

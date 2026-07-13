@@ -3,6 +3,7 @@ export const ROUTE_PATHS = {
   dashboard: '/dashboard',
   adminDashboard: '/admin-dashboard',
   managerDashboard: '/manager-dashboard',
+  managerProfile: '/manager/profile',
   users: '/users',
   auditLogs: '/admin/audit-logs',
   adminNotifications: '/admin/notifications',
