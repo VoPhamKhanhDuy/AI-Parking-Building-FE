@@ -1,6 +1,6 @@
 export const staffProfileData = {
-  initials: 'PS',
-  name: 'Parking Staff',
+  initials: 'NA',
+  name: 'Nguyễn Văn An',
   role: 'Entry Gate Operator',
   gate: 'Entry Gate A',
   department: 'Parking Operations',
