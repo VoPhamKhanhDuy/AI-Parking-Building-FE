@@ -50,6 +50,13 @@
 .action-menu.profile-menu:not(.manager-account-menu) button::before { width: 17px; flex: 0 0 17px; font-family: 'Material Symbols Outlined'; font-size: 17px; font-weight: 400; line-height: 1; }
 .action-menu.profile-menu:not(.manager-account-menu) button:first-child::before { content: 'person'; }
 .action-menu.profile-menu:not(.manager-account-menu) button:last-child::before { content: 'logout'; }
+.action-menu.staff-settings-menu { top: calc(100% + 7px); width: 176px; padding: 5px; border-color: #d9e0e9; border-radius: 8px; box-shadow: 0 10px 24px rgba(15,23,42,.14); }
+.action-menu.staff-settings-menu button { display: flex; min-height: 34px; padding: 7px 9px; align-items: center; gap: 9px; border-radius: 5px; color: #344054; font-family: inherit; font-size: 11px; font-weight: 600; line-height: 1.2; }
+.action-menu.staff-settings-menu button + button { margin-top: 2px; }
+.action-menu.staff-settings-menu button:hover { background: #f2f6fb; color: #174f91; }
+.action-menu.staff-settings-menu .material-symbols-outlined { width: 17px; flex: 0 0 17px; font-size: 17px; font-weight: 400; }
+.action-menu.staff-settings-menu .staff-settings-signout { margin-top: 4px; border-top: 1px solid #edf0f4; border-radius: 0 0 5px 5px; color: #9f2d26; }
+.action-menu.staff-settings-menu .staff-settings-signout:hover { background: #fff2f1; color: #b42318; }
 .layout-content { max-width: 1460px; margin-left: 260px; padding: 84px 26px 30px; }
 .mobile-menu { display: none; }
 .sidebar-overlay { display: none; }

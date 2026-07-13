@@ -66,7 +66,7 @@ function StaffProfilePage() {
         </section>
 
         <section className="profile-middle-grid">
-          <article className="profile-card security-card"><h2>Account Security</h2><dl>{profile.security.map(([label, value]) => <div key={label}><dt>{label}</dt><dd className={label === 'Current Session' ? 'active-text' : ''}>{value}</dd></div>)}</dl><div className="security-actions"><button onClick={openPasswordModal}>Change Password</button><button onClick={logout}>Sign Out</button></div></article>
+          <article id="account-security" className="profile-card security-card"><h2>Account Security</h2><dl>{profile.security.map(([label, value]) => <div key={label}><dt>{label}</dt><dd className={label === 'Current Session' ? 'active-text' : ''}>{value}</dd></div>)}</dl><div className="security-actions"><button onClick={openPasswordModal}>Change Password</button><button onClick={logout}>Sign Out</button></div></article>
           <article className="profile-card permissions-card"><h2>My Permissions</h2><section><h3>Allowed</h3><div className="permission-tags allowed">{profile.permissions.allowed.map((item) => <span key={item}>{item}</span>)}</div></section><section><h3>Limited Access</h3><div className="limited-list">{profile.permissions.limited.map(([name, access]) => <span key={name}><i>{name}</i><strong>{access}</strong></span>)}</div></section><section><h3>No Access</h3><div className="permission-tags denied">{profile.permissions.denied.map((item) => <span key={item}>{item}</span>)}</div></section></article>
         </section>
 
