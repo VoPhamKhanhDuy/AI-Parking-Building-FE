@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { adminProfileData } from '../../mock-data/adminProfile'
 import { ROLE_CREDENTIALS } from '../../mock-data/users'
 import { ROUTE_PATHS } from '../../routes/routePaths'
+import { formatCurrentTime } from '../Dashboard/dashboardService'
 import '../../layouts/MainLayout.css'
 
 const emptyPasswordForm = { currentPassword: '', newPassword: '', confirmPassword: '' }
@@ -14,6 +15,14 @@ function AdminProfilePage() {
   const [passwordForm, setPasswordForm] = useState(emptyPasswordForm)
   const [formError, setFormError] = useState('')
   const [openMenu, setOpenMenu] = useState(null)
+  const [time, setTime] = useState(() => formatCurrentTime ? formatCurrentTime() : new Date().toLocaleTimeString('en-GB'))
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(formatCurrentTime ? formatCurrentTime() : new Date().toLocaleTimeString('en-GB'))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
   
   // Custom Toast state
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
@@ -70,23 +79,6 @@ function AdminProfilePage() {
             border: 1px solid #e2e8f0;
             box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
         }
-        .profile-toast-custom {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            z-index: 999;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 18px;
-            border-radius: 6px;
-            background: #1e293b;
-            color: white;
-            font-size: 13px;
-            font-weight: 500;
-            box-shadow: 0 4px 12px rgba(15,23,42,0.15);
-            animation: slideInUp 0.2s ease-out;
-        }
         .admin-profile-circle {
             display: grid;
             width: 42px;
@@ -136,19 +128,20 @@ function AdminProfilePage() {
         {/* TopNavBar */}
         <header className="h-12 flex items-center justify-between px-6 bg-white border-b border-outline-variant sticky top-0 z-30">
           <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2 text-on-surface-variant font-label-md">
-              <span className="w-2 h-2 rounded-full bg-primary"></span>
-              <span>System Control</span>
-            </div>
-            <div className="h-4 w-px bg-outline-variant"></div>
-            <div className="flex items-center gap-2 text-on-surface-variant font-label-md">
-              <span className="material-symbols-outlined text-[18px]">verified_user</span>
-              <span>Security Mode: Normal</span>
-            </div>
-            <div className="h-4 w-px bg-outline-variant"></div>
-            <div className="flex items-center gap-2 text-on-surface-variant font-label-md">
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
-              <span>System Status: Online</span>
+            <span className="gate-pill"><i></i>Building A</span>
+            <span className="clock">
+              <span className="material-symbols-outlined">schedule</span>
+              {time}
+            </span>
+            <div className="shift-info">
+              <span>
+                <small>Operation Mode</small>
+                <strong>Normal</strong>
+              </span>
+              <span>
+                <small>System Status</small>
+                <strong>Online</strong>
+              </span>
             </div>
           </div>
           <div className="topbar-actions">
@@ -469,8 +462,10 @@ function AdminProfilePage() {
 
       {/* Global custom Toast */}
       {toast.show && (
-        <div className="profile-toast-custom">
-          <span className="material-symbols-outlined text-green-500">check_circle</span>
+        <div className={`profile-toast-custom ${toast.type || 'success'}`}>
+          <span className="material-symbols-outlined">
+            {toast.type === 'error' ? 'cancel' : 'check_circle'}
+          </span>
           <span>{toast.message}</span>
         </div>
       )}
