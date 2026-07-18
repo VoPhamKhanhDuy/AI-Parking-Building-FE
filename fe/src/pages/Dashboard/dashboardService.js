@@ -1,7 +1,7 @@
 import { api } from '../../core/api/apiClient'
 import logger from '../../core/utils/logger'
 
-const useMockData = import.meta.env.VITE_USE_MOCK_DATA !== 'false'
+const useMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true'
 
 export async function getDashboardData() {
   if (useMockData) {

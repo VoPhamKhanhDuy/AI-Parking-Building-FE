@@ -19,17 +19,18 @@ function ParkingStructurePage() {
 
   useEffect(() => { getParkingStructure().then(setData) }, [])
 
-  const filteredZones = useMemo(() => data?.zones.filter((item) => (
+  const filteredZones = useMemo(() => (data?.zones || []).filter((item) => (
     `${item.location} ${item.zone} ${item.type}`.toLowerCase().includes(query.toLowerCase())
-  )) ?? [], [data, query])
+  )), [data, query])
 
-  const detail = data?.zones.find((item) => item.location === floor && item.zone === selectedZone)
-    ?? data?.zones.find((item) => item.location === floor)
-    ?? data?.zones[0]
+  const detail = (data?.zones || []).find((item) => item.location === floor && item.zone === selectedZone)
+    ?? (data?.zones || []).find((item) => item.location === floor)
+    ?? (data?.zones || [])[0]
+    ?? { zone: 'N/A', location: 'N/A', type: 'Standard', status: 'Available', capacity: 0, occupied: 0, available: 0, reserved: 0, maintenance: 0 }
 
   const selectFloor = (nextFloor) => {
     setFloor(nextFloor)
-    const firstZone = data.zones.find((item) => item.location === nextFloor)
+    const firstZone = (data?.zones || []).find((item) => item.location === nextFloor)
     if (firstZone) setSelectedZone(firstZone.zone)
   }
 

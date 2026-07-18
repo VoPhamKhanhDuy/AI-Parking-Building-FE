@@ -1,32 +1,23 @@
 export const dashboardData = {
-  kpis: [
-    { label: 'Current Utilization', value: '76%', detail: '388 of 511 operational slots in use' },
-    { label: 'Available Slots', value: '123', detail: 'Across all floors' },
-    { label: 'Active Sessions', value: '342', detail: 'Vehicles currently parked' },
-    { label: 'Today Revenue', value: '12.85M', unit: 'VND', detail: '284 paid transactions', accent: true },
-  ],
-  floors: [
-    { area: 'Basement', capacity: 120, occupied: 82, available: 31, reserved: 7, status: 'Normal' },
-    { area: 'Floor 1', capacity: 140, occupied: 115, available: 18, reserved: 7, status: 'High Occupancy' },
-    { area: 'Floor 2', capacity: 144, occupied: 105, available: 27, reserved: 12, status: 'Normal' },
-    { area: 'Floor 3', capacity: 120, occupied: 41, available: 47, reserved: 19, status: 'Normal' },
-  ],
-  systemStatuses: [
-    ['AI Slot Engine', 'Ready'], ['Camera Scan', 'Active'], ['Payment Gateway', 'Online'], ['Gate A', 'Online'],
-  ],
-  alerts: [
-    { type: 'warning', text: 'Floor 1 occupancy above 80%' },
-    { type: 'info', text: '3 payments waiting for confirmation' },
-  ],
-  operations: [
-    ['Active Sessions', '342'], ['Pending Payments', '9'], ['Lost Ticket Cases', '5'],
-    ['Reservations Today', '21'], ['Vehicle Entries', '284'], ['Vehicle Exits', '271'],
-  ],
-  activities: [
-    ['17:48:20', 'Payment pending confirmation', '51A-12345 / PAY-000128', 'Parking Staff', 'Pending'],
-    ['14:32:05', 'Ticket created', '51A-12345 / TCK-2026-000128', 'Parking Staff', 'Active'],
-    ['14:32:05', 'Slot assigned', 'B2-18', 'System', 'Occupied'],
-    ['16:20:11', 'Lost ticket processed', '29B-87654', 'Parking Staff', 'Completed'],
-    ['15:00:00', 'Reservation checked in', 'RSV-2026-00046', 'Parking Staff', 'Checked In'],
+  stats: {
+    ActiveSessions: 342,
+    TodayEntries: 284,
+    TodayExits: 271,
+    TodayRevenue: 12850000,
+    OccupancyRate: 76,
+    TotalSlots: 511,
+    OccupiedSlots: 388,
+    AvailableSlots: 123,
+    PendingPayments: 9,
+    PendingReservations: 21,
+    MonthlyPassesActive: 156,
+  },
+  recentEntries: [
+    { Id: 1, Time: '2026-07-18T17:48:20', TicketCode: 'TCK-001', LicensePlate: '51A-12345', SlotCode: 'B2-18' },
+    { Id: 2, Time: '2026-07-18T14:32:05', TicketCode: 'TCK-002', LicensePlate: '29B-87654', SlotCode: 'F1-07' },
+    { Id: 3, Time: '2026-07-18T14:31:00', TicketCode: 'TCK-003', LicensePlate: '43C-11223', SlotCode: 'F2-15' },
+    { Id: 4, Time: '2026-07-18T13:20:10', TicketCode: 'TCK-004', LicensePlate: '60A-99887', SlotCode: 'B1-22' },
+    { Id: 5, Time: '2026-07-18T12:05:30', TicketCode: 'TCK-005', LicensePlate: '75B-33445', SlotCode: 'F3-09' },
+    { Id: 6, Time: '2026-07-18T11:45:00', TicketCode: 'TCK-006', LicensePlate: '51C-66778', SlotCode: 'F1-33' },
   ],
 }

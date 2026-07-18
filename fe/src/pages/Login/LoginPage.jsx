@@ -30,6 +30,7 @@ function Icon({ children, filled = false }) {
 }
 
 function LoginPage() {
+  console.log('LoginPage rendering')
   const navigate = useNavigate()
   const location = useLocation()
   const { login, loading: authLoading } = useAuth()

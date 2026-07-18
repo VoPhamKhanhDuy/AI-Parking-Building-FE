@@ -34,14 +34,18 @@ function ReportsManagementPage() {
   const [filters, setFilters] = useState({ date: 'Today', type: 'All Reports', facility: 'Building A', floor: 'All Floors' })
   const [notice, setNotice] = useState('')
 
-  useEffect(() => { getReports().then(setData) }, [])
-  const reports = useMemo(() => data?.reports.filter((report) => {
+  useEffect(() => { 
+    getReports().then((result) => {
+      if (result) setData(result)
+    })
+  }, [])
+  const reports = useMemo(() => (data?.reports || []).filter((report) => {
     const matchesSearch = Object.values(report).join(' ').toLowerCase().includes(query.toLowerCase())
     const matchesDate = filters.date === 'Last 7 Days' || report.date === filters.date
     const matchesType = filters.type === 'All Reports' || report.type === filters.type
     return matchesSearch && matchesDate && matchesType
-  }) ?? [], [data, filters.date, filters.type, query])
-  const selected = data?.reports.find((report) => report.id === selectedId) ?? data?.reports[0]
+  }), [data, filters.date, filters.type, query])
+  const selected = (data?.reports || []).find((report) => report.id === selectedId) || (data?.reports || [])[0]
 
   const notify = (message) => {
     setNotice(message)
@@ -52,7 +56,7 @@ function ReportsManagementPage() {
     const { name, value } = event.target
     setFilters((current) => ({ ...current, [name]: value }))
     if (name === 'type' && value !== 'All Reports') {
-      const matchingReport = data.reports.find((report) => report.type === value)
+      const matchingReport = (data?.reports || []).find((report) => report.type === value)
       if (matchingReport) {
         setSelectedId(matchingReport.id)
         setCategory(reportCategory[matchingReport.id])
@@ -67,7 +71,7 @@ function ReportsManagementPage() {
       notify('No generated Ticket Report is available in the current mock data.')
       return
     }
-    const report = data.reports.find((entry) => entry.id === reportId)
+    const report = (data?.reports || []).find((entry) => entry.id === reportId)
     setCategory(item)
     setSelectedId(reportId)
     setFilters((current) => ({ ...current, date: report.date === 'Today' ? 'Today' : 'Last 7 Days', type: report.type, floor: 'All Floors' }))

@@ -5,6 +5,7 @@ import { RequireAuth, RedirectIfAuth } from './AuthGuard'
 
 // Lazy-loaded page imports
 import LoginPage from '../pages/Login/LoginPage'
+import DashboardPage from '../pages/Dashboard/DashboardPage'
 import AdminDashboardPage from '../pages/Dashboard/AdminDashboardPage'
 import ManagerDashboardPage from '../pages/ManagerDashboard/ManagerDashboardPage'
 import ManagerProfilePage from '../pages/ManagerProfile/ManagerProfilePage'
@@ -64,8 +65,18 @@ function ComingSoonPage() {
 
 // Role-based dashboard redirect
 function DashboardRedirect() {
-  const { user } = useAuth()
-  const role = user?.role
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
+  // If no user, redirect to login
+  if (!user) {
+    return <Navigate to={ROUTE_PATHS.login} replace />
+  }
+
+  const role = user?.role || user?.Role
 
   if (role === 'Admin' || role === 'SystemAdmin') {
     return <Navigate to={ROUTE_PATHS.adminDashboard} replace />
@@ -73,15 +84,16 @@ function DashboardRedirect() {
   if (role === 'Manager') {
     return <Navigate to={ROUTE_PATHS.managerDashboard} replace />
   }
-  return <Navigate to={ROUTE_PATHS.dashboard} replace />
+  // Staff, Operator, Attendant -> Staff Dashboard (render directly)
+  return <DashboardPage />
 }
 
 // Role constants
 const ROLES = {
   ADMIN: ['Admin', 'SystemAdmin'],
   MANAGER: ['Admin', 'Manager', 'SystemAdmin'],
-  STAFF: ['Admin', 'Manager', 'Operator', 'Attendant'],
-  OPERATOR: ['Admin', 'Manager', 'Operator', 'SystemAdmin'],
+  STAFF: ['Admin', 'Manager', 'Staff', 'Operator', 'Attendant'],
+  OPERATOR: ['Admin', 'Manager', 'Staff', 'Operator', 'SystemAdmin'],
   ALL_AUTH: [], // No role restriction
 }
 

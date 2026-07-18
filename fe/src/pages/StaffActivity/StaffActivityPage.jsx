@@ -23,14 +23,18 @@ function StaffActivityPage() {
   const [filters, setFilters] = useState(defaultFilters)
   const [notice, setNotice] = useState('')
 
-  useEffect(() => { getStaffActivity().then(setData) }, [])
-  const staff = useMemo(() => data?.staff.filter((item) => matchesFilters(item, filters)) ?? [], [data, filters])
-  const selected = data?.staff.find((item) => item.id === selectedId) ?? data?.staff[0]
+  useEffect(() => { 
+    getStaffActivity().then((result) => {
+      if (result) setData(result)
+    })
+  }, [])
+  const staff = useMemo(() => (data?.staff || []).filter((item) => matchesFilters(item, filters)), [data, filters])
+  const selected = (data?.staff || []).find((item) => item.id === selectedId) || (data?.staff || [])[0]
 
   const updateFilter = (event) => {
     const nextFilters = { ...filters, [event.target.name]: event.target.value }
     setFilters(nextFilters)
-    const visibleStaff = data.staff.filter((item) => matchesFilters(item, nextFilters))
+    const visibleStaff = (data?.staff || []).filter((item) => matchesFilters(item, nextFilters))
     if (!visibleStaff.some((item) => item.id === selectedId) && visibleStaff.length) setSelectedId(visibleStaff[0].id)
   }
   const runAction = async (action, message) => {

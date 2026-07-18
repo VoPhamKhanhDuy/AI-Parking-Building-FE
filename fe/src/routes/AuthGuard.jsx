@@ -5,12 +5,16 @@ import { hasRoleAccess, getDashboardByRole } from './roleUtils'
 
 // Higher-order component for protected routes
 export function RequireAuth({ allowedRoles, children }) {
-  if (!isAuthenticated()) {
+  const auth = isAuthenticated()
+  console.log('RequireAuth - isAuthenticated:', auth)
+  
+  if (!auth) {
     return <Navigate to={ROUTE_PATHS.login} replace />
   }
 
   if (allowedRoles && allowedRoles.length > 0) {
     const userRole = getUserRole()
+    console.log('RequireAuth - userRole:', userRole, 'allowedRoles:', allowedRoles)
     if (!hasRoleAccess(userRole, allowedRoles)) {
       return <Navigate to={ROUTE_PATHS.login} replace />
     }
@@ -21,9 +25,13 @@ export function RequireAuth({ allowedRoles, children }) {
 
 // Redirect authenticated users away from login
 export function RedirectIfAuth({ children }) {
-  if (isAuthenticated()) {
+  const auth = isAuthenticated()
+  console.log('RedirectIfAuth - isAuthenticated:', auth)
+  
+  if (auth) {
     const userRole = getUserRole()
     const redirectTo = getDashboardByRole(userRole)
+    console.log('RedirectIfAuth - redirecting to:', redirectTo)
     return <Navigate to={redirectTo} replace />
   }
 

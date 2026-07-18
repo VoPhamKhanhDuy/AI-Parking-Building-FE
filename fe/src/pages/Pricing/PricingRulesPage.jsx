@@ -31,9 +31,13 @@ function PricingRulesPage() {
   const [query, setQuery] = useState('')
   const [notice, setNotice] = useState('')
 
-  useEffect(() => { getPricingRules().then(setData) }, [])
-  const rules = useMemo(() => data?.rules.filter((rule) => Object.values(rule).join(' ').toLowerCase().includes(query.toLowerCase())) ?? [], [data, query])
-  const selected = data?.rules.find((rule) => rule.code === selectedCode) ?? data?.rules[0]
+  useEffect(() => { 
+    getPricingRules().then((result) => {
+      if (result) setData(result)
+    })
+  }, [])
+  const rules = useMemo(() => (data?.rules || []).filter((rule) => Object.values(rule).join(' ').toLowerCase().includes(query.toLowerCase())), [data, query])
+  const selected = (data?.rules || []).find((rule) => rule.code === selectedCode) || (data?.rules || [])[0]
 
   const notify = (message) => {
     setNotice(message)

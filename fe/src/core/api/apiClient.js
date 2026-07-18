@@ -27,7 +27,7 @@ const clearAuthStorage = () => {
 // Create base axios instance
 const createBaseInstance = () => {
   const instance = axios.create({
-    baseURL: `${API_BASE_URL}/`,
+    baseURL: API_BASE_URL,
     timeout: REQUEST_TIMEOUT,
     headers: {
       'Content-Type': 'application/json'

@@ -12,7 +12,12 @@ export const getRefreshToken = () => localStorage.getItem(REFRESH_KEY)
 
 export const getStoredUser = () => {
   const user = localStorage.getItem(USER_KEY)
-  return user ? JSON.parse(user) : null
+  if (!user) return null
+  const parsed = JSON.parse(user)
+  return {
+    ...parsed,
+    role: parsed.role || parsed.Role
+  }
 }
 
 const setTokens = (accessToken, refreshToken, expiresInSeconds) => {
@@ -40,9 +45,13 @@ export const loginRequest = async (email, password) => {
   try {
     const { data } = await api.post('/auth/login', { email, password })
     setTokens(data.accessToken, data.refreshToken, data.expiresInSeconds)
-    setUser(data.user)
+    const userData = {
+      ...data.user,
+      role: data.user.role || data.user.Role
+    }
+    setUser(userData)
     logger.info('Auth', 'Login successful')
-    return { success: true, user: data.user, accessToken: data.accessToken }
+    return { success: true, user: userData, accessToken: data.accessToken }
   } catch (error) {
     logger.error('Auth', `Login failed: ${error.response?.data?.message || error.message}`)
     return { success: false, message: error.response?.data?.message || 'Login failed. Please check your credentials.' }
@@ -52,8 +61,9 @@ export const loginRequest = async (email, password) => {
 export const getCurrentUser = async () => {
   try {
     const { data } = await api.get('/auth/me')
-    setUser(data)
-    return data
+    const normalized = { ...data, role: data.role || data.Role }
+    setUser(normalized)
+    return normalized
   } catch {
     return null
   }
@@ -78,5 +88,5 @@ export const isAuthenticated = () => {
 
 export const getUserRole = () => {
   const user = getStoredUser()
-  return user?.role || null
+  return user?.role || user?.Role || null
 }

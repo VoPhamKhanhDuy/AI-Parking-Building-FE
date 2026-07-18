@@ -22,7 +22,8 @@ function DashboardPage() {
         setLoading(true)
         const result = await getDashboardData()
         if (!cancelled) {
-          setData(result)
+          const normalized = result.Stats ? { stats: result.Stats, recentEntries: result.RecentEntries || [] } : result
+          setData(normalized)
           setError(null)
         }
       } catch (err) {
@@ -246,12 +247,14 @@ function QuickActions({ navigate }) {
         <h2>Quick Actions</h2>
       </div>
       <div className="quick-actions">
-        {actions.map((action) => (
-          <button key={action.path} onClick={() => navigate(action.path)}>
-            <span className="material-symbols-outlined">{action.icon}</span>
-            {action.label}
-          </button>
-        ))}
+        <div>
+          {actions.map((action) => (
+            <button key={action.path} onClick={() => navigate(action.path)}>
+              <span className="material-symbols-outlined">{action.icon}</span>
+              {action.label}
+            </button>
+          ))}
+        </div>
       </div>
     </article>
   )
