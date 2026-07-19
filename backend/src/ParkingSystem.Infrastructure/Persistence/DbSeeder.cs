@@ -22,6 +22,7 @@ public static class DbSeeder
         await SeedTestUsersAsync(context);
         await SeedSampleBuildingAsync(context);
         await SeedPricingRulesAsync(context);
+        await SeedVehiclesAndActiveSessionsAsync(context);
     }
 
     private static async Task SeedRolesAsync(AppDbContext context)
@@ -297,6 +298,96 @@ public static class DbSeeder
         }
 
         await context.PricingRules.AddRangeAsync(rules);
+        await context.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Seeds a small fleet of vehicles + an active parking session per vehicle so
+    /// the Vehicle Exit screen has live data on a fresh database.
+    /// Idempotent — re-runs only when no active sessions exist.
+    /// </summary>
+    private static async Task SeedVehiclesAndActiveSessionsAsync(AppDbContext context)
+    {
+        if (await context.ParkingSessions.IgnoreQueryFilters().AnyAsync(s => s.Status == SessionStatus.Active))
+        {
+            return;
+        }
+
+        var carType = await context.VehicleTypes.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(vt => vt.Category == VehicleTypeCategory.Car);
+        var bikeType = await context.VehicleTypes.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(vt => vt.Category == VehicleTypeCategory.Motorbike);
+        var evType = await context.VehicleTypes.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(vt => vt.Category == VehicleTypeCategory.ElectricVehicle);
+        if (carType is null || bikeType is null || evType is null) return;
+
+        var seed = new[]
+        {
+            (Plate: "51A-12345", Type: carType, Entered: DateTime.UtcNow.AddHours(-3).AddMinutes(-12), Member: false),
+            (Plate: "59B-67890", Type: bikeType, Entered: DateTime.UtcNow.AddHours(-2).AddMinutes(-7), Member: false),
+            (Plate: "62C-11111", Type: evType, Entered: DateTime.UtcNow.AddHours(-1).AddMinutes(-22), Member: true)
+        };
+
+        var allZones = await context.ParkingZones.IgnoreQueryFilters()
+            .Include(z => z.Slots)
+            .ToListAsync();
+
+        var usedSlotIds = new HashSet<Guid>();
+        foreach (var (plate, type, entered, isMonthly) in seed)
+        {
+            var existingVehicle = await context.Vehicles.IgnoreQueryFilters()
+                .FirstOrDefaultAsync(v => v.LicensePlate == plate);
+            var vehicle = existingVehicle ?? new Vehicle
+            {
+                LicensePlate = plate,
+                VehicleTypeId = type.Id
+            };
+            if (existingVehicle is null)
+            {
+                await context.Vehicles.AddAsync(vehicle);
+                await context.SaveChangesAsync();
+            }
+
+            var matchingZones = allZones
+                .Where(z => z.VehicleTypeId == type.Id)
+                .ToList();
+            ParkingSlot? slot = null;
+            ParkingZone? zone = null;
+            foreach (var z in matchingZones)
+            {
+                slot = z.Slots.FirstOrDefault(s => s.Status == SlotStatus.Available && !usedSlotIds.Contains(s.Id));
+                if (slot is not null) { zone = z; break; }
+            }
+            if (slot is null || zone is null) continue;
+
+            usedSlotIds.Add(slot.Id);
+            slot.Status = SlotStatus.Occupied;
+            context.ParkingSlots.Update(slot);
+
+            var ticketCode = $"TKT-{DateTime.UtcNow:yyyyMMdd}-{plate.Replace("-", "").Substring(0, 4)}-{Guid.NewGuid().ToString()[..4].ToUpperInvariant()}";
+            var ticket = new ParkingTicket
+            {
+                TicketCode = ticketCode,
+                VehicleId = vehicle.Id,
+                Type = isMonthly ? TicketType.MonthlyPass : TicketType.Hourly,
+                Status = TicketStatus.Active,
+                IssuedAt = entered,
+                EntryTime = entered
+            };
+            await context.ParkingTickets.AddAsync(ticket);
+            await context.SaveChangesAsync();
+
+            var session = new ParkingSession
+            {
+                TicketId = ticket.Id,
+                VehicleId = vehicle.Id,
+                SlotId = slot.Id,
+                Status = SessionStatus.Active,
+                EntryTime = entered
+            };
+            await context.ParkingSessions.AddAsync(session);
+        }
+
         await context.SaveChangesAsync();
     }
 }

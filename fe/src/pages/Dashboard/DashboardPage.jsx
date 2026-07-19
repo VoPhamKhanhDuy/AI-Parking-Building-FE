@@ -2,8 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
-import { getDashboardData, formatCurrency } from './dashboardService'
-import logger from '../../core/utils/logger'
+import { formatCurrency, getDashboardData, shapeDashboardEntry } from './dashboardService'
 import './DashboardPage.css'
 
 function DashboardPage() {
@@ -12,54 +11,32 @@ function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showAllActivities, setShowAllActivities] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
 
-  // Fetch dashboard data
   useEffect(() => {
     let cancelled = false
-
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        const result = await getDashboardData()
-        if (!cancelled) {
-          const normalized = result.Stats ? { stats: result.Stats, recentEntries: result.RecentEntries || [] } : result
-          setData(normalized)
-          setError(null)
-        }
-      } catch (err) {
-        logger.error('Dashboard', `Load error: ${err.message}`)
-        if (!cancelled) {
-          setError('Failed to load dashboard data')
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false)
-        }
-      }
-    }
-
-    fetchData()
+    getDashboardData()
+      .then((result) => {
+        if (cancelled) return
+        setData(result)
+        setError(null)
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setError(err?.message || 'Failed to load dashboard data')
+      })
+      .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [])
+  }, [reloadKey])
 
   const handleRetry = useCallback(() => {
-    setData(null)
     setError(null)
-    setLoading(true)
+    setReloadKey((k) => k + 1)
   }, [])
 
-  // Transform activities data
   const activities = useMemo(() => {
     if (!data?.recentEntries) return []
-    return data.recentEntries.map((entry) => ({
-      time: new Date(entry.Time).toLocaleTimeString('en-GB'),
-      event: 'Vehicle Entry',
-      vehicle: entry.TicketCode,
-      plate: entry.LicensePlate,
-      slot: entry.SlotCode || '-',
-      status: 'Completed',
-      id: entry.Id
-    }))
+    return data.recentEntries.map((entry) => shapeDashboardEntry(entry)).filter(Boolean)
   }, [data])
 
   const displayActivities = showAllActivities ? activities : activities.slice(0, 3)
@@ -77,13 +54,13 @@ function DashboardPage() {
     )
   }
 
-  if (error || !data) {
+  if (error) {
     return (
       <MainLayout>
         <div className="dashboard-page">
           <div className="error-container">
             <span className="material-symbols-outlined">error</span>
-            <p>{error || 'Failed to load dashboard'}</p>
+            <p>{error}</p>
             <button onClick={handleRetry}>Retry</button>
           </div>
         </div>
@@ -91,7 +68,7 @@ function DashboardPage() {
     )
   }
 
-  const stats = data.stats || {}
+  const stats = data?.stats || {}
 
   return (
     <MainLayout>
@@ -105,22 +82,22 @@ function DashboardPage() {
         <section className="kpi-grid">
           <article className="kpi-card">
             <small>Active Sessions</small>
-            <strong>{stats.ActiveSessions || 0}</strong>
+            <strong>{stats.activeSessions ?? 0}</strong>
             <p>Vehicles currently parked</p>
           </article>
           <article className="kpi-card">
             <small>Today's Entries</small>
-            <strong>{stats.TodayEntries || 0}</strong>
+            <strong>{stats.todayEntries ?? 0}</strong>
             <p>Total vehicle entries today</p>
           </article>
           <article className="kpi-card">
             <small>Today's Exits</small>
-            <strong>{stats.TodayExits || 0}</strong>
+            <strong>{stats.todayExits ?? 0}</strong>
             <p>Total vehicle exits today</p>
           </article>
           <article className="kpi-card">
             <small>Today's Revenue</small>
-            <strong className="accent">{formatCurrency(stats.TodayRevenue || 0)}</strong>
+            <strong className="accent">{formatCurrency(stats.todayRevenue ?? 0)}</strong>
             <p>Total collected today</p>
           </article>
         </section>
@@ -147,13 +124,13 @@ function DashboardPage() {
 
 // Sub-components for better organization
 function ParkingStatusCard({ stats }) {
-  const occupancyRate = stats.OccupancyRate || 0
+  const occupancyRate = stats.occupancyRate ?? 0
 
   return (
     <article className="dashboard-card parking-status">
       <div className="card-title">
         <h2>Live Parking Status</h2>
-        <span>Total Capacity: {stats.TotalSlots || 0}</span>
+        <span>Total Capacity: {stats.totalSlots ?? 0}</span>
       </div>
       <div className="card-body">
         <div className="utilization-label">
@@ -165,21 +142,21 @@ function ParkingStatusCard({ stats }) {
           <i className="occupied" style={{ width: `${occupancyRate}%` }} />
         </div>
         <div className="legend">
-          <span><i className="available" />Available ({stats.AvailableSlots || 0})</span>
-          <span><i className="occupied" />Occupied ({stats.OccupiedSlots || 0})</span>
+          <span><i className="available" />Available ({stats.availableSlots ?? 0})</span>
+          <span><i className="occupied" />Occupied ({stats.occupiedSlots ?? 0})</span>
         </div>
         <div className="slot-summary">
           <div className="slot-item">
             <span className="slot-label">Total Slots</span>
-            <span className="slot-value">{stats.TotalSlots || 0}</span>
+            <span className="slot-value">{stats.totalSlots ?? 0}</span>
           </div>
           <div className="slot-item">
             <span className="slot-label">Occupied</span>
-            <span className="slot-value occupied">{stats.OccupiedSlots || 0}</span>
+            <span className="slot-value occupied">{stats.occupiedSlots ?? 0}</span>
           </div>
           <div className="slot-item">
             <span className="slot-label">Available</span>
-            <span className="slot-value available">{stats.AvailableSlots || 0}</span>
+            <span className="slot-value available">{stats.availableSlots ?? 0}</span>
           </div>
         </div>
       </div>
@@ -205,11 +182,11 @@ function OperationsStatusCard({ stats, navigate }) {
         <div className="alerts">
           <button className="info" onClick={() => navigate(ROUTE_PATHS.payment)}>
             <span className="material-symbols-outlined">payments</span>
-            {stats.PendingPayments || 0} Pending Payments
+            {stats.pendingPayments ?? 0} Pending Payments
           </button>
           <button className="warning" onClick={() => navigate(ROUTE_PATHS.reservation)}>
             <span className="material-symbols-outlined">event_available</span>
-            {stats.PendingReservations || 0} Pending Reservations
+            {stats.pendingReservations ?? 0} Pending Reservations
           </button>
         </div>
       </div>
@@ -224,10 +201,10 @@ function OperationsSummary({ stats }) {
         <h2>Operations Summary</h2>
       </div>
       <div className="operations-grid">
-        <div><small>Active Sessions</small><strong>{stats.ActiveSessions || 0}</strong></div>
-        <div><small>Monthly Passes</small><strong>{stats.MonthlyPassesActive || 0}</strong></div>
-        <div><small>Pending Payments</small><strong className="amber">{stats.PendingPayments || 0}</strong></div>
-        <div><small>Reservations</small><strong>{stats.PendingReservations || 0}</strong></div>
+        <div><small>Active Sessions</small><strong>{stats.activeSessions ?? 0}</strong></div>
+        <div><small>Monthly Passes</small><strong>{stats.monthlyPassesActive ?? 0}</strong></div>
+        <div><small>Pending Payments</small><strong className="amber">{stats.pendingPayments ?? 0}</strong></div>
+        <div><small>Reservations</small><strong>{stats.pendingReservations ?? 0}</strong></div>
       </div>
     </article>
   )
@@ -238,7 +215,7 @@ function QuickActions({ navigate }) {
     { path: ROUTE_PATHS.vehicleEntry, icon: 'login', label: 'Vehicle Entry' },
     { path: ROUTE_PATHS.vehicleExit, icon: 'logout', label: 'Vehicle Exit' },
     { path: ROUTE_PATHS.parkingMap, icon: 'map', label: 'Parking Map' },
-    { path: ROUTE_PATHS.aiRecommendation, icon: 'psychology', label: 'AI Recommendation' },
+    { path: ROUTE_PATHS.aiRecommendation, icon: 'psychology', label: 'AI Recommendation' }
   ]
 
   return (
@@ -265,9 +242,7 @@ function RecentEntriesSection({ activities, showAll, onToggle }) {
     <section className="dashboard-card activity-card">
       <div className="card-title">
         <h2>Recent Entries</h2>
-        <button onClick={onToggle}>
-          {showAll ? 'Show Less' : 'View All'}
-        </button>
+        <button onClick={onToggle}>{showAll ? 'Show Less' : 'View All'}</button>
       </div>
       {activities.length > 0 ? (
         <div className="table-wrap">

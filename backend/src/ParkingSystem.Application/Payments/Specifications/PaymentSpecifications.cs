@@ -12,8 +12,9 @@ public static class PaymentSpecifications
         public ByIdWithDetails(Guid id)
         {
             AddCriteria(p => p.Id == id);
-            AddInclude(p => p.Session);
-            AddInclude(p => p.ProcessedByUser);
+            AddInclude("Session.Ticket.Vehicle.VehicleType");
+            AddInclude("Session.Vehicle.VehicleType");
+            AddInclude("ProcessedByUser");
         }
     }
 
@@ -22,7 +23,9 @@ public static class PaymentSpecifications
         public BySession(Guid sessionId)
         {
             AddCriteria(p => p.SessionId == sessionId);
-            AddInclude(p => p.ProcessedByUser);
+            AddInclude("Session.Ticket.Vehicle.VehicleType");
+            AddInclude("Session.Vehicle.VehicleType");
+            AddInclude("ProcessedByUser");
         }
     }
 
@@ -48,8 +51,9 @@ public static class PaymentSpecifications
             }
 
             ApplyOrderByDescending(p => p.CreatedAt);
-            AddInclude(p => p.Session);
-            AddInclude(p => p.ProcessedByUser);
+            AddInclude("Session.Ticket.Vehicle.VehicleType");
+            AddInclude("Session.Vehicle.VehicleType");
+            AddInclude("ProcessedByUser");
         }
     }
 }

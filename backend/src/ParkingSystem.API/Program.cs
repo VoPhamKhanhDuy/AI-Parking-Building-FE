@@ -55,7 +55,14 @@ builder.Services.AddControllers(options =>
     .AddJsonOptions(opt =>
     {
         opt.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        opt.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
+
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(opt =>
+{
+    opt.SerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    opt.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+});
 
 builder.Services.AddEndpointsApiExplorer();
 

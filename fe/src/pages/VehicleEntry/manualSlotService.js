@@ -21,24 +21,24 @@ export async function assignManualSlot(slotId, ticketId) {
   }
 }
 
-// Additional functions
-export async function getParkingFloors(buildingId) {
+export async function assignParkingSlot(payload) {
   try {
-    const { data } = await api.get(`/parking-structure/buildings/${buildingId}/floors`)
+    const { data } = await api.post('/parking-slots/assign', payload)
     return { success: true, data }
   } catch (error) {
-    logger.error('ManualSlot', `Failed to get floors: ${error.message}`)
+    logger.error('ManualSlot', `Failed to assign: ${error.message}`)
     return { success: false }
   }
 }
 
 export async function getFloorStats(floorId) {
+  if (!floorId) return null
   try {
     const { data } = await api.get(`/parking-structure/floors/${floorId}/stats`)
-    return { success: true, data }
+    return data
   } catch (error) {
-    logger.error('ManualSlot', `Failed to get floor stats: ${error.message}`)
-    return { success: false }
+    logger.warn('ManualSlot', `Failed to get floor stats: ${error.message}`)
+    return null
   }
 }
 
@@ -49,7 +49,7 @@ export function isCompatible() {
 export async function getAvailableSlotsByFloor(floorId, vehicleType) {
   try {
     const { data } = await api.get(`/parking-slots/available`, {
-      params: { floorId, vehicleType }
+      params: { floorId, vehicleType },
     })
     return { success: true, data }
   } catch (error) {
@@ -57,6 +57,3 @@ export async function getAvailableSlotsByFloor(floorId, vehicleType) {
     return { success: false }
   }
 }
-
-// Aliases
-export const assignParkingSlot = assignManualSlot

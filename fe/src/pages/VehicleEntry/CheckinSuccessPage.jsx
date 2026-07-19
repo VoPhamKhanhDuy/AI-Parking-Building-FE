@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
 import { formatSessionTime, getCheckinNextSteps } from './checkinSuccessService'
+import { safeArray, safeString } from '../../core/utils/apiShapers'
 import './CheckinSuccessPage.css'
 
 const DEFAULT_SESSION = { licensePlate: '51A-12345', vehicleType: 'Car', ticketType: 'Normal', checkStatus: 'Existing Vehicle', plateSource: 'Camera Scan', selectedSlotId: 'B2-18', ticketCode: 'TCK-2026-000128', entryTime: new Date().toISOString(), method: 'AI Recommended', matchScore: '92%' }
@@ -16,7 +17,7 @@ function CheckinSuccessPage() {
   const floor = session.selectedFloor || (slotId.includes('2') || slotId.startsWith('C') ? 'Floor 2' : 'Floor 1')
   const zone = slotId.startsWith('M') ? 'A · Motorcycle' : slotId.startsWith('EV') ? 'C · EV charging' : 'B · Car'
   const entryTime = formatSessionTime(session.entryTime)
-  const nextSteps = getCheckinNextSteps({ slotId, floor, zone })
+  const nextSteps = safeArray(getCheckinNextSteps({ slotId, floor, zone }))
 
   return <MainLayout><div className="checkin-page">
     <nav className="checkin-breadcrumb"><button onClick={() => navigate(ROUTE_PATHS.dashboard)}>Dashboard</button><span>/</span><button onClick={() => navigate(ROUTE_PATHS.vehicleEntry)}>Vehicle Entry</button><span>/</span><b>Check-in Success</b></nav>

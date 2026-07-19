@@ -1,248 +1,205 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { initialUserKPIs, initialUsersList, rolePermissionMap, initialUserChanges } from './usersRolesService'
+import {
+  createUser,
+  deleteUser,
+  getUsers,
+  initialUserKPIs,
+  initialUsersList,
+  initialUserChanges,
+  rolePermissionMap,
+  updateUser,
+  updateUserStatus
+} from './usersRolesService'
 import { ROUTE_PATHS } from '../../routes/routePaths'
 import '../../layouts/MainLayout.css'
 
 function UsersRolesPage() {
   const navigate = useNavigate()
 
-  // Real-time states
-  const [kpis, setKpis] = useState(initialUserKPIs)
   const [users, setUsers] = useState(initialUsersList)
+  const [kpis, setKpis] = useState(initialUserKPIs)
   const [userChanges, setUserChanges] = useState(initialUserChanges)
-  const [selectedUserEmail, setSelectedUserEmail] = useState('an.nguyen@parking.vn')
+  const [selectedUserId, setSelectedUserId] = useState(null)
   const [openMenu, setOpenMenu] = useState(null)
 
-  // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState('All Roles')
   const [statusFilter, setStatusFilter] = useState('All Status')
 
-  // Selected User Detail
-  const selectedUser = users.find((u) => u.email === selectedUserEmail) || users[0] || {
-    name: 'N/A',
-    email: '',
-    role: 'Parking Staff',
-    area: 'N/A',
-    status: 'Active',
-    lastLogin: 'N/A',
-    createdDate: 'N/A'
-  }
-
-  // Professional Modal State
   const [modal, setModal] = useState({
     isOpen: false,
-    type: '', // 'addUser' | 'editRole' | 'resetPassword' | 'suspendAccount'
+    type: '',
     inputVal1: '',
     inputVal2: '',
-    inputVal3: '',
-    inputVal4: ''
+    inputVal3: 'Parking Staff',
+    inputVal4: 'Entry Gate A'
   })
 
-  // Professional Toast State
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
 
-  const showToast = (message, type = 'success') => {
-    setToast({ show: true, message, type })
-    setTimeout(() => {
-      setToast({ show: false, message: '', type: 'success' })
-    }, 3000)
-  }
+  useEffect(() => {
+    let active = true
+    getUsers()
+      .then((result) => {
+        if (!active) return
+        const list = Array.isArray(result?.data) ? result.data : []
+        setUsers(list)
+        const activeCount = list.filter((u) => u.status === 'Active').length
+        const adminCount = list.filter((u) => String(u.role).toLowerCase() === 'admin').length
+        setKpis([
+          { label: 'Total Accounts', value: list.length },
+          { label: 'Active Today', value: activeCount },
+          { label: 'Admins', value: adminCount }
+        ])
+        setSelectedUserId((current) => current || list[0]?.id || null)
+      })
+      .catch(() => active && false)
+    return () => { active = false }
+  }, [])
 
-  // Get permissions for active role
-  const permissions = rolePermissionMap[selectedUser.role] || {
-    allowed: 'Entry/Exit Logs, Basic Reports',
-    limited: 'User Directory (View Only)',
-    denied: 'System Settings, Audit Logs'
-  }
+  const selectedUser = useMemo(
+    () => users.find((u) => u.id === selectedUserId) || users[0] || null,
+    [users, selectedUserId]
+  )
 
-  // Action: Add change log entry
-  const addChangeLog = (action, targetName) => {
-    const timeStr = new Date().toTimeString().split(' ')[0]
-    const newLog = {
-      time: timeStr,
-      action,
-      target: targetName,
-      changedBy: 'System Admin',
-      result: 'Success'
+  const permissions = useMemo(() => {
+    if (!selectedUser) return { allowed: '—', limited: '—', denied: '—' }
+    return rolePermissionMap[selectedUser.role] || {
+      allowed: 'Entry/Exit Logs, Basic Reports',
+      limited: 'User Directory (View Only)',
+      denied: 'System Settings, Audit Logs'
     }
-    setUserChanges([newLog, ...userChanges])
-  }
+  }, [selectedUser])
 
-  // Action: Add User
-  const handleAddUser = () => {
-    setModal({
-      isOpen: true,
-      type: 'addUser',
-      inputVal1: '',
-      inputVal2: '',
-      inputVal3: 'Parking Staff',
-      inputVal4: 'Entry Gate A'
-    })
-  }
+  const showToast = useCallback((message, type = 'success') => {
+    setToast({ show: true, message, type })
+    setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000)
+  }, [])
 
-  // Action: Edit Role
-  const handleEditRole = () => {
+  const addChangeLog = useCallback((action, targetName) => {
+    const timeStr = new Date().toTimeString().split(' ')[0]
+    setUserChanges((current) => [
+      { time: timeStr, action, target: targetName, changedBy: 'System Admin', result: 'Success' },
+      ...current
+    ])
+  }, [])
+
+  const handleAddUser = useCallback(() => {
+    setModal({ isOpen: true, type: 'addUser', inputVal1: '', inputVal2: '', inputVal3: 'Parking Staff', inputVal4: 'Entry Gate A' })
+  }, [])
+
+  const handleEditRole = useCallback(() => {
     if (!selectedUser) return
-    setModal({
-      isOpen: true,
-      type: 'editRole',
-      inputVal1: selectedUser.role,
-      inputVal2: '',
-      inputVal3: '',
-      inputVal4: ''
-    })
-  }
+    setModal({ isOpen: true, type: 'editRole', inputVal1: selectedUser.role, inputVal2: '', inputVal3: '', inputVal4: '' })
+  }, [selectedUser])
 
-  // Action: Reset Password
-  const handleResetPassword = () => {
+  const handleResetPassword = useCallback(() => {
     if (!selectedUser) return
-    setModal({
-      isOpen: true,
-      type: 'resetPassword',
-      inputVal1: '',
-      inputVal2: '',
-      inputVal3: '',
-      inputVal4: ''
-    })
-  }
+    setModal({ isOpen: true, type: 'resetPassword', inputVal1: '', inputVal2: '', inputVal3: '', inputVal4: '' })
+  }, [selectedUser])
 
-  // Action: Suspend Account
-  const handleSuspendAccount = () => {
+  const handleSuspendAccount = useCallback(() => {
     if (!selectedUser) return
     if (selectedUser.status === 'Suspended') {
-      // Unsuspended
-      setUsers((prev) => 
-        prev.map((u) => 
-          u.email === selectedUser.email ? { ...u, status: 'Active' } : u
-        )
-      )
-      setKpis((prev) => ({
-        ...prev,
-        activeAccounts: prev.activeAccounts + 1,
-        suspendedAccounts: prev.suspendedAccounts - 1
-      }))
-      addChangeLog('Status Changed', selectedUser.name)
-      showToast(`Đã kích hoạt lại tài khoản ${selectedUser.name}.`, 'success')
+      updateUserStatus(selectedUser.id, 'Active')
+        .then((result) => {
+          if (result?.success) {
+            setUsers((prev) => prev.map((u) => u.id === selectedUser.id ? { ...u, ...result.data } : u))
+            addChangeLog('Status Changed', selectedUser.fullName)
+            showToast(`Đã kích hoạt lại tài khoản ${selectedUser.fullName}.`, 'success')
+          } else {
+            showToast(result?.message || 'Failed to reactivate.', 'error')
+          }
+        })
       return
     }
+    setModal({ isOpen: true, type: 'suspendAccount', inputVal1: '', inputVal2: '', inputVal3: '', inputVal4: '' })
+  }, [selectedUser, addChangeLog, showToast])
 
-    setModal({
-      isOpen: true,
-      type: 'suspendAccount',
-      inputVal1: '',
-      inputVal2: '',
-      inputVal3: '',
-      inputVal4: ''
-    })
-  }
-
-  // Modal Confirm Action handler
-  const handleModalConfirm = () => {
+  const handleModalConfirm = useCallback(async () => {
+    if (!modal.isOpen) return
     if (modal.type === 'addUser') {
       const name = modal.inputVal1.trim()
       const email = modal.inputVal2.trim()
       const role = modal.inputVal3.trim()
       const area = modal.inputVal4.trim()
-
       if (!name || !email) {
         showToast('Vui lòng điền đầy đủ họ tên và email.', 'error')
         return
       }
-
-      if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
-        showToast('Email này đã tồn tại trong danh sách!', 'error')
-        return
+      const result = await createUser({ fullName: name, email, role, area, password: 'Temp@123' })
+      if (result?.success) {
+        setUsers((prev) => [...prev, result.data])
+        setKpis((prev) => prev.map((k) => k.label === 'Total Accounts' ? { ...k, value: k.value + 1 } : k))
+        setSelectedUserId(result.data.id)
+        addChangeLog('Account Created', name)
+        setModal((m) => ({ ...m, isOpen: false }))
+        showToast(`Đã thêm người dùng ${name}.`, 'success')
+      } else {
+        showToast(result?.message || 'Failed to create user', 'error')
       }
-
-      const newUser = {
-        name,
-        email,
-        role,
-        area,
-        status: 'Active',
-        lastLogin: 'Not logged in',
-        createdDate: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
-      }
-
-      setUsers([...users, newUser])
-      setSelectedUserEmail(email)
-      setKpis((prev) => ({
-        ...prev,
-        totalAccounts: prev.totalAccounts + 1,
-        activeAccounts: prev.activeAccounts + 1
-      }))
-
-      addChangeLog('Account Created', name)
-      setModal({ ...modal, isOpen: false })
-      showToast(`Đã thêm thành công người dùng ${name}!`, 'success')
+      return
     }
-
-    else if (modal.type === 'editRole') {
+    if (modal.type === 'editRole') {
       const newRole = modal.inputVal1.trim()
-      if (!newRole) {
-        showToast('Vui lòng điền vai trò hợp lệ.', 'error')
-        return
+      if (!newRole || !selectedUser) return
+      const result = await updateUser(selectedUser.id, { role: newRole })
+      if (result?.success) {
+        setUsers((prev) => prev.map((u) => u.id === selectedUser.id ? { ...u, ...result.data } : u))
+        addChangeLog('Role Updated', selectedUser.fullName)
+        setModal((m) => ({ ...m, isOpen: false }))
+        showToast(`Đã cập nhật vai trò của ${selectedUser.fullName}.`, 'success')
+      } else {
+        showToast(result?.message || 'Failed to update role.', 'error')
       }
-
-      setUsers((prev) => 
-        prev.map((u) => 
-          u.email === selectedUser.email ? { ...u, role: newRole } : u
-        )
-      )
-
-      addChangeLog('Role Updated', selectedUser.name)
-      setModal({ ...modal, isOpen: false })
-      showToast(`Đã cập nhật vai trò của ${selectedUser.name} thành: ${newRole}.`, 'success')
+      return
     }
-
-    else if (modal.type === 'resetPassword') {
-      addChangeLog('Password Reset', selectedUser.name)
-      setModal({ ...modal, isOpen: false })
-      showToast(`Đã reset mật khẩu của tài khoản ${selectedUser.name} về mặc định.`, 'success')
+    if (modal.type === 'resetPassword') {
+      if (!selectedUser) return
+      // Backend doesn't expose a reset endpoint yet — surface the intent as a stub.
+      addChangeLog('Password Reset', selectedUser.fullName)
+      setModal((m) => ({ ...m, isOpen: false }))
+      showToast(`Yêu cầu reset mật khẩu của ${selectedUser.fullName} đã ghi nhận.`, 'success')
+      return
     }
-
-    else if (modal.type === 'suspendAccount') {
-      const prevStatus = selectedUser.status
-      setUsers((prev) => 
-        prev.map((u) => 
-          u.email === selectedUser.email ? { ...u, status: 'Suspended' } : u
-        )
-      )
-
-      setKpis((prev) => {
-        const activeDec = prevStatus === 'Active' ? 1 : 0
-        const pendingDec = prevStatus === 'Pending' ? 1 : 0
-        return {
-          ...prev,
-          activeAccounts: prev.activeAccounts - activeDec,
-          pendingInvitations: prev.pendingInvitations - pendingDec,
-          suspendedAccounts: prev.suspendedAccounts + 1
-        }
-      })
-
-      addChangeLog('Status Changed', selectedUser.name)
-      setModal({ ...modal, isOpen: false })
-      showToast(`Đã khóa tạm thời tài khoản ${selectedUser.name}.`, 'success')
+    if (modal.type === 'suspendAccount') {
+      if (!selectedUser) return
+      const result = await updateUserStatus(selectedUser.id, 'Suspended')
+      if (result?.success) {
+        setUsers((prev) => prev.map((u) => u.id === selectedUser.id ? { ...u, ...result.data } : u))
+        addChangeLog('Status Changed', selectedUser.fullName)
+        setModal((m) => ({ ...m, isOpen: false }))
+        showToast(`Đã khóa tài khoản ${selectedUser.fullName}.`, 'success')
+      } else {
+        showToast(result?.message || 'Failed to suspend.', 'error')
+      }
     }
-  }
+  }, [modal, selectedUser, addChangeLog, showToast])
 
-  // Filter user list
-  const filteredUsers = users.filter((u) => {
-    const matchesSearch = u.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          u.area.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    const matchesRole = roleFilter === 'All Roles' || u.role === roleFilter
-    const matchesStatus = statusFilter === 'All Status' || u.status === statusFilter
+  const handleDelete = useCallback(async (user) => {
+    if (!user) return
+    if (!window.confirm(`Xóa tài khoản ${user.fullName}?`)) return
+    const result = await deleteUser(user.id)
+    if (result?.success) {
+      setUsers((prev) => prev.filter((u) => u.id !== user.id))
+      setKpis((prev) => prev.map((k) => k.label === 'Total Accounts' ? { ...k, value: Math.max(0, k.value - 1) } : k))
+      showToast(`Đã xóa ${user.fullName}.`, 'success')
+    } else {
+      showToast(result?.message || 'Failed to delete.', 'error')
+    }
+  }, [showToast])
 
-    return matchesSearch && matchesRole && matchesStatus
-  })
+  const filteredUsers = useMemo(() => users.filter((u) => {
+    const blob = `${u.fullName || ''} ${u.email || ''} ${u.role || ''} ${u.area || ''}`.toLowerCase()
+    if (searchQuery && !blob.includes(searchQuery.toLowerCase())) return false
+    if (roleFilter !== 'All Roles' && u.role !== roleFilter) return false
+    if (statusFilter !== 'All Status' && u.status !== statusFilter) return false
+    return true
+  }), [users, searchQuery, roleFilter, statusFilter])
 
-  // List of unique roles & statuses for filter dropdowns
-  const uniqueRoles = ['All Roles', 'Parking Staff', 'Facility Manager', 'System Admin', 'Field Support', 'Manager']
-  const uniqueStatuses = ['All Status', 'Active', 'Suspended', 'Pending']
+  const uniqueRoles = useMemo(() => ['All Roles', ...Array.from(new Set(users.map((u) => u.role).filter(Boolean)))], [users])
+  const uniqueStatuses = ['All Status', 'Active', 'Suspended', 'Pending', 'Inactive']
 
   return (
     <div className="bg-surface text-on-surface flex min-h-screen">
@@ -426,15 +383,15 @@ function UsersRolesPage() {
                     </thead>
                     <tbody className="divide-y divide-outline-variant">
                       {filteredUsers.map((user) => {
-                        const isSelected = selectedUser.email === user.email
+                        const isSelected = selectedUser?.id === user.id
                         return (
                           <tr 
-                            key={user.email} 
+                            key={user.id}
                             className={`cursor-pointer transition-colors ${isSelected ? 'bg-primary/5' : 'hover:bg-surface-container-low/30'}`}
-                            onClick={() => setSelectedUserEmail(user.email)}
+                            onClick={() => setSelectedUserId(user.id)}
                           >
                             <td className="px-4 py-3">
-                              <div className="font-body-sm text-on-surface font-medium">{user.name}</div>
+                              <div className="font-body-sm text-on-surface font-medium">{user.fullName}</div>
                               <div className="text-[10px] text-on-surface-variant">{user.email}</div>
                             </td>
                             <td className="px-4 py-3 text-body-sm text-on-surface-variant">{user.role}</td>
@@ -449,15 +406,22 @@ function UsersRolesPage() {
                               </span>
                             </td>
                             <td className="px-4 py-3">
-                              <button 
+                              <button
                                 className="text-primary material-symbols-outlined"
                                 onClick={(e) => {
                                   e.stopPropagation()
-                                  setSelectedUserEmail(user.email)
+                                  setSelectedUserId(user.id)
                                   handleEditRole()
                                 }}
                               >
                                 edit
+                              </button>
+                              <button
+                                className="text-error material-symbols-outlined ml-2"
+                                title="Delete"
+                                onClick={(e) => { e.stopPropagation(); handleDelete(user) }}
+                              >
+                                delete
                               </button>
                             </td>
                           </tr>
@@ -486,7 +450,7 @@ function UsersRolesPage() {
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between">
                     <span className="text-body-sm text-on-surface-variant">Name</span>
-                    <span className="text-body-sm font-medium">{selectedUser.name}</span>
+                    <span className="text-body-sm font-medium">{selectedUser.fullName}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-body-sm text-on-surface-variant">Email</span>
@@ -512,11 +476,11 @@ function UsersRolesPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-body-sm text-on-surface-variant">Last Login</span>
-                    <span className="text-body-sm">{selectedUser.lastLogin}</span>
+                    <span className="text-body-sm">{selectedUser.lastLoginAt ? new Date(selectedUser.lastLoginAt).toLocaleString('vi-VN') : '—'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-body-sm text-on-surface-variant">Created Date</span>
-                    <span className="text-body-sm">{selectedUser.createdDate || 'Oct 12, 2023'}</span>
+                    <span className="text-body-sm">{selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString('en-GB') : '—'}</span>
                   </div>
                 </div>
 
@@ -647,20 +611,20 @@ function UsersRolesPage() {
 
               {modal.type === 'editRole' && (
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-on-surface-variant uppercase">Nhập vai trò mới cho {selectedUser.name}</label>
+                  <label className="text-xs font-bold text-on-surface-variant uppercase">Nhập vai trò mới cho {selectedUser.fullName}</label>
                   <input className="w-full px-3.5 py-2 border border-outline-variant rounded text-body-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary" value={modal.inputVal1} onChange={(e) => setModal({...modal, inputVal1: e.target.value})} placeholder="Parking Staff..." />
                 </div>
               )}
 
               {modal.type === 'resetPassword' && (
                 <p className="text-body-sm text-on-surface-variant font-medium">
-                  Bạn có chắc chắn muốn reset mật khẩu của tài khoản **{selectedUser.name}** về mặc định? Mật khẩu tạm thời sẽ được gửi tới email của họ.
+                  Bạn có chắc chắn muốn reset mật khẩu của tài khoản **{selectedUser.fullName}** về mặc định? Mật khẩu tạm thời sẽ được gửi tới email của họ.
                 </p>
               )}
 
               {modal.type === 'suspendAccount' && (
                 <p className="text-body-sm text-on-surface-variant font-medium">
-                  Bạn có chắc chắn muốn tạm khóa tài khoản của thành viên **{selectedUser.name}**? Họ sẽ không thể đăng nhập cho tới khi được kích hoạt lại.
+                  Bạn có chắc chắn muốn tạm khóa tài khoản của thành viên **{selectedUser.fullName}**? Họ sẽ không thể đăng nhập cho tới khi được kích hoạt lại.
                 </p>
               )}
 

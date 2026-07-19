@@ -1,0 +1,48 @@
+# Combined ignores for the ParkingSystem monorepo.
+# The per-project .gitignore in backend/ and fe/ cover the bulk of cases,
+# but tooling that walks the repo from the root (VSCode, GitHub web UI,
+# CodeQL, etc.) needs a root-level file to honor the same rules.
+
+# --- .NET / backend ---
+bin/
+obj/
+out/
+TestResults/
+coverage/
+*.user
+*.suo
+*.trx
+*.coverage
+appsettings.Local.json
+appsettings.*.Local.json
+.secrets/
+
+# --- Node / frontend ---
+node_modules/
+dist/
+dist-ssr/
+.env
+.env.local
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- IDEs / editors ---
+.vs/
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.sw?
+*.ntvs*
+*.njsproj
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+
+# --- Misc ---
+*.log
+.cursor/

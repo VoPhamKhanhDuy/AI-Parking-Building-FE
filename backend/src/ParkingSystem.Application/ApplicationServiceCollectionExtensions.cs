@@ -17,8 +17,13 @@ using ParkingSystem.Application.PricingRules.Interfaces;
 using ParkingSystem.Application.PricingRules.Services;
 using ParkingSystem.Application.Reservations.Interfaces;
 using ParkingSystem.Application.Reservations.Services;
-using ParkingSystem.Application.SystemLogs.Interfaces;
-using ParkingSystem.Application.SystemLogs.Services;
+    // SystemLogs / Audit
+    using ParkingSystem.Application.SystemLogs.Interfaces;
+    using ParkingSystem.Application.SystemLogs.Services;
+
+    // AI recommendations
+    using ParkingSystem.Application.AIRecommendations.Interfaces;
+    using ParkingSystem.Application.AIRecommendations.Services;
 using ParkingSystem.Application.Tickets.Interfaces;
 using ParkingSystem.Application.Tickets.Services;
 using ParkingSystem.Application.VehicleExits.Interfaces;
@@ -79,6 +84,9 @@ public static class ApplicationServiceCollectionExtensions
 
         // Monthly passes
         services.AddScoped<IMonthlyPassService, MonthlyPassService>();
+
+        // AI recommendations
+        services.AddScoped<IAIRecommendationService, AIRecommendationService>();
 
         return services;
     }

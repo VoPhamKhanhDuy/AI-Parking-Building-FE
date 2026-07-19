@@ -2,8 +2,43 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
-import { assignParkingSlot, getFloorStats, getParkingFloors, isCompatible } from './manualSlotService'
+import { getBuildings, getFloors, getSlotsByZone } from '../ParkingMap/parkingMapService'
+import { assignParkingSlot, isCompatible } from './manualSlotService'
 import './ManualSlotPage.css'
+
+function getFloorStats(floor) {
+  const slots = floor?.slots || []
+  const total = slots.length
+  const occupied = slots.filter((s) => s.status === 'Occupied').length
+  const reserved = slots.filter((s) => s.status === 'Reserved').length
+  const available = slots.filter((s) => s.status === 'Available').length
+  const occupiedLike = total ? occupied + reserved : 0
+  return {
+    total,
+    available,
+    occupied,
+    reserved,
+    occupancy: total ? Math.round((occupiedLike * 100) / total) : 0,
+  }
+}
+
+async function loadFloorsWithSlots() {
+  const buildings = await getBuildings()
+  const all = []
+  for (const building of buildings) {
+    const floors = await getFloors(building.id)
+    for (const floor of floors) {
+      const slots = await getSlotsByZone(floor.id, 'All Statuses')
+      all.push({
+        id: floor.id,
+        name: floor.name || `Floor ${floor.floorNumber || ''}`,
+        building: building.name,
+        slots,
+      })
+    }
+  }
+  return all
+}
 
 const DEFAULT_ENTRY = {
   licensePlate: '51A-12345', vehicleType: 'Car', ticketType: 'Normal (Visitor)',
@@ -50,15 +85,16 @@ function ManualSlotPage() {
 
   useEffect(() => {
     let active = true
-    getParkingFloors().then((data) => {
-      if (!active) return
-      setFloors(data)
-      const preferred = data.find((floor) => floor.id === 'floor-2') || data[0]
-      setFloorId(preferred?.id || '')
-      const initial = preferred?.slots.find((slot) => slot.id === 'C18' && slot.status === 'available')
-        || preferred?.slots.find((slot) => slot.status === 'available' && isCompatible(slot, entry.vehicleType))
-      setSelectedSlot(initial || null)
-    }).catch(() => active && setError('Unable to load the parking layout. Please try again.'))
+    loadFloorsWithSlots()
+      .then((list) => {
+        if (!active) return
+        setFloors(list)
+        const preferred = list.find((floor) => floor.name.toLowerCase().includes('floor 2')) || list[0]
+        const initial = preferred?.slots.find((slot) => slot.status === 'Available' && isCompatible(slot, entry.vehicleType))
+        setFloorId(preferred?.id || '')
+        setSelectedSlot(initial || null)
+      })
+      .catch(() => active && setError('Unable to load the parking layout. Please try again.'))
       .finally(() => active && setLoading(false))
     return () => { active = false }
   }, [entry.vehicleType])

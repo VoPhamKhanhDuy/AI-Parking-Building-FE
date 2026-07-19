@@ -1,12 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "b8JIx0BuUAQ=",
+  "dgSpecHash": "L409esJ4ikM=",
   "success": true,
   "projectFilePath": "D:\\Ki8\\SWD392\\project\\ParkingSystem\\backend\\src\\ParkingSystem.Domain\\ParkingSystem.Domain.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\21b330cf1a90efbf2783ab54b6eaa549\\nuget\\microsoft.netcore.app.ref\\8.0.27\\microsoft.netcore.app.ref.8.0.27.nupkg.sha512",
-    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\21b330cf1a90efbf2783ab54b6eaa549\\nuget\\microsoft.windowsdesktop.app.ref\\8.0.27\\microsoft.windowsdesktop.app.ref.8.0.27.nupkg.sha512",
-    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\21b330cf1a90efbf2783ab54b6eaa549\\nuget\\microsoft.aspnetcore.app.ref\\8.0.27\\microsoft.aspnetcore.app.ref.8.0.27.nupkg.sha512"
+    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\dce2e922f0771c7d7e69011397e8c04d\\nuget\\microsoft.netcore.app.ref\\8.0.27\\microsoft.netcore.app.ref.8.0.27.nupkg.sha512",
+    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\dce2e922f0771c7d7e69011397e8c04d\\nuget\\microsoft.windowsdesktop.app.ref\\8.0.27\\microsoft.windowsdesktop.app.ref.8.0.27.nupkg.sha512",
+    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\dce2e922f0771c7d7e69011397e8c04d\\nuget\\microsoft.aspnetcore.app.ref\\8.0.27\\microsoft.aspnetcore.app.ref.8.0.27.nupkg.sha512"
   ],
   "logs": []
 }

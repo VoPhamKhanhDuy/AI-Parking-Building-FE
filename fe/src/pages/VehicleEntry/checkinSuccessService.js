@@ -2,12 +2,13 @@ import { api } from '../../core/api/apiClient'
 import logger from '../../core/utils/logger'
 
 export async function checkInSuccess(ticketId) {
+  if (!ticketId) return { success: false, message: 'Missing ticketId' }
   try {
-    const { data } = await api.get(`/parking-tickets/${ticketId}/checkin-success`)
+    const { data } = await api.get(`/tickets/${ticketId}/checkin-success`)
     return { success: true, data }
   } catch (error) {
     logger.error('CheckinSuccess', `Failed to load: ${error.message}`)
-    return { success: false }
+    return { success: false, message: error?.message || 'Failed to load' }
   }
 }
 
@@ -21,25 +22,25 @@ export function formatSessionTime(date) {
   })
 }
 
-export async function getCheckinNextSteps() {
-  return {
-    success: true,
-    data: {
-      steps: [
-        { id: 1, label: 'Print ticket', completed: true },
-        { id: 2, label: 'Direct vehicle to slot', completed: false },
-        { id: 3, label: 'Complete check-in', completed: false }
-      ]
-    }
-  }
+// Static handoff steps. Page renders them as plain strings; we return
+// a flat array of labels so the consumer can .map() directly.
+const DEFAULT_NEXT_STEPS = [
+  'Print ticket',
+  'Direct vehicle to slot',
+  'Complete check-in',
+]
+
+export function getCheckinNextSteps() {
+  return DEFAULT_NEXT_STEPS
 }
 
 export async function getTicketDetails(ticketId) {
+  if (!ticketId) return { success: false, message: 'Missing ticketId' }
   try {
-    const { data } = await api.get(`/parking-tickets/${ticketId}`)
+    const { data } = await api.get(`/tickets/${ticketId}`)
     return { success: true, data }
   } catch (error) {
     logger.error('CheckinSuccess', `Failed to get details: ${error.message}`)
-    return { success: false }
+    return { success: false, message: error?.message || 'Failed to load ticket details' }
   }
 }

@@ -2924,7 +2924,7 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\21b330cf1a90efbf2783ab54b6eaa549\\nuget": {},
+    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\dce2e922f0771c7d7e69011397e8c04d\\nuget": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
@@ -2933,7 +2933,7 @@
       "projectUniqueName": "D:\\Ki8\\SWD392\\project\\ParkingSystem\\backend\\src\\ParkingSystem.Infrastructure\\ParkingSystem.Infrastructure.csproj",
       "projectName": "ParkingSystem.Infrastructure",
       "projectPath": "D:\\Ki8\\SWD392\\project\\ParkingSystem\\backend\\src\\ParkingSystem.Infrastructure\\ParkingSystem.Infrastructure.csproj",
-      "packagesPath": "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\21b330cf1a90efbf2783ab54b6eaa549\\nuget",
+      "packagesPath": "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\dce2e922f0771c7d7e69011397e8c04d\\nuget",
       "outputPath": "D:\\Ki8\\SWD392\\project\\ParkingSystem\\backend\\src\\ParkingSystem.Infrastructure\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [

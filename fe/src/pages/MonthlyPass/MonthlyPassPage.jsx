@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
@@ -12,17 +12,15 @@ import {
 } from './monthlyPassService'
 import './MonthlyPassPage.css'
 
-// Constants
 const EMPTY_FORM = { driver: '', licensePlate: '', vehicleType: 'Car' }
 const STATUS_OPTIONS = ['All Statuses', 'Active', 'Expiring Soon', 'Pending Approval', 'Expired']
 const VEHICLE_TYPE_OPTIONS = ['All Types', 'Car', 'Motorcycle', 'EV']
 const DATE_FILTER_OPTIONS = ['This Month', 'Next 30 Days', 'Expired']
 
-// Badge helper
-const getBadgeClass = (value) => `monthly-pass-badge ${value.toLowerCase().replaceAll(' ', '-')}`
-
 function StatusBadge({ value }) {
-  return <span className={getBadgeClass(value)}>{value}</span>
+  const raw = String(value ?? '—')
+  const safe = raw.toLowerCase().replaceAll(' ', '-')
+  return <span className={`monthly-pass-badge ${safe}`}>{raw}</span>
 }
 
 function MonthlyPassPage() {
@@ -35,44 +33,46 @@ function MonthlyPassPage() {
   const [message, setMessage] = useState('')
   const [dialog, setDialog] = useState(null)
   const [form, setForm] = useState(EMPTY_FORM)
+  const [loading, setLoading] = useState(true)
 
-  // Fetch passes with debounce
   useEffect(() => {
-    let cancelled = false
-    let timeoutId
-
-    const fetchData = async () => {
-      try {
-        const result = await getMonthlyPasses({ search, status, vehicleType })
-        if (!cancelled) {
-          setData(result)
-          // Keep selected if still exists, otherwise select first
-          setSelectedId((current) =>
-            result.passes.some((item) => item.id === current) ? current : result.passes[0]?.id
-          )
-        }
-      } catch {
-        if (!cancelled) {
-          setMessage('Unable to load monthly passes.')
-        }
-      }
-    }
-
-    timeoutId = setTimeout(fetchData, 160)
-    return () => {
-      cancelled = true
-      clearTimeout(timeoutId)
-    }
+    let active = true
+    const timer = setTimeout(() => {
+      getMonthlyPasses({ search, status, vehicleType })
+        .then((result) => {
+          if (!active) return
+          const passes = Array.isArray(result?.data?.passes) ? result.data.passes : []
+          const stats = result?.data?.stats && Object.keys(result.data.stats).length > 0
+            ? result.data.stats
+            : deriveStats(passes)
+          setData({ stats, passes, activities: result?.data?.activities || [] })
+          setSelectedId((current) => current && passes.some((p) => p.id === current)
+            ? current
+            : (passes[0]?.id ?? null))
+          setLoading(false)
+          if (!result?.success) setMessage('Unable to load monthly passes.')
+          else setMessage('')
+        })
+        .catch(() => {
+          if (active) {
+            setMessage('Unable to load monthly passes.')
+            setLoading(false)
+          }
+        })
+    }, 180)
+    return () => { active = false; clearTimeout(timer) }
   }, [search, status, vehicleType])
 
-  // Clear message after delay
   useEffect(() => {
-    if (!message) return
+    if (!message) return undefined
     const timer = setTimeout(() => setMessage(''), 2800)
     return () => clearTimeout(timer)
   }, [message])
 
-  const selected = data.passes.find((item) => item.id === selectedId) || data.passes[0]
+  const selected = useMemo(
+    () => data.passes.find((item) => item.id === selectedId) || data.passes[0] || null,
+    [data.passes, selectedId]
+  )
 
   const replacePass = useCallback((updated) => {
     setData((current) => ({
@@ -85,12 +85,10 @@ function MonthlyPassPage() {
     if (!selected) return
     try {
       const updated = await action(selected.id)
-      if (updated.id) {
-        replacePass(updated)
-      }
-      setMessage(successMessage)
+      if (updated?.id) replacePass(updated)
+      setMessage(updated?.id ? successMessage : (updated?.message || 'Action failed.'))
     } catch (error) {
-      setMessage(error.message)
+      setMessage(error?.message || 'Action failed.')
     }
   }, [selected, replacePass])
 
@@ -113,40 +111,56 @@ function MonthlyPassPage() {
     event.preventDefault()
     try {
       if (dialog === 'create') {
-        const created = await createMonthlyPass(form)
-        setData((current) => ({ ...current, passes: [created, ...current.passes] }))
-        setSelectedId(created.id)
-        setMessage(`${created.passCode} submitted for manager approval.`)
+        const result = await createMonthlyPass(form)
+        if (result?.success && result.data) {
+          setData((current) => ({ ...current, passes: [result.data, ...current.passes] }))
+          setSelectedId(result.data.id)
+          setMessage(`${result.data.passCode} submitted for manager approval.`)
+        } else {
+          setMessage(result?.message || 'Failed to create pass.')
+          return
+        }
       } else {
-        const updated = await updateMonthlyPassVehicle(selected.id, form)
-        replacePass(updated)
-        setMessage(`Vehicle information for ${updated.passCode} updated.`)
+        const result = await updateMonthlyPassVehicle(selected.id, form)
+        if (result?.success && result.data) {
+          replacePass(result.data)
+          setMessage(`Vehicle information for ${result.data.passCode} updated.`)
+        } else {
+          setMessage(result?.message || 'Failed to update pass.')
+          return
+        }
       }
       setDialog(null)
     } catch (error) {
-      setMessage(error.message)
+      setMessage(error?.message || 'Save failed.')
     }
   }, [dialog, form, selected, replacePass])
 
   const handleSuspension = useCallback(async () => {
     if (!selected) return
     try {
-      const request = await requestPassSuspension(selected.id)
-      setMessage(`${request.requestId} sent for manager approval.`)
+      const result = await requestPassSuspension(selected.id, 'Staff request')
+      setMessage(result?.data?.requestId
+        ? `${result.data.requestId} sent for manager approval.`
+        : result?.message || 'Suspension request failed.')
     } catch (error) {
-      setMessage(error.message)
+      setMessage(error?.message || 'Suspension request failed.')
     }
   }, [selected])
 
   const closeDialog = useCallback(() => setDialog(null), [])
 
-  const stats = [
-    ['Active Passes', data.stats.activePasses],
-    ['Expiring Soon', data.stats.expiringSoon],
-    ['Pending Approval', data.stats.pendingApproval],
-    ['Verified Today', data.stats.verifiedToday],
-    ['Expired Passes', data.stats.expiredPasses]
-  ]
+  const stats = useMemo(() => {
+    const base = data.stats || {}
+    const fallback = deriveStats(data.passes)
+    return [
+      ['Active Passes', base.activePasses ?? fallback.active],
+      ['Expiring Soon', base.expiringSoon ?? fallback.expiring],
+      ['Pending Approval', base.pendingApproval ?? fallback.pending],
+      ['Verified Today', base.verifiedToday ?? fallback.verified],
+      ['Expired Passes', base.expiredPasses ?? fallback.expired]
+    ]
+  }, [data])
 
   return (
     <MainLayout>
@@ -160,10 +174,7 @@ function MonthlyPassPage() {
         <header className="monthly-pass-heading">
           <div>
             <h1>Monthly Pass Processing</h1>
-            <p>
-              Search, verify, create, renew, and update monthly parking passes
-              for customer service operations.
-            </p>
+            <p>Search, verify, create, renew, and update monthly parking passes for customer service operations.</p>
           </div>
           <span><i />Staff workspace</span>
         </header>
@@ -187,19 +198,13 @@ function MonthlyPassPage() {
             />
           </label>
           <select value={status} onChange={(e) => setStatus(e.target.value)}>
-            {STATUS_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
+            {STATUS_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
           </select>
           <select value={vehicleType} onChange={(e) => setVehicleType(e.target.value)}>
-            {VEHICLE_TYPE_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
+            {VEHICLE_TYPE_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
           </select>
           <select defaultValue="This Month">
-            {DATE_FILTER_OPTIONS.map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
+            {DATE_FILTER_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
           </select>
           <button className="create-pass" onClick={openCreate}>
             <span className="material-symbols-outlined">add</span>
@@ -207,30 +212,22 @@ function MonthlyPassPage() {
           </button>
         </section>
 
-        {message && (
-          <div className="monthly-pass-message" role="status">
-            {message}
-          </div>
-        )}
+        {message && <div className="monthly-pass-message" role="status">{message}</div>}
 
         <div className="monthly-pass-layout">
-          <PassList
-            passes={data.passes}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
-          />
+          <PassList passes={data.passes} selectedId={selectedId} onSelect={setSelectedId} loading={loading} />
           <aside className="monthly-pass-side">
             <PassDetail
               selected={selected}
               onVerify={() => runAction(verifyMonthlyPass, `${selected?.passCode} verified successfully.`)}
-              onRenew={() => runAction(renewMonthlyPass, `${selected?.passCode} renewed through 2026-08-31.`)}
+              onRenew={() => runAction(renewMonthlyPass, `${selected?.passCode} renewed successfully.`)}
               onUpdate={openUpdate}
               onSuspension={handleSuspension}
             />
             <ServicePanel
               selected={selected}
               onCreate={openCreate}
-              onRenew={() => runAction(renewMonthlyPass, `${selected?.passCode} renewed through 2026-08-31.`)}
+              onRenew={() => runAction(renewMonthlyPass, `${selected?.passCode} renewed successfully.`)}
               onUpdate={openUpdate}
               onSuspension={handleSuspension}
             />
@@ -263,7 +260,25 @@ function MonthlyPassPage() {
   )
 }
 
-function PassList({ passes, selectedId, onSelect }) {
+function deriveStats(passes) {
+  let active = 0
+  let expiring = 0
+  let pending = 0
+  let verified = 0
+  let expired = 0
+  const todayKey = new Date().toISOString().slice(0, 10)
+  for (const pass of passes) {
+    const status = String(pass.status || '').toLowerCase()
+    if (status === 'active') active += 1
+    else if (status === 'expiringsoon') expiring += 1
+    else if (status === 'pendingapproval') pending += 1
+    else if (status === 'expired') expired += 1
+    if (pass.lastVerified && String(pass.lastVerified).startsWith(todayKey)) verified += 1
+  }
+  return { active, expiring, pending, verified, expired }
+}
+
+function PassList({ passes, selectedId, onSelect, loading }) {
   return (
     <section className="monthly-pass-list">
       <header>
@@ -272,46 +287,44 @@ function PassList({ passes, selectedId, onSelect }) {
           <p>Showing {passes.length} passes</p>
         </div>
       </header>
-
       <div className="monthly-pass-table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Pass Code</th>
-              <th>License Plate</th>
-              <th>Driver</th>
-              <th>Vehicle Type</th>
-              <th>Valid Until</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {passes.map((item) => (
-              <tr
-                key={item.id}
-                className={item.id === selectedId ? 'selected' : ''}
-                onClick={() => onSelect(item.id)}
-              >
-                <td><b>{item.passCode}</b></td>
-                <td><strong>{item.licensePlate}</strong></td>
-                <td>{item.driver}</td>
-                <td>{item.vehicleType}</td>
-                <td>{item.validUntil}</td>
-                <td><StatusBadge value={item.status} /></td>
-                <td>
-                  <button onClick={(e) => { e.stopPropagation(); onSelect(item.id) }}>
-                    View
-                  </button>
-                </td>
+        {loading ? (
+          <div className="monthly-pass-empty">Loading passes…</div>
+        ) : passes.length === 0 ? (
+          <div className="monthly-pass-empty">No monthly passes match the current filters.</div>
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>Pass Code</th>
+                <th>License Plate</th>
+                <th>Driver</th>
+                <th>Vehicle Type</th>
+                <th>Valid Until</th>
+                <th>Status</th>
+                <th>Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {!passes.length && (
-          <div className="monthly-pass-empty">
-            No monthly passes match the current filters.
-          </div>
+            </thead>
+            <tbody>
+              {passes.map((item) => (
+                <tr
+                  key={item.id}
+                  className={item.id === selectedId ? 'selected' : ''}
+                  onClick={() => onSelect(item.id)}
+                >
+                  <td><b>{item.passCode}</b></td>
+                  <td><strong>{item.licensePlate}</strong></td>
+                  <td>{item.driver}</td>
+                  <td>{item.vehicleType}</td>
+                  <td>{item.validUntil}</td>
+                  <td><StatusBadge value={item.status} /></td>
+                  <td>
+                    <button onClick={(e) => { e.stopPropagation(); onSelect(item.id) }}>View</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
     </section>
@@ -322,12 +335,7 @@ function PassDetail({ selected, onVerify, onRenew, onUpdate, onSuspension }) {
   if (!selected) {
     return (
       <section className="monthly-pass-detail">
-        <header>
-          <div>
-            <small>Monthly Pass Detail</small>
-            <h2>No pass selected</h2>
-          </div>
-        </header>
+        <header><div><small>Monthly Pass Detail</small><h2>No pass selected</h2></div></header>
       </section>
     )
   }
@@ -341,7 +349,6 @@ function PassDetail({ selected, onVerify, onRenew, onUpdate, onSuspension }) {
         </div>
         <StatusBadge value={selected.status} />
       </header>
-
       <div className="monthly-pass-vehicle">
         <span className="material-symbols-outlined">directions_car</span>
         <div>
@@ -349,16 +356,14 @@ function PassDetail({ selected, onVerify, onRenew, onUpdate, onSuspension }) {
           <small>{selected.driver}</small>
         </div>
       </div>
-
       <dl>
-        <div><dt>Vehicle Type</dt><dd>{selected.vehicleType}</dd></div>
-        <div><dt>Pass Type</dt><dd>{selected.passType}</dd></div>
+        <div><dt>Vehicle Type</dt><dd>{selected.vehicleType || '—'}</dd></div>
+        <div><dt>Pass Type</dt><dd>{selected.passType || '—'}</dd></div>
         <div><dt>Validity</dt><dd>{selected.validFrom} to {selected.validUntil}</dd></div>
-        <div><dt>Status</dt><dd><span className="paid-dot" />{selected.status} / {selected.paymentStatus}</dd></div>
-        <div><dt>Assigned Location</dt><dd>{selected.assignedLocation}</dd></div>
-        <div><dt>Last Verified</dt><dd>{selected.lastVerified}</dd></div>
+        <div><dt>Status</dt><dd><span className="paid-dot" />{selected.status || '—'} / {selected.paymentStatus || '—'}</dd></div>
+        <div><dt>Assigned Location</dt><dd>{selected.assignedLocation || '—'}</dd></div>
+        <div><dt>Last Verified</dt><dd>{selected.lastVerified || '—'}</dd></div>
       </dl>
-
       <div className="monthly-pass-actions">
         <button className="primary" onClick={onVerify}>Verify Pass</button>
         <button onClick={onRenew}>Renew Pass</button>
@@ -380,26 +385,17 @@ function ServicePanel({ selected, onCreate, onRenew, onUpdate, onSuspension }) {
       </header>
       <div>
         <button onClick={onCreate}>Create New Monthly Pass</button>
-        <button
-          onClick={() => selected && onRenew()}
-          disabled={!selected}
-        >
-          Renew Existing Pass
-        </button>
+        <button onClick={() => selected && onRenew()} disabled={!selected}>Renew Existing Pass</button>
         <button onClick={onUpdate} disabled={!selected}>Update Vehicle Information</button>
-        <button onClick={onSuspension} disabled={!selected}>
-          Submit Manager Approval Request
-        </button>
+        <button onClick={onSuspension} disabled={!selected}>Submit Manager Approval Request</button>
       </div>
-      <p>
-        Staff can process standard services. Suspension, price changes,
-        and special approvals require manager review.
-      </p>
+      <p>Staff can process standard services. Suspension, price changes, and special approvals require manager review.</p>
     </section>
   )
 }
 
 function ActivitySection({ activities }) {
+  if (!activities?.length) return null
   return (
     <section className="monthly-pass-activity">
       <header>
@@ -423,11 +419,11 @@ function ActivitySection({ activities }) {
           <tbody>
             {activities.map((item) => (
               <tr key={item.id}>
-                <td>{item.time}</td>
-                <td><b>{item.passCode}</b></td>
-                <td>{item.licensePlate}</td>
-                <td>{item.action}</td>
-                <td>{item.staff}</td>
+                <td>{item.time || '—'}</td>
+                <td><b>{item.passCode || '—'}</b></td>
+                <td>{item.licensePlate || '—'}</td>
+                <td>{item.action || '—'}</td>
+                <td>{item.staff || '—'}</td>
                 <td><StatusBadge value={item.status} /></td>
               </tr>
             ))}
@@ -440,23 +436,15 @@ function ActivitySection({ activities }) {
 
 function PassModal({ dialog, form, setForm, selected, onSubmit, onClose }) {
   const handleBackdropClick = (event) => {
-    if (event.target === event.currentTarget) {
-      onClose()
-    }
+    if (event.target === event.currentTarget) onClose()
   }
 
   return (
-    <div
-      className="monthly-pass-modal-backdrop"
-      role="presentation"
-      onMouseDown={handleBackdropClick}
-    >
+    <div className="monthly-pass-modal-backdrop" role="presentation" onMouseDown={handleBackdropClick}>
       <section className="monthly-pass-modal" role="dialog" aria-modal="true">
         <header>
           <div>
-            <h2>
-              {dialog === 'create' ? 'Create New Monthly Pass' : 'Update Vehicle Information'}
-            </h2>
+            <h2>{dialog === 'create' ? 'Create New Monthly Pass' : 'Update Vehicle Information'}</h2>
             <p>
               {dialog === 'create'
                 ? 'Submit a standard monthly pass for processing.'
@@ -467,7 +455,6 @@ function PassModal({ dialog, form, setForm, selected, onSubmit, onClose }) {
             <span className="material-symbols-outlined">close</span>
           </button>
         </header>
-
         <form onSubmit={onSubmit}>
           {dialog === 'create' && (
             <label>
@@ -479,7 +466,6 @@ function PassModal({ dialog, form, setForm, selected, onSubmit, onClose }) {
               />
             </label>
           )}
-
           <label>
             License Plate
             <input
@@ -488,7 +474,6 @@ function PassModal({ dialog, form, setForm, selected, onSubmit, onClose }) {
               required
             />
           </label>
-
           <label>
             Vehicle Type
             <select
@@ -500,9 +485,7 @@ function PassModal({ dialog, form, setForm, selected, onSubmit, onClose }) {
               <option>EV</option>
             </select>
           </label>
-
           <p>New passes and special changes may require manager approval.</p>
-
           <div>
             <button type="button" onClick={onClose}>Cancel</button>
             <button className="submit" type="submit">

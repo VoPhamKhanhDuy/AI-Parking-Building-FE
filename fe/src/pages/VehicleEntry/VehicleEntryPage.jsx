@@ -220,7 +220,7 @@ function VehicleEntryPage() {
     } finally {
       setLoading(false)
     }
-  }, [licensePlate, vehicleType, ticketType, selectedSlot, aiRecommendation, checkStatus, navigate])
+  }, [licensePlate, vehicleType, ticketType, selectedSlot, aiRecommendation, checkStatus, plateSource, navigate])
 
   // Clear Form
   const handleClearForm = useCallback(() => {
@@ -763,9 +763,9 @@ function RecentEntriesTable({ entries }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant/20 bg-surface-container-lowest">
-              {entries.map((entry) => (
+              {entries.map((entry, index) => (
                 <tr
-                  key={entry.id}
+                  key={entry.id ?? `${entry.licensePlate}-${entry.time}-${entry.assignedSlot}-${index}`}
                   className={`hover:bg-surface-container/30 transition-colors ${entry.highlight ? 'bg-primary-fixed/20 border-l-2 border-primary' : ''}`}
                 >
                   <td className="px-6 py-4 text-on-surface-variant whitespace-nowrap">{entry.time}</td>

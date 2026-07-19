@@ -6,7 +6,9 @@ import { getParkingStructure, updateZone } from './parkingStructureService'
 import './ParkingStructurePage.css'
 
 function Badge({ children }) {
-  return <span className={`structure-badge ${children.toLowerCase().replaceAll(' ', '-')}`}>{children}</span>
+  const text = String(children ?? '—')
+  const safe = text.toLowerCase().replaceAll(' ', '-')
+  return <span className={`structure-badge ${safe}`}>{text}</span>
 }
 
 function ParkingStructurePage() {
@@ -20,9 +22,10 @@ function ParkingStructurePage() {
   useEffect(() => { getParkingStructure().then(setData) }, [])
 
   const filteredZones = useMemo(() => (data?.zones || []).filter((item) => (
-    `${item.location} ${item.zone} ${item.type}`.toLowerCase().includes(query.toLowerCase())
+    `${item.location || ''} ${item.zone || ''} ${item.type || ''}`.toLowerCase().includes(query.toLowerCase())
   )), [data, query])
 
+  const building = data?.buildings?.[0]
   const detail = (data?.zones || []).find((item) => item.location === floor && item.zone === selectedZone)
     ?? (data?.zones || []).find((item) => item.location === floor)
     ?? (data?.zones || [])[0]
@@ -45,11 +48,17 @@ function ParkingStructurePage() {
   }
 
   const markMaintenance = async () => {
-    await updateZone(`${detail.location}-${detail.zone}`, { status: 'Maintenance' })
+    if (!detail.id) {
+      showNotice(`${detail.zone} maintenance request has been recorded (offline).`)
+      return
+    }
+    await updateZone(detail.id, { status: 'Maintenance' })
     showNotice(`${detail.zone} maintenance request has been recorded.`)
   }
 
   if (!data) return <ManagerLayout><div className="structure-loading">Loading parking structure...</div></ManagerLayout>
+
+  const utilizationPct = detail.capacity ? Math.round((detail.occupied / detail.capacity) * 100) : 0
 
   return <ManagerLayout>
     <div className="structure-page">
@@ -57,13 +66,13 @@ function ParkingStructurePage() {
         <div>
           <p>Dashboard <span>/</span> Parking Structure</p>
           <h1>Parking Structure</h1>
-          <h2>Building A capacity, zone allocation, and maintenance status.</h2>
+          <h2>Building capacity, zone allocation, and maintenance status.</h2>
         </div>
         <span><i />Data current</span>
       </header>
 
       <section className="structure-kpis" aria-label="Structure summary">
-        {data.kpis.map((item) => <article key={item.label}>
+        {(data.kpis || []).map((item) => <article key={item.label}>
           <small>{item.label}</small>
           <strong className={item.tone ?? ''}>{item.value}</strong>
           <span>{item.note}</span>
@@ -74,8 +83,8 @@ function ParkingStructurePage() {
         <div className="structure-column structure-left-column">
           <aside className="structure-card structure-navigator">
             <header><h3>Building &amp; floor</h3></header>
-            <div className="building-row"><span className="material-symbols-outlined">apartment</span><strong>Building A</strong></div>
-            <nav>{data.buildings[0].floors.map((item) => {
+            <div className="building-row"><span className="material-symbols-outlined">apartment</span><strong>{building?.name || 'Building'}</strong></div>
+            <nav>{(building?.floors || []).map((item) => {
               const zoneCount = data.zones.filter((zone) => zone.location === item).length
               return <button className={floor === item ? 'active' : ''} key={item} onClick={() => selectFloor(item)}>
                 <span>{item}</span><small>{zoneCount} {zoneCount === 1 ? 'zone' : 'zones'}</small>
@@ -86,12 +95,12 @@ function ParkingStructurePage() {
           <section className="structure-card slot-summary">
             <header><h3>Slot type summary</h3></header>
             <div className="compact-summary">
-              {data.slotTypes.map((item) => <div key={item.type}>
+              {(data.slotTypes || []).map((item) => <div key={item.type}>
                 <span><strong>{item.type}</strong><small>{item.total} total</small></span>
                 <span><b>{item.available}</b><small>available</small></span>
               </div>)}
             </div>
-            <footer><span>Total capacity</span><strong>524 slots</strong></footer>
+            <footer><span>Total capacity</span><strong>{detail.capacity || 0} slots</strong></footer>
           </section>
         </div>
 
@@ -113,17 +122,17 @@ function ParkingStructurePage() {
 
           <section className="structure-card updates">
             <header><div><h3>Recent updates</h3><p>Structure and maintenance activity</p></div><button>View all</button></header>
-            <div className="updates-list">{data.recentUpdates.map((item) => <article key={`${item.time}-${item.area}`}>
-              <time>{item.time}</time>
-              <div><strong>{item.update}</strong><span>{item.area} · {item.staff}</span></div>
-              <Badge>{item.status}</Badge>
+            <div className="updates-list">{(data.recentUpdates || []).map((item) => <article key={`${item.time}-${item.area}`}>
+              <time>{item.time || '—'}</time>
+              <div><strong>{item.update || '—'}</strong><span>{item.area || '—'} · {item.staff || '—'}</span></div>
+              <Badge>{item.status || 'Updated'}</Badge>
             </article>)}</div>
           </section>
         </div>
 
         <aside className="structure-card zone-detail">
-          <header><div><h3>{detail.zone} · {detail.location}</h3><p>Building A · {detail.type}</p></div><Badge>{detail.status}</Badge></header>
-          <div className="utilization"><span>Utilization <b>{Math.round(detail.occupied / detail.capacity * 100)}%</b></span><div><i style={{ width: `${Math.round(detail.occupied / detail.capacity * 100)}%` }} /></div></div>
+          <header><div><h3>{detail.zone} · {detail.location}</h3><p>{building?.name || 'Building'} · {detail.type}</p></div><Badge>{detail.status}</Badge></header>
+          <div className="utilization"><span>Utilization <b>{utilizationPct}%</b></span><div><i style={{ width: `${utilizationPct}%` }} /></div></div>
           <dl>
             <div><dt>Total slots</dt><dd>{detail.capacity}</dd></div>
             <div><dt>Type</dt><dd>{detail.type}</dd></div>

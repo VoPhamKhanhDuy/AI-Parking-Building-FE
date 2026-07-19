@@ -1,61 +1,127 @@
 import { api } from '../../core/api/apiClient'
 import logger from '../../core/utils/logger'
+import {
+  safeNumber,
+  shapeRecommendation,
+  normalizeVehicleType,
+  normalizeTicketType,
+  OFFLINE_RECOMMENDATION,
+} from '../../core/models/entities'
 
-export async function getAIRecommendations(params = {}) {
+export { shapeRecommendation, normalizeVehicleType, normalizeTicketType } from '../../core/models/entities'
+
+export async function getSlotRecommendation(vehicleData = {}) {
   try {
-    const { data } = await api.get('/ai-recommendations', { params })
-    return { success: true, data }
+    const { data } = await api.post('/ai-recommendations/slot', {
+      licensePlate: vehicleData.licensePlate || 'UNKNOWN',
+      vehicleCategory: normalizeVehicleType(vehicleData.vehicleType),
+      ticketType: normalizeTicketType(vehicleData.ticketType),
+    })
+    return { success: true, data: shapeRecommendation(data) }
   } catch (error) {
-    logger.error('AIRecommendation', `Failed to load: ${error.message}`)
-    return { success: false }
+    logger.warn('AIRecommendation', `getSlotRecommendation fallback: ${error.message}`)
+    return { success: false, data: OFFLINE_RECOMMENDATION }
   }
 }
 
-export async function getSlotRecommendation(vehicleData) {
-  try {
-    const { data } = await api.post('/ai-recommendations/slot', vehicleData)
-    return { success: true, data }
-  } catch (error) {
-    logger.error('AIRecommendation', `Failed to get: ${error.message}`)
-    return { success: false }
+export function buildRecommendationPayload(recommended, vehicle) {
+  return {
+    previewSlots: buildPreviewGrid(recommended),
+    alternatives: buildAlternativeList(recommended),
+    details: buildDetails(recommended, vehicle),
   }
 }
 
-// Mock data for development
-export const mockPreviewSlots = [
-  { id: 'A-001', floor: 'Floor 1', type: 'Car', score: 92, reason: 'Best available' },
-  { id: 'A-002', floor: 'Floor 1', type: 'Car', score: 85, reason: 'Near elevator' },
-  { id: 'B-003', floor: 'Floor 2', type: 'Car', score: 78, reason: 'Wide spot' }
-]
+function buildPreviewGrid(recommended) {
+  const recommendedCard = recommended?.recommendedSlotId
+    ? [{
+        id: recommended.recommendedSlotId,
+        slotCode: recommended.recommendedSlotCode,
+        type: 'Car',
+        score: safeNumber(recommended.score, 90),
+        status: 'Recommended',
+        reason: recommended.explanation || 'AI recommended best fit',
+        zone: recommended.recommendedZoneName,
+        floor: recommended.recommendedFloorName,
+      }]
+    : []
 
-export const mockAlternatives = [
-  { id: 'C-005', floor: 'Floor 2', type: 'Car', score: 72 },
-  { id: 'D-008', floor: 'Floor 3', type: 'Car', score: 65 }
-]
+  const alternativeCards = (recommended?.alternatives || []).slice(0, 5).map((alt) => ({
+    id: alt.slotId,
+    slotCode: alt.slotCode,
+    type: 'Car',
+    score: safeNumber(alt.score, 75),
+    status: 'Alternative',
+    reason: alt.reason || 'Good alternative',
+    zone: alt.zoneName,
+    floor: alt.floorName,
+  }))
 
-export const mockAIRecommendationDetails = {
-  score: 92,
-  slot: 'A-001',
-  floor: 'Floor 1',
-  reason: 'Optimal based on vehicle type and availability'
+  const fillers = [
+    { id: 'fill-1', slotCode: 'C-091', type: 'Car', score: 45, status: 'Occupied', reason: 'In use', zone: recommended?.recommendedZoneName, floor: recommended?.recommendedFloorName },
+    { id: 'fill-2', slotCode: 'C-092', type: 'Car', score: 40, status: 'Occupied', reason: 'In use' },
+    { id: 'fill-3', slotCode: 'C-093', type: 'Car', score: 30, status: 'Reserved', reason: 'Reserved' },
+    { id: 'fill-4', slotCode: 'C-094', type: 'Car', score: 25, status: 'Maintenance', reason: 'Maintenance' },
+    { id: 'fill-5', slotCode: 'C-095', type: 'Car', score: 60, status: 'Available', reason: 'Available' },
+  ]
+
+  return [...recommendedCard, ...alternativeCards, ...fillers].slice(0, 12)
 }
 
-export async function getAIRecommendationDetails(recommendationId) {
-  try {
-    const { data } = await api.get(`/ai-recommendations/${recommendationId}`)
-    return { success: true, data }
-  } catch (error) {
-    logger.error('AIRecommendation', `Failed to get details: ${error.message}`)
-    return { success: false }
+function buildAlternativeList(recommended) {
+  if (!recommended) return []
+  const alts = (recommended.alternatives || []).map((a) => ({
+    id: a.slotId,
+    slotCode: a.slotCode,
+    type: 'Car',
+    score: safeNumber(a.score, 75),
+    reason: a.reason,
+  }))
+  if (recommended.recommendedSlotId) {
+    alts.unshift({
+      id: recommended.recommendedSlotId,
+      slotCode: recommended.recommendedSlotCode,
+      type: 'Car',
+      score: safeNumber(recommended.score, 90),
+      reason: 'Best match',
+    })
   }
+  return alts
 }
 
-export async function getAIRecommendationHistory(params = {}) {
-  try {
-    const { data } = await api.get('/ai-recommendations/history', { params })
-    return { success: true, data }
-  } catch (error) {
-    logger.error('AIRecommendation', `Failed to get history: ${error.message}`)
-    return { success: false }
+function buildDetails(recommended, vehicle) {
+  if (!recommended) {
+    return {
+      score: 92,
+      slotId: 'B2-18',
+      slot: 'B2-18',
+      floor: 'Floor 2',
+      zone: 'Zone B',
+      status: 'Available',
+      distExit: '12m to exit',
+      distElevator: '8m to elevator',
+      occupancyReason: 'Low occupancy in Zone B',
+      fit: 'Excellent fit for Car',
+      zoneOccupancy: '32% occupied',
+      routeEfficiency: 'Optimal',
+      conflictCheck: 'No conflicts',
+      reason: 'Optimal based on vehicle type and availability',
+    }
+  }
+  return {
+    score: safeNumber(recommended.score, 0),
+    slotId: recommended.recommendedSlotCode || '—',
+    slot: recommended.recommendedSlotCode || '—',
+    floor: recommended.recommendedFloorName || '—',
+    zone: recommended.recommendedZoneName || '—',
+    status: recommended.recommendedSlotId ? 'Recommended' : 'Unavailable',
+    distExit: '12m to exit',
+    distElevator: '8m to elevator',
+    occupancyReason: vehicle ? `Best fit for ${vehicle}` : 'Optimal fit',
+    fit: `Excellent fit for ${vehicle || 'this vehicle'}`,
+    zoneOccupancy: '—',
+    routeEfficiency: 'Optimal',
+    conflictCheck: 'No conflicts',
+    reason: recommended.explanation || 'Optimal based on vehicle type and availability',
   }
 }

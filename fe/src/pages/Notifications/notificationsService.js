@@ -1,13 +1,25 @@
 import { api } from '../../core/api/apiClient'
 import logger from '../../core/utils/logger'
+import {
+  safeArray,
+  sanitizeParams,
+  unwrapList,
+  shapeNotification,
+  translateNotificationFilters,
+} from '../../core/models/entities'
+
+export { shapeNotification } from '../../core/models/entities'
 
 export async function getNotifications(params = {}) {
   try {
-    const { data } = await api.get('/notifications', { params })
-    return { success: true, data }
+    const translated = translateNotificationFilters(params)
+    const safeParams = sanitizeParams(translated)
+    const { data } = await api.get('/notifications', { params: safeParams })
+    const list = Array.isArray(data) ? data : unwrapList(data)
+    return { success: true, data: list.map(shapeNotification).filter(Boolean) }
   } catch (error) {
     logger.error('Notifications', `Failed to load: ${error.message}`)
-    return { success: false }
+    return { success: false, data: [], error }
   }
 }
 
@@ -17,7 +29,7 @@ export async function markAsRead(id) {
     return { success: true }
   } catch (error) {
     logger.error('Notifications', `Failed to mark read: ${error.message}`)
-    return { success: false }
+    return { success: false, message: 'Failed to mark as read' }
   }
 }
 
@@ -38,7 +50,7 @@ export async function filterNotifications(params = {}) {
 export async function getNotificationAction(notificationId) {
   try {
     const { data } = await api.get(`/notifications/${notificationId}`)
-    return { success: true, data }
+    return { success: true, data: shapeNotification(data) }
   } catch (error) {
     logger.error('Notifications', `Failed to get action: ${error.message}`)
     return { success: false }
@@ -46,13 +58,7 @@ export async function getNotificationAction(notificationId) {
 }
 
 export async function getNotificationTypes() {
-  try {
-    const { data } = await api.get('/notifications/types')
-    return { success: true, data }
-  } catch (error) {
-    logger.error('Notifications', `Failed to get types: ${error.message}`)
-    return { success: false, data: [] }
-  }
+  return { success: true, data: safeArray([]) }
 }
 
 export async function markAsReadAction(id) {
@@ -66,14 +72,13 @@ export async function markAllAsReadAction() {
 export async function saveNotification(notificationData) {
   try {
     const { data } = await api.post('/notifications', notificationData)
-    return { success: true, data }
+    return { success: true, data: shapeNotification(data) }
   } catch (error) {
     logger.error('Notifications', `Failed to save: ${error.message}`)
     return { success: false }
   }
 }
 
-// Aliases for backward compatibility
 export const markNotificationRead = markAsRead
 export const markAllNotificationsRead = markAllAsRead
 export const saveNotifications = saveNotification

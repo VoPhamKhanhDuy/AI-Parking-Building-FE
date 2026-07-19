@@ -1,19 +1,45 @@
 import { api } from '../../core/api/apiClient'
 import logger from '../../core/utils/logger'
+import {
+  safeArray,
+  unwrapList,
+  shapeZoneStructure,
+  shapeBuilding,
+  buildStructureKpis,
+  buildStructureSlotTypes,
+  FALLBACK_STRUCTURE,
+} from '../../core/models/entities'
+
+export { shapeZoneStructure, shapeBuilding, buildStructureKpis, buildStructureSlotTypes } from '../../core/models/entities'
 
 export async function getParkingStructure() {
   try {
     const { data } = await api.get('/parking-structure')
-    return data // Return raw data directly
+    if (!data || typeof data !== 'object') return { ...FALLBACK_STRUCTURE }
+
+    const buildings = (Array.isArray(data.buildings) ? data.buildings : [])
+      .map(shapeBuilding)
+      .filter(Boolean)
+    const zones = (Array.isArray(data.zones) ? data.zones : [])
+      .map(shapeZoneStructure)
+      .filter(Boolean)
+
+    return {
+      buildings: buildings.length ? buildings : [{ id: null, name: 'Building A', floors: [] }],
+      zones,
+      kpis: Array.isArray(data.kpis) ? data.kpis : buildStructureKpis(zones),
+      slotTypes: Array.isArray(data.slotTypes) ? data.slotTypes : buildStructureSlotTypes(zones),
+      recentUpdates: Array.isArray(data.recentUpdates) ? data.recentUpdates : [],
+    }
   } catch (error) {
-    logger.error('ParkingStructure', `Failed to load: ${error.message}`)
-    return getMockParkingStructure()
+    logger.warn('ParkingStructure', `getParkingStructure fallback: ${error.message}`)
+    return { ...FALLBACK_STRUCTURE }
   }
 }
 
 export async function createBuilding(buildingData) {
   try {
-    const { data } = await api.post('/parking-structure/buildings', buildingData)
+    const { data } = await api.post('/buildings', buildingData)
     return { success: true, data }
   } catch (error) {
     logger.error('ParkingStructure', `Failed to create building: ${error.message}`)
@@ -23,7 +49,7 @@ export async function createBuilding(buildingData) {
 
 export async function createFloor(buildingId, floorData) {
   try {
-    const { data } = await api.post(`/parking-structure/buildings/${buildingId}/floors`, floorData)
+    const { data } = await api.post('/floors', { ...floorData, buildingId })
     return { success: true, data }
   } catch (error) {
     logger.error('ParkingStructure', `Failed to create floor: ${error.message}`)
@@ -33,7 +59,7 @@ export async function createFloor(buildingId, floorData) {
 
 export async function createZone(floorId, zoneData) {
   try {
-    const { data } = await api.post(`/parking-structure/floors/${floorId}/zones`, zoneData)
+    const { data } = await api.post('/zones', { ...zoneData, floorId })
     return { success: true, data }
   } catch (error) {
     logger.error('ParkingStructure', `Failed to create zone: ${error.message}`)
@@ -43,7 +69,7 @@ export async function createZone(floorId, zoneData) {
 
 export async function updateZone(zoneId, zoneData) {
   try {
-    const { data } = await api.put(`/parking-structure/zones/${zoneId}`, zoneData)
+    const { data } = await api.put(`/zones/${zoneId}`, zoneData)
     return { success: true, data }
   } catch (error) {
     logger.error('ParkingStructure', `Failed to update zone: ${error.message}`)
@@ -53,7 +79,7 @@ export async function updateZone(zoneId, zoneData) {
 
 export async function updateSlot(slotId, slotData) {
   try {
-    const { data } = await api.patch(`/parking-slots/${slotId}`, slotData)
+    const { data } = await api.put(`/slots/${slotId}`, slotData)
     return { success: true, data }
   } catch (error) {
     logger.error('ParkingStructure', `Failed to update slot: ${error.message}`)
@@ -61,13 +87,4 @@ export async function updateSlot(slotId, slotData) {
   }
 }
 
-function getMockParkingStructure() {
-  const zones = [
-    { zone: 'A1', location: 'Ground Floor', type: 'Standard', status: 'Available', capacity: 20, occupied: 12, available: 8, reserved: 0, maintenance: 0 },
-    { zone: 'A2', location: 'Ground Floor', type: 'EV Charging', status: 'Available', capacity: 10, occupied: 4, available: 6, reserved: 0, maintenance: 0 },
-    { zone: 'B1', location: 'Ground Floor', type: 'Motorcycle', status: 'Full', capacity: 30, occupied: 30, available: 0, reserved: 0, maintenance: 0 },
-    { zone: 'A1', location: 'Level 1', type: 'Standard', status: 'Available', capacity: 25, occupied: 15, available: 10, reserved: 0, maintenance: 0 },
-    { zone: 'B1', location: 'Level 1', type: 'Standard', status: 'Maintenance', capacity: 20, occupied: 0, available: 0, reserved: 0, maintenance: 20 }
-  ]
-  return { zones }
-}
+export const _internal = { safeArray, unwrapList }
