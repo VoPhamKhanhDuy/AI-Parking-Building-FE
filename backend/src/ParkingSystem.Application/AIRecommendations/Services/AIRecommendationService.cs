@@ -69,20 +69,56 @@ public class AIRecommendationService : IAIRecommendationService
     {
         if (string.IsNullOrWhiteSpace(licensePlate)) return null;
 
-        var existing = await _vehicles.FirstOrDefaultAsync(new AIRecommendationSpecifications.VehicleByLicensePlate(licensePlate), ct);
-        if (existing is not null) return existing;
+        var normalized = licensePlate.Trim().ToUpperInvariant();
 
-        var vehicleType = await _vehicleTypes.FirstOrDefaultAsync(new AIRecommendationSpecifications.VehicleTypeByCategory(category), ct)
-            ?? throw new NotFoundException(nameof(VehicleType), category.ToString());
-
-        var vehicle = new Vehicle
+        // Serializable transaction collapses the check-then-insert race window
+        // (e.g. React StrictMode's double-invoked effect in dev, or two
+        // concurrent operators) so the unique index on Vehicles.LicensePlate
+        // is no longer reached twice.
+        await _uow.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct);
+        try
         {
-            LicensePlate = licensePlate.Trim().ToUpperInvariant(),
-            VehicleTypeId = vehicleType.Id
-        };
-        await _vehicles.AddAsync(vehicle, ct);
-        await _uow.SaveChangesAsync(ct);
-        return vehicle;
+            var existing = await _vehicles.FirstOrDefaultAsync(
+                new AIRecommendationSpecifications.VehicleByLicensePlate(normalized), ct);
+            if (existing is not null)
+            {
+                await _uow.CommitTransactionAsync(ct);
+                return existing;
+            }
+
+            var vehicleType = await _vehicleTypes.FirstOrDefaultAsync(
+                new AIRecommendationSpecifications.VehicleTypeByCategory(category), ct)
+                ?? throw new NotFoundException(nameof(VehicleType), category.ToString());
+
+            var vehicle = new Vehicle
+            {
+                LicensePlate = normalized,
+                VehicleTypeId = vehicleType.Id
+            };
+            await _vehicles.AddAsync(vehicle, ct);
+            await _uow.SaveChangesAsync(ct);
+            await _uow.CommitTransactionAsync(ct);
+            return vehicle;
+        }
+        catch (NotFoundException)
+        {
+            await _uow.RollbackTransactionAsync(ct);
+            throw;
+        }
+        catch (ValidationException)
+        {
+            await _uow.RollbackTransactionAsync(ct);
+            throw;
+        }
+        catch (Exception)
+        {
+            // Any other failure — including the rare unique-constraint violation
+            // that can race through a concurrent non-transactional writer — is
+            // rolled back and surfaced. The API middleware translates the
+            // remaining provider exception into HTTP 409 conflict.
+            await _uow.RollbackTransactionAsync(ct);
+            throw;
+        }
     }
 
     private async Task<List<RankedSlot>> LoadCandidatesAsync(VehicleTypeCategory category, CancellationToken ct)
