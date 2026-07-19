@@ -171,4 +171,18 @@ public class VehicleService : IVehicleService
         _vehicles.Update(vehicle);
         await _uow.SaveChangesAsync(ct);
     }
+
+    public async Task<IReadOnlyList<VehicleTypeDto>> ListTypesAsync(CancellationToken ct = default)
+    {
+        var types = await _vehicleTypes.ListAllAsync(ct);
+        return types
+            .Select(t => new VehicleTypeDto
+            {
+                Id = t.Id,
+                Name = t.Name,
+                Category = t.Category,
+                DefaultHourlyRate = t.DefaultHourlyRate,
+            })
+            .ToList();
+    }
 }

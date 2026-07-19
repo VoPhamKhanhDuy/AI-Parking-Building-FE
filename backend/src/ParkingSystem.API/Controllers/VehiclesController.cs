@@ -78,4 +78,11 @@ public class VehiclesController : ControllerBase
         await _service.DeleteAsync(id, ct);
         return NoContent();
     }
+
+    /// <summary>List all known vehicle types (used by entry gates to map a category to a vehicleTypeId).</summary>
+    [HttpGet("types")]
+    [Authorize]
+    [ProducesResponseType(typeof(IReadOnlyList<VehicleTypeDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<VehicleTypeDto>>> ListTypes(CancellationToken ct)
+        => Ok(await _service.ListTypesAsync(ct));
 }

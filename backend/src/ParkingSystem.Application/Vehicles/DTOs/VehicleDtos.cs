@@ -19,6 +19,14 @@ public class VehicleDto
     public DateTime? UpdatedAt { get; set; }
 }
 
+public class VehicleTypeDto
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public VehicleTypeCategory Category { get; set; }
+    public decimal DefaultHourlyRate { get; set; }
+}
+
 public class CreateVehicleRequest
 {
     public string LicensePlate { get; set; } = string.Empty;

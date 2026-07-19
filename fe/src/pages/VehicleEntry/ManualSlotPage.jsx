@@ -121,7 +121,11 @@ function ManualSlotPage() {
     setSubmitting(true); setError('')
     try {
       const assignment = await assignParkingSlot({ slotId: selectedSlot.id, licensePlate: entry.licensePlate, vehicleType: entry.vehicleType, ticketType: entry.ticketType })
-      navigate(ROUTE_PATHS.checkinSuccess, { state: { ...entry, selectedSlotId: selectedSlot.id, ticketCode: assignment.ticketCode, entryTime: assignment.entryTime, method: 'Manual Selection', matchScore: 'Staff selected' } })
+      if (!assignment.success) {
+        setError(assignment.message || 'Could not assign this slot.')
+        return
+      }
+      navigate(ROUTE_PATHS.checkinSuccess, { state: { ...entry, selectedSlotId: selectedSlot.id, ticketCode: assignment.data.ticketCode, entryTime: assignment.data.entryTime, method: 'Manual Selection', matchScore: 'Staff selected', sessionId: assignment.data.sessionId } })
     } catch (requestError) {
       setError(requestError.response?.data?.message || requestError.message || 'Could not assign this slot.')
     } finally { setSubmitting(false) }

@@ -19,4 +19,6 @@ public interface IVehicleService
     Task<VehicleDto> UpdateAsync(Guid id, UpdateVehicleRequest req, CancellationToken ct = default);
 
     Task DeleteAsync(Guid id, CancellationToken ct = default);
+
+    Task<IReadOnlyList<VehicleTypeDto>> ListTypesAsync(CancellationToken ct = default);
 }
