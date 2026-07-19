@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
-import { getBuildings, getFloors, getSlotsByZone } from '../ParkingMap/parkingMapService'
+import { getBuildings, getFloors, getZones, getSlotsByZone } from '../ParkingMap/parkingMapService'
 import { assignParkingSlot, isCompatible } from './manualSlotService'
 import './ManualSlotPage.css'
 
@@ -28,7 +28,16 @@ async function loadFloorsWithSlots() {
   for (const building of buildings) {
     const floors = await getFloors(building.id)
     for (const floor of floors) {
-      const slots = await getSlotsByZone(floor.id, 'All Statuses')
+      // The slots endpoint is keyed by zoneId, not floorId. Walk down through
+      // zones so a stale or missing floorId cannot trip a 404 on /api/slots.
+      const zones = await getZones(floor.id)
+      const slotBatches = await Promise.all(
+        zones.map(async (zone) => {
+          const slots = await getSlotsByZone(zone.id, 'All Statuses').catch(() => [])
+          return slots.map((slot) => ({ ...slot, zoneId: zone.id, zone: zone.name, floor: floor.name }))
+        })
+      )
+      const slots = slotBatches.flat()
       all.push({
         id: floor.id,
         name: floor.name || `Floor ${floor.floorNumber || ''}`,
