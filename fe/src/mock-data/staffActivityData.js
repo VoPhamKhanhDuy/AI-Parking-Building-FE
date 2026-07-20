@@ -1,0 +1,40 @@
+export const staffActivityData = {
+  summaries: [
+    { label: 'Staff on Duty', value: '8', note: '8 of 9 assigned' },
+    { label: 'Active Gates', value: '3', note: 'All reporting normally' },
+    { label: 'Entries Handled', value: '284', note: 'Current shift' },
+    { label: 'Exits Handled', value: '271', note: 'Current shift' },
+    { label: 'Pending Staff Reviews', value: '3', note: 'Manager action required', tone: 'warning' },
+  ],
+  shift: { name: 'Morning Shift', facility: 'Building A', time: '08:00 - 17:00', supervisor: 'Lê Hoàng Nam', coverage: '8 / 9 assigned', status: 'Active', note: 'One exit gate operator has pending payment cases requiring manager review.' },
+  staff: [
+    { id: 'STF-2026-001', name: 'Nguyễn Văn An', role: 'Entry Gate Operator', area: 'Entry Gate A', entries: 42, exits: 0, payments: 0, pending: 0, status: 'Active', lastActivity: 'Today 14:20', shiftTime: '08:00 - 17:00' },
+    { id: 'STF-2026-004', name: 'Phạm Thu Hà', role: 'Exit Gate Operator', area: 'Exit Gate B', entries: 0, exits: 38, payments: 36, pending: 2, status: 'Active', lastActivity: 'Today 16:45', shiftTime: '08:00 - 17:00' },
+    { id: 'STF-2026-006', name: 'Trần Minh Đức', role: 'Parking Support', area: 'Zone B', entries: 12, exits: 10, payments: 4, pending: 1, status: 'Active', lastActivity: 'Today 15:30', shiftTime: '08:00 - 17:00' },
+    { id: 'STF-2026-002', name: 'Lê Hoàng Nam', role: 'Supervisor', area: 'Building A', entries: 8, exits: 7, payments: 5, pending: 0, status: 'Active', lastActivity: 'Today 13:45', shiftTime: '08:00 - 17:00' },
+    { id: 'STF-2026-008', name: 'Bùi Anh Tuấn', role: 'Parking Support', area: 'Zone C', entries: 10, exits: 8, payments: 3, pending: 0, status: 'On Break', lastActivity: 'Today 16:10', shiftTime: '08:00 - 17:00' },
+    { id: 'STF-2026-009', name: 'Đỗ Gia Huy', role: 'Entry Support', area: 'Entry Gate B', entries: 28, exits: 0, payments: 0, pending: 0, status: 'Active', lastActivity: 'Today 16:25', shiftTime: '08:00 - 17:00' },
+    { id: 'STF-2026-003', name: 'Hoàng Mai Linh', role: 'Exit Gate Operator', area: 'Exit Gate A', entries: 0, exits: 31, payments: 29, pending: 0, status: 'Active', lastActivity: 'Today 16:35', shiftTime: '08:00 - 17:00' },
+    { id: 'STF-2026-007', name: 'Võ Quốc Bảo', role: 'Facility Support', area: 'Zone D', entries: 9, exits: 7, payments: 2, pending: 0, status: 'Active', lastActivity: 'Today 15:55', shiftTime: '08:00 - 17:00' },
+  ],
+  workload: [
+    { area: 'Entry Gate A', value: 42, label: '42 entries' },
+    { area: 'Entry Gate B', value: 28, label: '28 entries' },
+    { area: 'Exit Gate A', value: 31, label: '31 exits' },
+    { area: 'Exit Gate B', value: 38, label: '38 exits' },
+    { area: 'Zone B Support', value: 22, label: '22 handled sessions' },
+  ],
+  pendingReviews: [
+    { reference: 'PAY-000128', text: 'Payment pending confirmation by Phạm Thu Hà', priority: 'High' },
+    { reference: 'LT-00008', text: 'Lost ticket case submitted by Parking Staff', priority: 'Medium' },
+    { reference: 'Zone B', text: 'High occupancy alert handled by Trần Minh Đức', priority: 'Low' },
+  ],
+  activities: [
+    { time: 'Today 17:20', staff: 'Parking Staff', activity: 'Lost ticket case submitted', reference: 'LT-00008', area: 'Exit Gate B', status: 'Pending Review' },
+    { time: 'Today 17:48', staff: 'Phạm Thu Hà', activity: 'Payment pending confirmation', reference: 'PAY-000128', area: 'Exit Gate B', status: 'Pending' },
+    { time: 'Today 15:30', staff: 'Trần Minh Đức', activity: 'Zone B high occupancy handled', reference: 'Zone B', area: 'Zone B', status: 'Resolved' },
+    { time: 'Today 14:32', staff: 'Nguyễn Văn An', activity: 'Vehicle entry processed', reference: 'TCK-2026-000128', area: 'Entry Gate A', status: 'Completed' },
+    { time: 'Today 13:45', staff: 'Lê Hoàng Nam', activity: 'Shift coverage checked', reference: 'SHIFT-001', area: 'Building A', status: 'Completed' },
+  ],
+  managerNote: 'Staff activity is stable. Pending payment and lost ticket cases should be reviewed before shift closing. Exit Gate B workload is higher than other areas.',
+}
