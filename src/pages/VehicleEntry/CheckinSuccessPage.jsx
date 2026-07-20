@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
-import { createCheckinPayment, formatMoney, formatSessionTime, getCheckinPaymentStatus } from './checkinSuccessService'
+import { formatSessionTime, getCheckinNextSteps } from './checkinSuccessService'
 import './CheckinSuccessPage.css'
 
 const DEFAULT_SESSION = { licensePlate: '51A-12345', vehicleType: 'Car', ticketType: 'Normal', checkStatus: 'Existing Vehicle', plateSource: 'Camera Scan', selectedSlotId: 'B2-18', ticketCode: 'TCK-2026-000128', entryTime: new Date().toISOString(), method: 'AI Recommended', matchScore: '92%' }
@@ -13,39 +12,11 @@ function CheckinSuccessPage() {
   const location = useLocation()
   const navigate = useNavigate()
   const session = { ...DEFAULT_SESSION, ...(location.state || {}) }
-  const [payment, setPayment] = useState(null)
-  const [paymentLoading, setPaymentLoading] = useState(true)
-  const [paymentError, setPaymentError] = useState('')
   const slotId = session.selectedSlotId || 'B2-18'
   const floor = session.selectedFloor || (slotId.includes('2') || slotId.startsWith('C') ? 'Floor 2' : 'Floor 1')
   const zone = slotId.startsWith('M') ? 'A · Motorcycle' : slotId.startsWith('EV') ? 'C · EV charging' : 'B · Car'
   const entryTime = formatSessionTime(session.entryTime)
-  const ticketCode = session.ticketCode
-  const licensePlate = session.licensePlate
-
-  const loadPayment = async () => {
-    setPaymentLoading(true); setPaymentError('')
-    try { setPayment(await createCheckinPayment({ ticketCode, licensePlate })) }
-    catch { setPaymentError('Could not create the payment QR. Please try again.') }
-    finally { setPaymentLoading(false) }
-  }
-
-  useEffect(() => {
-    let active = true
-    createCheckinPayment({ ticketCode, licensePlate })
-      .then((result) => active && setPayment(result))
-      .catch(() => active && setPaymentError('Could not create the payment QR. Please try again.'))
-      .finally(() => active && setPaymentLoading(false))
-    return () => { active = false }
-  }, [ticketCode, licensePlate])
-
-  const refreshStatus = async () => {
-    if (!payment) return
-    setPaymentLoading(true)
-    try { const status = await getCheckinPaymentStatus(payment.paymentId); setPayment((current) => ({ ...current, status: status.status })) }
-    catch { setPaymentError('Could not refresh payment status.') }
-    finally { setPaymentLoading(false) }
-  }
+  const nextSteps = getCheckinNextSteps({ slotId, floor, zone })
 
   return <MainLayout><div className="checkin-page">
     <nav className="checkin-breadcrumb"><button onClick={() => navigate(ROUTE_PATHS.dashboard)}>Dashboard</button><span>/</span><button onClick={() => navigate(ROUTE_PATHS.vehicleEntry)}>Vehicle Entry</button><span>/</span><b>Check-in Success</b></nav>
@@ -60,9 +31,11 @@ function CheckinSuccessPage() {
     </main>
 
     <aside className="checkin-side"><div className="checkin-actions"><button className="primary" onClick={() => window.print()}><span className="material-symbols-outlined">print</span>Print ticket</button><button onClick={() => navigate(ROUTE_PATHS.manualSlot, { state: session })}><span className="material-symbols-outlined">map</span>View slot map</button><button onClick={() => navigate(ROUTE_PATHS.vehicleEntry)}><span className="material-symbols-outlined">add_circle</span>New vehicle entry</button><button className="text" onClick={() => navigate(ROUTE_PATHS.dashboard)}>Back to dashboard</button></div>
-      <section className="operation-card"><h2>Operation checks</h2>{['Vehicle verified','Slot assignment confirmed','Ticket created','Session initiated'].map((item) => <p key={item}><span className="material-symbols-outlined">check_circle</span>{item}</p>)}</section>
-      <section className="payment-card"><div className="payment-heading"><div><small>QR payment</small><h2>Parking deposit</h2></div>{payment && <span className={`payment-status ${payment.status.toLowerCase()}`}>{payment.status === 'PENDING' ? 'Awaiting payment' : payment.status}</span>}</div>
-        {paymentLoading && !payment ? <div className="payment-state"><i />Creating payment QR…</div> : paymentError && !payment ? <div className="payment-state error">{paymentError}<button onClick={loadPayment}>Try again</button></div> : payment && <><div className="qr-wrap"><img src={payment.qrImageUrl} alt="Payment QR code"/><div><small>Amount</small><strong>{formatMoney(payment.amount)}</strong><small>Bank</small><span>{payment.bankName}</span><small>Transfer content</small><code>{payment.description}</code></div></div><div className="payment-meta"><span>Expires {formatSessionTime(payment.expiresAt)}</span><button disabled={paymentLoading} onClick={refreshStatus}>{paymentLoading ? 'Checking…' : 'Check payment'}</button></div>{paymentError && <p className="payment-error">{paymentError}</p>}</>}
+      <section className="operation-card"><h2>Session checks</h2>{['Vehicle verified','Slot assignment confirmed','Ticket created','Session initiated'].map((item) => <p key={item}><span className="material-symbols-outlined">check_circle</span>{item}</p>)}</section>
+      <section className="next-step-card">
+        <div className="next-step-heading"><div className="next-step-title"><span className="material-symbols-outlined">route</span><div><small>Entry handoff</small><h2>Next Step</h2></div></div><span className="next-step-status"><i />Entry authorized</span></div>
+        <div className="next-step-list">{nextSteps.map((item) => <p key={item}><span className="material-symbols-outlined">check_circle</span>{item}</p>)}</div>
+        <div className="next-step-note"><span className="material-symbols-outlined">info</span><div><strong>Fee handling</strong><small>No payment is required at entry. Parking fees are calculated and processed during vehicle exit.</small></div></div>
       </section>
     </aside></div>
   </div></MainLayout>

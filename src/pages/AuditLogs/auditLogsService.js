@@ -93,5 +93,5 @@ export const initialSecurityEvents = [
   { time: 'Today 14:10', event: 'Failed login attempt', account: 'unknown@parking.vn', severity: 'Medium', severityClass: 'text-secondary', status: 'Review' },
   { time: 'Today 12:45', event: 'Password reset request', account: 'Phạm Thu Hà', severity: 'Low', severityClass: 'text-slate-500', status: 'Pending' },
   { time: 'Today 10:30', event: 'Suspended account access blocked', account: 'Lê Minh Khoa', severity: 'High', severityClass: 'text-error', status: 'Resolved' },
-  { time: 'Today 09:05', event: 'Admin login verified', account: 'Nguyễn Văn Admin', severity: 'Low', severityClass: 'text-slate-500', status: 'Success' }
+  { time: 'Today 09:05', event: 'Admin login verified', account: 'Trần Thanh Vân', severity: 'Low', severityClass: 'text-slate-500', status: 'Success' }
 ]

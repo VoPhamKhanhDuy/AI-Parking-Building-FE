@@ -1,6 +1,6 @@
 export const adminProfileData = {
-  initials: 'NA',
-  name: 'Nguyễn Văn Admin',
+  initials: 'TV',
+  name: 'Trần Thanh Vân',
   role: 'System Administrator',
   gate: 'Control Center Room 301',
   department: 'Information Technology',
