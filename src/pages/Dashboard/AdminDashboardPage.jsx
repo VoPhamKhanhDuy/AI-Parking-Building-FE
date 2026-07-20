@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { mockAdminKPIs, mockAdminUsers, mockAccountDistribution, mockSecurityOverview, mockAuditActivity } from './adminDashboardService'
 import { ROUTE_PATHS } from '../../routes/routePaths'
+import { formatCurrentTime } from './dashboardService'
 import '../../layouts/MainLayout.css'
 
 function AdminDashboardPage() {
@@ -13,6 +14,14 @@ function AdminDashboardPage() {
   const [kpis, setKpis] = useState(mockAdminKPIs)
   const [auditLogs, setAuditLogs] = useState(mockAuditActivity)
   const [openMenu, setOpenMenu] = useState(null)
+  const [time, setTime] = useState(() => formatCurrentTime ? formatCurrentTime() : new Date().toLocaleTimeString('en-GB'))
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(formatCurrentTime ? formatCurrentTime() : new Date().toLocaleTimeString('en-GB'))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
   
   // Professional Modal State
   const [modal, setModal] = useState({
@@ -247,19 +256,20 @@ function AdminDashboardPage() {
         {/* TopNavBar */}
         <header className="h-14 flex items-center justify-between px-8 bg-white border-b border-outline-variant sticky top-0 z-30">
           <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2 text-on-surface-variant font-label-md">
-              <span className="w-2 h-2 rounded-full bg-primary"></span>
-              <span>System Control</span>
-            </div>
-            <div className="h-4 w-px bg-outline-variant"></div>
-            <div className="flex items-center gap-2 text-on-surface-variant font-label-md">
-              <span className="material-symbols-outlined text-[18px]">verified_user</span>
-              <span>Security Mode: Normal</span>
-            </div>
-            <div className="h-4 w-px bg-outline-variant"></div>
-            <div className="flex items-center gap-2 text-on-surface-variant font-label-md">
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
-              <span>System Status: Online</span>
+            <span className="gate-pill"><i></i>Building A</span>
+            <span className="clock">
+              <span className="material-symbols-outlined">schedule</span>
+              {time}
+            </span>
+            <div className="shift-info">
+              <span>
+                <small>Operation Mode</small>
+                <strong>Normal</strong>
+              </span>
+              <span>
+                <small>System Status</small>
+                <strong>Online</strong>
+              </span>
             </div>
           </div>
           <div className="topbar-actions">
@@ -282,8 +292,8 @@ function AdminDashboardPage() {
             <span className="top-divider" />
             <div className="menu-anchor">
               <button className="profile-button" onClick={() => setOpenMenu(openMenu === 'profile' ? null : 'profile')}>
-                <span><strong>Nguyễn Văn Admin</strong><small>System Admin</small></span>
-                <b>A</b>
+                <span><strong>Trần Thanh Vân</strong><small>System Admin</small></span>
+                <b>TV</b>
               </button>
               {openMenu === 'profile' && (
                 <div className="action-menu compact profile-menu">
@@ -300,8 +310,8 @@ function AdminDashboardPage() {
           
           {/* Page Header */}
           <section>
-            <h2 className="font-headline-lg text-headline-lg text-on-surface">Admin Dashboard</h2>
-            <p className="font-body-md text-body-md text-on-surface-variant mt-0.5">Monitor system users, account status, security alerts, and administrative activity.</p>
+            <h2 className="font-headline-md text-headline-md font-bold text-on-surface">Admin Dashboard</h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Monitor system users, account status, security alerts, and administrative activity.</p>
           </section>
 
           {/* KPI Row */}
@@ -605,8 +615,10 @@ function AdminDashboardPage() {
       )}
 
       {toast.show && (
-        <div className="profile-toast-custom">
-          <span className="material-symbols-outlined text-green-500">check_circle</span>
+        <div className={`profile-toast-custom ${toast.type || 'success'}`}>
+          <span className="material-symbols-outlined">
+            {toast.type === 'error' ? 'cancel' : 'check_circle'}
+          </span>
           <span>{toast.message}</span>
         </div>
       )}

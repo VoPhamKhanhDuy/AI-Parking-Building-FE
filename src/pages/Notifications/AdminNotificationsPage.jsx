@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getNotifications, filterNotifications, markNotificationRead, markAllNotificationsRead } from './notificationsService'
 import { ROUTE_PATHS } from '../../routes/routePaths'
+import { formatCurrentTime } from '../Dashboard/dashboardService'
 import '../../layouts/MainLayout.css'
 
 const defaultFilters = { search: '', type: 'All Types', status: 'All Statuses', shift: 'All Shifts' }
@@ -12,6 +13,14 @@ function AdminNotificationsPage() {
   const [selectedId, setSelectedId] = useState(notifications[0]?.id)
   const [filters, setFilters] = useState(defaultFilters)
   const [openMenu, setOpenMenu] = useState(null)
+  const [time, setTime] = useState(() => formatCurrentTime ? formatCurrentTime() : new Date().toLocaleTimeString('en-GB'))
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(formatCurrentTime ? formatCurrentTime() : new Date().toLocaleTimeString('en-GB'))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
   
   // Custom Toast state
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
@@ -57,27 +66,10 @@ function AdminNotificationsPage() {
             border: 1px solid #e2e8f0;
             box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
         }
-        .profile-toast-custom {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            z-index: 999;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 18px;
-            border-radius: 6px;
-            background: #1e293b;
-            color: white;
-            font-size: 13px;
-            font-weight: 500;
-            box-shadow: 0 4px 12px rgba(15,23,42,0.15);
-            animation: slideInUp 0.2s ease-out;
-        }
       `}} />
 
       {/* SideNavBar (Professional Dark) */}
-      <aside className="fixed left-0 top-0 h-full w-[280px] z-40 overflow-y-auto bg-[#1e293b] flex flex-col">
+      <aside className="fixed left-0 top-0 h-full w-[240px] z-40 overflow-y-auto bg-[#1e293b] flex flex-col">
         <div className="px-6 py-8 mb-4">
           <h1 className="text-headline-md font-headline-md font-bold text-white mb-1">AI Command Center</h1>
           <p className="text-slate-400 text-label-md font-label-md">System Administrator Portal</p>
@@ -108,7 +100,7 @@ function AdminNotificationsPage() {
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded bg-primary/20 text-primary flex items-center justify-center font-bold text-sm">NA</div>
             <div>
-              <p className="text-white text-body-sm font-medium">Nguyễn Văn Admin</p>
+              <p className="text-white text-body-sm font-medium">Trần Thanh Vân</p>
               <p className="text-slate-500 text-[11px] uppercase tracking-tight">System Admin</p>
             </div>
           </div>
@@ -116,24 +108,25 @@ function AdminNotificationsPage() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 ml-[280px] flex flex-col min-w-0 bg-[#f7f9fc]">
+      <main className="flex-1 ml-[240px] flex flex-col min-w-0 bg-[#f7f9fc]">
         
         {/* TopNavBar */}
         <header className="h-14 flex items-center justify-between px-8 bg-white border-b border-outline-variant sticky top-0 z-30">
           <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2 text-on-surface-variant font-label-md">
-              <span className="w-2 h-2 rounded-full bg-primary"></span>
-              <span>System Control</span>
-            </div>
-            <div className="h-4 w-px bg-outline-variant"></div>
-            <div className="flex items-center gap-2 text-on-surface-variant font-label-md">
-              <span className="material-symbols-outlined text-[18px]">verified_user</span>
-              <span>Security Mode: Normal</span>
-            </div>
-            <div className="h-4 w-px bg-outline-variant"></div>
-            <div className="flex items-center gap-2 text-on-surface-variant font-label-md">
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
-              <span>System Status: Online</span>
+            <span className="gate-pill"><i></i>Building A</span>
+            <span className="clock">
+              <span className="material-symbols-outlined">schedule</span>
+              {time}
+            </span>
+            <div className="shift-info">
+              <span>
+                <small>Operation Mode</small>
+                <strong>Normal</strong>
+              </span>
+              <span>
+                <small>System Status</small>
+                <strong>Online</strong>
+              </span>
             </div>
           </div>
           <div className="topbar-actions">
@@ -156,8 +149,8 @@ function AdminNotificationsPage() {
             <span className="top-divider" />
             <div className="menu-anchor">
               <button className="profile-button" onClick={() => setOpenMenu(openMenu === 'profile' ? null : 'profile')}>
-                <span><strong>Nguyễn Văn Admin</strong><small>System Admin</small></span>
-                <b>A</b>
+                <span><strong>Trần Thanh Vân</strong><small>System Admin</small></span>
+                <b>TV</b>
               </button>
               {openMenu === 'profile' && (
                 <div className="action-menu compact profile-menu">
@@ -170,7 +163,7 @@ function AdminNotificationsPage() {
         </header>
 
         {/* Content Canvas */}
-        <div className="p-6 space-y-4 max-w-[1600px] mx-auto w-full">
+        <div className="p-4 space-y-4 max-w-[1280px] mx-auto w-full">
           
           {/* Breadcrumb Heading */}
           <header className="space-y-1">
@@ -179,8 +172,8 @@ function AdminNotificationsPage() {
               <span className="material-symbols-outlined text-[16px] text-on-surface-variant">chevron_right</span>
               <strong className="text-on-surface font-semibold text-body-sm">Notifications</strong>
             </div>
-            <h2 className="font-headline-lg text-headline-lg text-on-surface">Notifications</h2>
-            <p className="font-body-md text-body-md text-on-surface-variant mt-0.5">Review important alerts, gate events, system updates, and task lists.</p>
+            <h2 className="font-headline-md text-headline-md font-bold text-on-surface">Notifications</h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Review important alerts, gate events, system updates, and task lists.</p>
           </header>
 
           {/* Filters Bar */}
@@ -320,8 +313,10 @@ function AdminNotificationsPage() {
 
       {/* Global custom Toast */}
       {toast.show && (
-        <div className="profile-toast-custom">
-          <span className="material-symbols-outlined text-green-500">check_circle</span>
+        <div className={`profile-toast-custom ${toast.type || 'success'}`}>
+          <span className="material-symbols-outlined">
+            {toast.type === 'error' ? 'cancel' : 'check_circle'}
+          </span>
           <span>{toast.message}</span>
         </div>
       )}

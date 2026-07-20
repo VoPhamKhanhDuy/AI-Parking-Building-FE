@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { adminProfileData } from '../../mock-data/adminProfile'
 import { ROLE_CREDENTIALS } from '../../mock-data/users'
 import { ROUTE_PATHS } from '../../routes/routePaths'
+import { formatCurrentTime } from '../Dashboard/dashboardService'
 import '../../layouts/MainLayout.css'
 
 const emptyPasswordForm = { currentPassword: '', newPassword: '', confirmPassword: '' }
@@ -14,6 +15,14 @@ function AdminProfilePage() {
   const [passwordForm, setPasswordForm] = useState(emptyPasswordForm)
   const [formError, setFormError] = useState('')
   const [openMenu, setOpenMenu] = useState(null)
+  const [time, setTime] = useState(() => formatCurrentTime ? formatCurrentTime() : new Date().toLocaleTimeString('en-GB'))
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(formatCurrentTime ? formatCurrentTime() : new Date().toLocaleTimeString('en-GB'))
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
   
   // Custom Toast state
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
@@ -70,48 +79,31 @@ function AdminProfilePage() {
             border: 1px solid #e2e8f0;
             box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
         }
-        .profile-toast-custom {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            z-index: 999;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 18px;
-            border-radius: 6px;
-            background: #1e293b;
-            color: white;
-            font-size: 13px;
-            font-weight: 500;
-            box-shadow: 0 4px 12px rgba(15,23,42,0.15);
-            animation: slideInUp 0.2s ease-out;
-        }
         .admin-profile-circle {
             display: grid;
-            width: 48px;
-            height: 48px;
+            width: 42px;
+            height: 42px;
             place-items: center;
             border-radius: 50%;
             background: #2563eb;
             color: white;
-            font-size: 20px;
+            font-size: 17px;
             font-weight: bold;
         }
       `}} />
 
       {/* SideNavBar (Professional Dark) */}
-      <aside className="fixed left-0 top-0 h-full w-[280px] z-40 overflow-y-auto bg-[#1e293b] flex flex-col">
-        <div className="px-6 py-8 mb-4">
-          <h1 className="text-headline-md font-headline-md font-bold text-white mb-1">AI Command Center</h1>
+      <aside className="fixed left-0 top-0 h-full w-[220px] z-40 overflow-y-auto bg-[#1e293b] flex flex-col">
+        <div className="px-5 py-6 mb-2">
+          <h1 className="text-[20px] leading-tight font-bold text-white mb-1">AI Command Center</h1>
           <p className="text-slate-400 text-label-md font-label-md">System Administrator Portal</p>
         </div>
-        <nav className="flex-1 px-4 space-y-4">
+        <nav className="flex-1 px-3 space-y-3">
           <div>
             <div className="px-4 mb-2 text-slate-500 text-[10px] font-bold uppercase tracking-widest">Main</div>
             <a className="flex items-center gap-3 px-4 py-2 text-slate-300 hover:text-white transition-colors duration-200 hover:bg-white/5 rounded-lg mx-2 cursor-pointer" onClick={() => navigate(ROUTE_PATHS.adminDashboard)}>
               <span className="material-symbols-outlined text-[20px]">dashboard</span>
-              <span className="font-body-md text-body-md">Admin Dashboard</span>
+              <span className="font-body-sm text-body-sm">Admin Dashboard</span>
             </a>
           </div>
           <div>
@@ -119,45 +111,37 @@ function AdminProfilePage() {
             <div className="space-y-1">
               <a className="flex items-center gap-3 px-4 py-2 text-slate-300 hover:text-white transition-colors duration-200 hover:bg-white/5 rounded-lg mx-2 cursor-pointer" onClick={() => navigate(ROUTE_PATHS.users)}>
                 <span className="material-symbols-outlined text-[20px]">group</span>
-                <span className="font-body-md text-body-md">Users &amp; Roles</span>
+                <span className="font-body-sm text-body-sm">Users &amp; Roles</span>
               </a>
               <a className="flex items-center gap-3 px-4 py-2 text-slate-300 hover:text-white transition-colors duration-200 hover:bg-white/5 rounded-lg mx-2 cursor-pointer" onClick={() => navigate(ROUTE_PATHS.auditLogs)}>
                 <span className="material-symbols-outlined text-[20px]">list_alt</span>
-                <span className="font-body-md text-body-md">Audit Logs</span>
+                <span className="font-body-sm text-body-sm">Audit Logs</span>
               </a>
             </div>
           </div>
         </nav>
-        <div className="p-6 mt-auto border-t border-slate-700/50">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded bg-primary/20 text-primary flex items-center justify-center font-bold text-sm">NA</div>
-            <div>
-              <p className="text-white text-body-sm font-medium">Nguyễn Văn Admin</p>
-              <p className="text-slate-500 text-[11px] uppercase tracking-tight">System Admin</p>
-            </div>
-          </div>
-        </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 ml-[280px] flex flex-col min-w-0 bg-[#f7f9fc]">
+      <main className="flex-1 ml-[220px] flex flex-col min-w-0 bg-[#f7f9fc]">
         
         {/* TopNavBar */}
-        <header className="h-14 flex items-center justify-between px-8 bg-white border-b border-outline-variant sticky top-0 z-30">
+        <header className="h-12 flex items-center justify-between px-6 bg-white border-b border-outline-variant sticky top-0 z-30">
           <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2 text-on-surface-variant font-label-md">
-              <span className="w-2 h-2 rounded-full bg-primary"></span>
-              <span>System Control</span>
-            </div>
-            <div className="h-4 w-px bg-outline-variant"></div>
-            <div className="flex items-center gap-2 text-on-surface-variant font-label-md">
-              <span className="material-symbols-outlined text-[18px]">verified_user</span>
-              <span>Security Mode: Normal</span>
-            </div>
-            <div className="h-4 w-px bg-outline-variant"></div>
-            <div className="flex items-center gap-2 text-on-surface-variant font-label-md">
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
-              <span>System Status: Online</span>
+            <span className="gate-pill"><i></i>Building A</span>
+            <span className="clock">
+              <span className="material-symbols-outlined">schedule</span>
+              {time}
+            </span>
+            <div className="shift-info">
+              <span>
+                <small>Operation Mode</small>
+                <strong>Normal</strong>
+              </span>
+              <span>
+                <small>System Status</small>
+                <strong>Online</strong>
+              </span>
             </div>
           </div>
           <div className="topbar-actions">
@@ -180,8 +164,8 @@ function AdminProfilePage() {
             <span className="top-divider" />
             <div className="menu-anchor">
               <button className="profile-button" onClick={() => setOpenMenu(openMenu === 'profile' ? null : 'profile')}>
-                <span><strong>Nguyễn Văn Admin</strong><small>System Admin</small></span>
-                <b>A</b>
+                <span><strong>{profile.name}</strong><small>System Admin</small></span>
+                <b>{profile.initials}</b>
               </button>
               {openMenu === 'profile' && (
                 <div className="action-menu compact profile-menu">
@@ -194,7 +178,7 @@ function AdminProfilePage() {
         </header>
 
         {/* Content Canvas */}
-        <div className="p-6 space-y-6 max-w-[1600px] mx-auto w-full">
+        <div className="p-3 space-y-3 max-w-[1120px] mx-auto w-full">
           
           {/* Breadcrumb heading */}
           <header className="space-y-1">
@@ -203,28 +187,28 @@ function AdminProfilePage() {
               <span className="material-symbols-outlined text-[16px] text-on-surface-variant">chevron_right</span>
               <strong className="text-on-surface font-semibold text-body-sm">Admin Profile</strong>
             </div>
-            <h2 className="font-headline-lg text-headline-lg text-on-surface">Admin Profile</h2>
-            <p className="font-body-md text-body-md text-on-surface-variant mt-0.5">Manage administrative credentials, IT system access clearances, and logs overview.</p>
+            <h2 className="text-[22px] leading-tight font-bold text-on-surface">Admin Profile</h2>
+            <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Manage administrative credentials, IT system access clearances, and logs overview.</p>
           </header>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
             
             {/* Left: General Facts & Shift Status */}
-            <div className="lg:col-span-8 space-y-6">
+            <div className="lg:col-span-8 space-y-3">
               
               {/* Profile Main Card */}
-              <div className="glass-card rounded-lg p-5 bg-white space-y-6">
-                <h3 className="font-body-lg font-bold text-on-surface m-0 border-b border-outline-variant pb-3">Admin Information</h3>
+              <div className="glass-card rounded-lg p-3 bg-white space-y-3">
+                <h3 className="text-[15px] font-bold text-on-surface m-0 border-b border-outline-variant pb-2">Admin Information</h3>
                 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <div className="admin-profile-circle">{profile.initials}</div>
                   <div>
-                    <h4 className="font-body-lg font-bold text-on-surface">{profile.name}</h4>
+                    <h4 className="text-[15px] font-bold text-on-surface">{profile.name}</h4>
                     <p className="text-body-sm text-on-surface-variant font-medium">{profile.role}</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-body-sm">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-body-sm">
                   <div className="flex justify-between border-b border-slate-100 py-2">
                     <span className="text-on-surface-variant">IT Terminal Office</span>
                     <span className="font-semibold">{profile.gate}</span>
@@ -260,9 +244,9 @@ function AdminProfilePage() {
               </div>
 
               {/* Shift and checks */}
-              <div className="glass-card rounded-lg p-5 bg-white space-y-4">
-                <h3 className="font-body-lg font-bold text-on-surface m-0 border-b border-outline-variant pb-3">Active Shift Security Checks</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="glass-card rounded-lg p-3 bg-white space-y-3">
+                <h3 className="text-[15px] font-bold text-on-surface m-0 border-b border-outline-variant pb-2">Active Shift Security Checks</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="space-y-3 bg-slate-50 p-4 rounded border border-slate-100">
                     <div className="flex flex-col">
                       <small className="text-[10px] text-slate-500 font-bold uppercase">Workshift Schedule</small>
@@ -292,11 +276,11 @@ function AdminProfilePage() {
             </div>
 
             {/* Right: Security & Permissions */}
-            <div className="lg:col-span-4 space-y-6">
+            <div className="lg:col-span-4 space-y-3">
               
               {/* Security info card */}
-              <div className="glass-card rounded-lg p-5 bg-white space-y-4">
-                <h3 className="font-body-lg font-bold text-on-surface m-0 border-b border-outline-variant pb-2">IT Security Policies</h3>
+              <div className="glass-card rounded-lg p-3 bg-white space-y-3">
+                <h3 className="text-[15px] font-bold text-on-surface m-0 border-b border-outline-variant pb-2">IT Security Policies</h3>
                 <div className="space-y-3 text-body-sm">
                   {profile.security.map(([label, val]) => (
                     <div key={label} className="flex justify-between">
@@ -308,8 +292,8 @@ function AdminProfilePage() {
               </div>
 
               {/* Clearance Levels */}
-              <div className="glass-card rounded-lg p-5 bg-white space-y-4">
-                <h3 className="font-body-lg font-bold text-on-surface m-0 border-b border-outline-variant pb-2">Clearence Access Permissions</h3>
+              <div className="glass-card rounded-lg p-3 bg-white space-y-3">
+                <h3 className="text-[15px] font-bold text-on-surface m-0 border-b border-outline-variant pb-2">Clearance Access Permissions</h3>
                 
                 <div className="space-y-3">
                   <div>
@@ -355,7 +339,7 @@ function AdminProfilePage() {
           {/* Activity Section */}
           <section className="glass-card rounded-lg overflow-hidden bg-white">
             <div className="px-5 py-3 border-b border-outline-variant flex justify-between items-center bg-white">
-              <h3 className="font-body-lg font-bold text-on-surface m-0">Recent Admin Activities</h3>
+              <h3 className="text-[15px] font-bold text-on-surface m-0">Recent Admin Activities</h3>
               <button 
                 className="text-primary font-bold text-xs uppercase hover:underline"
                 onClick={() => navigate(ROUTE_PATHS.auditLogs)}
@@ -367,19 +351,19 @@ function AdminProfilePage() {
               <table className="w-full text-left">
                 <thead className="bg-surface-container-lowest border-b border-outline-variant">
                   <tr>
-                    <th className="px-6 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Time</th>
-                    <th className="px-6 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Activity</th>
-                    <th className="px-6 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Reference</th>
-                    <th className="px-6 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Status</th>
+                    <th className="px-4 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Time</th>
+                    <th className="px-4 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Activity</th>
+                    <th className="px-4 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Reference</th>
+                    <th className="px-4 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant bg-white">
                   {profile.activities.map(([time, act, ref, stat], i) => (
                     <tr key={i} className="hover:bg-surface-container-low/30 transition-colors">
-                      <td className="px-6 py-3 text-body-sm text-on-surface-variant">{time}</td>
-                      <td className="px-6 py-3 text-body-sm font-semibold text-on-surface">{act}</td>
-                      <td className="px-6 py-3 text-body-sm text-on-surface-variant">{ref}</td>
-                      <td className="px-6 py-3">
+                      <td className="px-4 py-2.5 text-body-sm text-on-surface-variant">{time}</td>
+                      <td className="px-4 py-2.5 text-body-sm font-semibold text-on-surface">{act}</td>
+                      <td className="px-4 py-2.5 text-body-sm text-on-surface-variant">{ref}</td>
+                      <td className="px-4 py-2.5">
                         <span className="text-green-700 font-bold text-[10px] uppercase">{stat}</span>
                       </td>
                     </tr>
@@ -478,8 +462,10 @@ function AdminProfilePage() {
 
       {/* Global custom Toast */}
       {toast.show && (
-        <div className="profile-toast-custom">
-          <span className="material-symbols-outlined text-green-500">check_circle</span>
+        <div className={`profile-toast-custom ${toast.type || 'success'}`}>
+          <span className="material-symbols-outlined">
+            {toast.type === 'error' ? 'cancel' : 'check_circle'}
+          </span>
           <span>{toast.message}</span>
         </div>
       )}

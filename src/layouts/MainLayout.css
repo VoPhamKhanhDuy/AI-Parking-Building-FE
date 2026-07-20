@@ -70,3 +70,55 @@
   .mobile-menu { display: grid; }
   .clock, .profile-button > span, .top-divider { display: none; }
 }
+
+/* Custom Premium Toast for Admin Panel */
+.profile-toast-custom {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08), 0 4px 8px rgba(15, 23, 42, 0.04);
+  backdrop-filter: blur(10px);
+  animation: toastSlideInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transition: all 0.3s ease;
+}
+
+/* Success Toast */
+.profile-toast-custom:not(.error), .profile-toast-custom.success {
+  background: rgba(236, 253, 245, 0.92);
+  border: 1px solid rgba(167, 243, 208, 0.85);
+  color: #065f46;
+}
+.profile-toast-custom:not(.error) .material-symbols-outlined, .profile-toast-custom.success .material-symbols-outlined {
+  color: #10b981;
+  font-size: 18px;
+}
+
+/* Error Toast */
+.profile-toast-custom.error {
+  background: rgba(254, 242, 242, 0.92);
+  border: 1px solid rgba(254, 202, 202, 0.85);
+  color: #991b1b;
+}
+.profile-toast-custom.error .material-symbols-outlined {
+  color: #ef4444;
+  font-size: 18px;
+}
+
+@keyframes toastSlideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
