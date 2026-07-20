@@ -51,7 +51,7 @@ public class PaymentsController : ControllerBase
 
     /// <summary>Create a Pending payment for a session (cashier holds the slip until money is collected).</summary>
     [HttpPost]
-    [Authorize(Roles = "Admin,Operator,Attendant")]
+    [Authorize(Roles = "Admin,Manager,Staff")]
     [ProducesResponseType(typeof(PaymentDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -65,7 +65,7 @@ public class PaymentsController : ControllerBase
 
     /// <summary>Mark a Pending payment as Paid (cashier confirms money received).</summary>
     [HttpPost("{id:guid}/mark-paid")]
-    [Authorize(Roles = "Admin,Operator,Attendant")]
+    [Authorize(Roles = "Admin,Manager,Staff")]
     [ProducesResponseType(typeof(PaymentDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -98,7 +98,7 @@ public class PaymentsController : ControllerBase
 
     /// <summary>Cancel a Pending payment (e.g. wrong amount typed in).</summary>
     [HttpPost("{id:guid}/cancel")]
-    [Authorize(Roles = "Admin,Operator")]
+    [Authorize(Roles = "Admin,Manager")]
     [ProducesResponseType(typeof(PaymentDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

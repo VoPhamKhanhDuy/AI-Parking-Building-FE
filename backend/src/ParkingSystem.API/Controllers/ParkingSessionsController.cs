@@ -74,7 +74,7 @@ public class ParkingSessionsController : ControllerBase
 
     /// <summary>Start a new parking session — claims the slot and activates the ticket.</summary>
     [HttpPost]
-    [Authorize(Roles = "Admin,Operator,Attendant")]
+    [Authorize(Roles = "Admin,Manager,Staff")]
     [ProducesResponseType(typeof(ParkingSessionDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -88,7 +88,7 @@ public class ParkingSessionsController : ControllerBase
 
     /// <summary>End an active session — frees the slot and marks the ticket Completed.</summary>
     [HttpPost("{id:guid}/end")]
-    [Authorize(Roles = "Admin,Operator,Attendant")]
+    [Authorize(Roles = "Admin,Manager,Staff")]
     [ProducesResponseType(typeof(ParkingSessionDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -99,7 +99,7 @@ public class ParkingSessionsController : ControllerBase
 
     /// <summary>Cancel a still-active session (releases the slot without creating a billable exit).</summary>
     [HttpPost("{id:guid}/cancel")]
-    [Authorize(Roles = "Admin,Operator")]
+    [Authorize(Roles = "Admin,Manager")]
     [ProducesResponseType(typeof(ParkingSessionDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ParkingSessionDto>> Cancel(Guid id, CancellationToken ct)

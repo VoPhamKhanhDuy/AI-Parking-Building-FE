@@ -38,7 +38,7 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin,Operator,Attendant")]
+    [Authorize(Roles = "Admin,Manager,Staff")]
     public async Task<ActionResult<ReservationDto>> Create(
         [FromBody] CreateReservationRequest req,
         CancellationToken ct)
@@ -48,7 +48,7 @@ public class ReservationsController : ControllerBase
     }
 
     [HttpPost("{id:guid}/confirm")]
-    [Authorize(Roles = "Admin,Operator")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<ActionResult<ReservationDto>> Confirm(Guid id, CancellationToken ct)
         => Ok(await _service.ConfirmAsync(id, ct));
 

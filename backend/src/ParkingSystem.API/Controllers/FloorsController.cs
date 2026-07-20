@@ -30,7 +30,7 @@ public class FloorsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin,Operator")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<ActionResult<FloorDto>> Create([FromBody] CreateFloorRequest req, CancellationToken ct)
     {
         var dto = await _service.CreateAsync(req, ct);
@@ -38,7 +38,7 @@ public class FloorsController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin,Operator")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<ActionResult<FloorDto>> Update(Guid id, [FromBody] UpdateFloorRequest req, CancellationToken ct)
         => Ok(await _service.UpdateAsync(id, req, ct));
 

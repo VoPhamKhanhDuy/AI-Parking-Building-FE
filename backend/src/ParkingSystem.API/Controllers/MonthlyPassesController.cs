@@ -31,7 +31,7 @@ public class MonthlyPassesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin,Operator,Attendant")]
+    [Authorize(Roles = "Admin,Manager,Staff")]
     public async Task<ActionResult<MonthlyPassDto>> Create(
         [FromBody] CreateMonthlyPassRequest req,
         CancellationToken ct)

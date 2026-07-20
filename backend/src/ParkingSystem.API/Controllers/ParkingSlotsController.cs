@@ -34,7 +34,7 @@ public class ParkingSlotsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin,Operator")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<ActionResult<ParkingSlotDto>> Create([FromBody] CreateParkingSlotRequest req, CancellationToken ct)
     {
         var dto = await _service.CreateAsync(req, ct);
@@ -42,13 +42,13 @@ public class ParkingSlotsController : ControllerBase
     }
 
     [HttpPost("bulk")]
-    [Authorize(Roles = "Admin,Operator")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<ActionResult<IReadOnlyList<ParkingSlotDto>>> CreateBulk(
         [FromBody] CreateParkingSlotsBulkRequest req, CancellationToken ct)
         => Ok(await _service.CreateBulkAsync(req, ct));
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin,Operator,Attendant")]
+    [Authorize(Roles = "Admin,Manager,Staff")]
     public async Task<ActionResult<ParkingSlotDto>> Update(Guid id, [FromBody] UpdateParkingSlotRequest req, CancellationToken ct)
         => Ok(await _service.UpdateAsync(id, req, ct));
 

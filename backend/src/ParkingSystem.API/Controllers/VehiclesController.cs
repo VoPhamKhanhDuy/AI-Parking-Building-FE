@@ -48,7 +48,7 @@ public class VehiclesController : ControllerBase
 
     /// <summary>Register a new vehicle.</summary>
     [HttpPost]
-    [Authorize(Roles = "Admin,Operator,Attendant")]
+    [Authorize(Roles = "Admin,Manager,Staff")]
     [ProducesResponseType(typeof(VehicleDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -61,7 +61,7 @@ public class VehiclesController : ControllerBase
 
     /// <summary>Update vehicle attributes.</summary>
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin,Operator,Attendant")]
+    [Authorize(Roles = "Admin,Manager,Staff")]
     [ProducesResponseType(typeof(VehicleDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<VehicleDto>> Update(

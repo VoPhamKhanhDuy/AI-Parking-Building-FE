@@ -61,7 +61,7 @@ public class ParkingTicketsController : ControllerBase
 
     /// <summary>Issue a new ticket (vehicle not yet arrived).</summary>
     [HttpPost]
-    [Authorize(Roles = "Admin,Operator,Attendant")]
+    [Authorize(Roles = "Admin,Manager,Staff")]
     [ProducesResponseType(typeof(ParkingTicketDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -74,7 +74,7 @@ public class ParkingTicketsController : ControllerBase
 
     /// <summary>Mark the ticket as entered (Issued -> Active).</summary>
     [HttpPost("{id:guid}/check-in")]
-    [Authorize(Roles = "Admin,Operator,Attendant")]
+    [Authorize(Roles = "Admin,Manager,Staff")]
     [ProducesResponseType(typeof(ParkingTicketDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ParkingTicketDto>> CheckIn(
@@ -85,7 +85,7 @@ public class ParkingTicketsController : ControllerBase
 
     /// <summary>Close the ticket and compute the fee.</summary>
     [HttpPost("{id:guid}/check-out")]
-    [Authorize(Roles = "Admin,Operator,Attendant")]
+    [Authorize(Roles = "Admin,Manager,Staff")]
     [ProducesResponseType(typeof(CheckOutResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CheckOutResult>> CheckOut(
@@ -96,7 +96,7 @@ public class ParkingTicketsController : ControllerBase
 
     /// <summary>Cancel a still-open ticket.</summary>
     [HttpPost("{id:guid}/cancel")]
-    [Authorize(Roles = "Admin,Operator")]
+    [Authorize(Roles = "Admin,Manager")]
     [ProducesResponseType(typeof(ParkingTicketDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ParkingTicketDto>> Cancel(

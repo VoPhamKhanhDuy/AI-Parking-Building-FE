@@ -30,7 +30,7 @@ public class ParkingZonesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin,Operator")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<ActionResult<ParkingZoneDto>> Create([FromBody] CreateParkingZoneRequest req, CancellationToken ct)
     {
         var dto = await _service.CreateAsync(req, ct);
@@ -38,7 +38,7 @@ public class ParkingZonesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin,Operator")]
+    [Authorize(Roles = "Admin,Manager")]
     public async Task<ActionResult<ParkingZoneDto>> Update(Guid id, [FromBody] UpdateParkingZoneRequest req, CancellationToken ct)
         => Ok(await _service.UpdateAsync(id, req, ct));
 
