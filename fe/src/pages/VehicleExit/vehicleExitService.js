@@ -75,42 +75,42 @@ export async function calculateExitFee(sessionId) {
 
 export async function createExitPayment(sessionId) {
   if (!sessionId) return null
-  try {
-    const { data } = await api.post(`/vehicle-exits/${sessionId}/payments`, { method: 2 })
-    return {
-      paymentId: data.paymentId,
-      amount: data.amount,
-      method: data.method,
-      status: data.status,
-      transactionCode: data.transactionCode,
-      qrImageUrl: 'data:image/svg+xml;utf8,' + encodeURIComponent(
-        `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><rect width='100%' height='100%' fill='%23fff'/><text x='50%' y='50%' text-anchor='middle' font-family='monospace' font-size='14'>QR ${formatVnd(data.amount)}</text></svg>`,
-      ),
-      bankName: 'Mock Bank',
-      expiresAt: data.expiresAt,
-    }
-  } catch (error) {
-    logger.warn('VehicleExit', `createExitPayment fallback: ${error.message}`)
-    return {
-      paymentId: `LOCAL-${Date.now()}`,
-      amount: 0,
-      method: 'EWallet',
-      status: 'PENDING',
-      transactionCode: `TXN-${Date.now()}`,
-      qrImageUrl: null,
-      bankName: 'Mock Bank',
-    }
+  const { data } = await api.post(`/vehicle-exits/${sessionId}/payments`, { method: 2 })
+  return {
+    paymentId: data.paymentId,
+    amount: data.amount,
+    method: data.method,
+    status: data.status,
+    transactionCode: data.transactionCode,
+    qrImageUrl: 'data:image/svg+xml;utf8,' + encodeURIComponent(
+      `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><rect width='100%' height='100%' fill='%23fff'/><text x='50%' y='50%' text-anchor='middle' font-family='monospace' font-size='14'>QR ${formatVnd(data.amount)}</text></svg>`,
+    ),
+    bankName: 'Mock Bank',
+    expiresAt: data.expiresAt,
   }
 }
 
 export async function checkExitPaymentStatus(paymentId) {
   if (!paymentId) return null
-  try {
-    const { data } = await api.get(`/vehicle-exits/payments/${paymentId}/status`)
-    return { status: data.status, paidAt: data.paidAt }
-  } catch (error) {
-    logger.warn('VehicleExit', `checkExitPaymentStatus fallback: ${error.message}`)
-    return { status: 'PENDING', paidAt: null }
+  const { data } = await api.get(`/vehicle-exits/payments/${paymentId}/status`)
+  return { status: data.status, paidAt: data.paidAt }
+}
+
+export async function fetchExitPaymentBySession(sessionId) {
+  if (!sessionId) return null
+  const { data } = await api.get(`/payments/by-session/${sessionId}`)
+  if (!data?.id) return null
+  return {
+    paymentId: data.id,
+    amount: data.amount,
+    method: data.method,
+    status: data.status,
+    transactionCode: data.transactionReference || `TXN-${data.id?.slice(0, 8)}`,
+    qrImageUrl: 'data:image/svg+xml;utf8,' + encodeURIComponent(
+      `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><rect width='100%' height='100%' fill='%23fff'/><text x='50%' y='50%' text-anchor='middle' font-family='monospace' font-size='14'>QR ${formatVnd(data.amount)}</text></svg>`,
+    ),
+    bankName: 'Mock Bank',
+    expiresAt: data.expiresAt,
   }
 }
 

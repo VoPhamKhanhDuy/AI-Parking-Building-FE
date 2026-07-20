@@ -155,10 +155,18 @@ export async function assignParkingSlot({ slotId, licensePlate, vehicleType, tic
       },
     }
   } catch (error) {
-    const message = error.response?.data?.message || error.response?.data?.error || error.message || 'Failed to assign slot'
+    const message = extractErrorMessage(error, 'Failed to assign slot')
     logger.error('ManualSlot', `Failed to assign: ${message}`)
     return { success: false, message }
   }
+}
+
+function extractErrorMessage(error, fallback) {
+  const data = error?.response?.data
+  const candidate = data?.message ?? data?.error ?? data?.title ?? data?.Message ?? data?.Error
+  if (typeof candidate === 'string') return candidate
+  if (candidate && typeof candidate === 'object') return candidate.message || candidate.error || fallback
+  return error?.message || fallback
 }
 
 export async function getFloorStats(floorId) {

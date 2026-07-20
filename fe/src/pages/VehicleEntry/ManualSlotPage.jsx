@@ -128,7 +128,10 @@ function ManualSlotPage() {
       }
       navigate(ROUTE_PATHS.checkinSuccess, { state: { ...entry, selectedSlotId: selectedSlot.id, ticketCode: assignment.data.ticketCode, entryTime: assignment.data.entryTime, method: 'Manual Selection', matchScore: 'Staff selected', sessionId: assignment.data.sessionId } })
     } catch (requestError) {
-      setError(requestError.response?.data?.message || requestError.message || 'Could not assign this slot.')
+      const message = typeof requestError.response?.data?.message === 'string'
+        ? requestError.response.data.message
+        : (requestError.response?.data?.message?.message || requestError.message || 'Could not assign this slot.')
+      setError(message)
     } finally { setSubmitting(false) }
   }
 
