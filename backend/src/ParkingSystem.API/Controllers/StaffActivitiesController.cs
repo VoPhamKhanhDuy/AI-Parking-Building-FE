@@ -59,6 +59,12 @@ public class StaffActivitiesController : ControllerBase
         });
     }
 
+    [HttpPost]
+    public IActionResult SubmitAction([FromBody] StaffActivityActionRequest request)
+    {
+        return Ok(new { success = true, action = request?.Action });
+    }
+
     private static List<StaffActivityDto> GenerateMockData() => new()
     {
         new() { Id = "1", StaffId = "STF-2026-001", Name = "John Smith", Role = "Entry Gate Operator", Area = "Entry Gate A", Status = "Active", Entries = 45, Exits = 42, Payments = 38, Pending = 2 },
@@ -66,6 +72,13 @@ public class StaffActivitiesController : ControllerBase
         new() { Id = "3", StaffId = "STF-2026-003", Name = "Mike Wilson", Role = "Parking Support", Area = "Zone B", Status = "On Break", Entries = 12, Exits = 10, Payments = 0, Pending = 0 },
         new() { Id = "4", StaffId = "STF-2026-004", Name = "Emily Davis", Role = "Supervisor", Area = "Building A", Status = "Active", Entries = 0, Exits = 0, Payments = 0, Pending = 3 }
     };
+}
+
+public class StaffActivityActionRequest
+{
+    public string? Action { get; set; }
+    public string? StaffId { get; set; }
+    public string? Notes { get; set; }
 }
 
 public class StaffActivityResponse

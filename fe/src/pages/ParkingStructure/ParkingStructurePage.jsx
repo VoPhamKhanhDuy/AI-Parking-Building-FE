@@ -72,7 +72,7 @@ function ParkingStructurePage() {
       </header>
 
       <section className="structure-kpis" aria-label="Structure summary">
-        {(data.kpis || []).map((item) => <article key={item.label}>
+        {(data.kpis || []).map((item, index) => <article key={item.id ?? `${item.label ?? 'kpi'}-${index}`}>
           <small>{item.label}</small>
           <strong className={item.tone ?? ''}>{item.value}</strong>
           <span>{item.note}</span>
@@ -95,7 +95,7 @@ function ParkingStructurePage() {
           <section className="structure-card slot-summary">
             <header><h3>Slot type summary</h3></header>
             <div className="compact-summary">
-              {(data.slotTypes || []).map((item) => <div key={item.type}>
+              {(data.slotTypes || []).map((item, index) => <div key={item.id ?? `${item.type ?? 'type'}-${index}`}>
                 <span><strong>{item.type}</strong><small>{item.total} total</small></span>
                 <span><b>{item.available}</b><small>available</small></span>
               </div>)}
@@ -113,7 +113,7 @@ function ParkingStructurePage() {
             <div className="structure-table-wrap">
               <table>
                 <thead><tr><th>Location</th><th>Zone</th><th>Type</th><th>Capacity</th><th>Occupied</th><th>Available</th><th>Status</th></tr></thead>
-                <tbody>{filteredZones.map((item) => <tr className={detail === item ? 'selected' : ''} key={`${item.location}-${item.zone}`} onClick={() => selectZone(item)}>
+                <tbody>{filteredZones.map((item, index) => <tr className={detail === item ? 'selected' : ''} key={item.id ?? `${item.location ?? 'loc'}-${item.zone ?? 'zone'}-${item.type ?? 'type'}-${index}`} onClick={() => selectZone(item)}>
                   <td>{item.location}</td><td><strong>{item.zone}</strong></td><td>{item.type}</td><td>{item.capacity}</td><td>{item.occupied}</td><td>{item.available}</td><td><Badge>{item.status}</Badge></td>
                 </tr>)}</tbody>
               </table>
@@ -122,7 +122,7 @@ function ParkingStructurePage() {
 
           <section className="structure-card updates">
             <header><div><h3>Recent updates</h3><p>Structure and maintenance activity</p></div><button>View all</button></header>
-            <div className="updates-list">{(data.recentUpdates || []).map((item) => <article key={`${item.time}-${item.area}`}>
+            <div className="updates-list">{(data.recentUpdates || []).map((item, index) => <article key={item.id ?? `${item.time ?? 't'}-${item.area ?? 'a'}-${index}`}>
               <time>{item.time || '—'}</time>
               <div><strong>{item.update || '—'}</strong><span>{item.area || '—'} · {item.staff || '—'}</span></div>
               <Badge>{item.status || 'Updated'}</Badge>

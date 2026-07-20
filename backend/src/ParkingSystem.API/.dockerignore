@@ -5,7 +5,7 @@
 **/bin
 **/obj
 **/Dockerfile*
-**/.dockerignore
+**/.dockerignore*
 **/*.md
 **/docker-compose*.yml
 **/docker-compose*.yaml
@@ -14,8 +14,10 @@
 **/node_modules
 **/.env
 **/.env.*
+**/.env*
 **/*.user
 **/*.suo
 **/Tests
 **/*.Tests
 **/*.tests
+

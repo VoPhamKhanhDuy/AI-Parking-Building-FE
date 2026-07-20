@@ -62,11 +62,12 @@ export async function getRoles() {
   return { success: true, data: safeArray([]) }
 }
 
-export const initialUserKPIs = [
-  { label: 'Total Accounts', value: 0 },
-  { label: 'Active Today', value: 0 },
-  { label: 'Admins', value: 0 },
-]
+export const initialUserKPIs = {
+  totalAccounts: 0,
+  activeAccounts: 0,
+  suspendedAccounts: 0,
+  pendingInvitations: 0,
+}
 export const initialUsersList = []
 export const initialUserChanges = []
 export const rolePermissionMap = {

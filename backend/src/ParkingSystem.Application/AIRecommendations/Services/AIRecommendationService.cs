@@ -59,7 +59,16 @@ public class AIRecommendationService : IAIRecommendationService
 
         if (vehicle is not null)
         {
-            await PersistLogAsync(vehicle.Id, req, payload, payload.Alternatives.Count == 0 && candidates.Count == 0, stopwatch.ElapsedMilliseconds, ct);
+            try
+            {
+                await PersistLogAsync(vehicle.Id, req, payload, payload.Alternatives.Count == 0 && candidates.Count == 0, stopwatch.ElapsedMilliseconds, ct);
+            }
+            catch (Exception logEx)
+            {
+                // The recommendation itself is more valuable than its audit row;
+                // never let a logging failure surface as a 5xx for the caller.
+                _logger.LogWarning(logEx, "Failed to persist AI recommendation log");
+            }
         }
 
         return payload;
@@ -112,11 +121,21 @@ public class AIRecommendationService : IAIRecommendationService
         }
         catch (Exception)
         {
-            // Any other failure — including the rare unique-constraint violation
-            // that can race through a concurrent non-transactional writer — is
-            // rolled back and surfaced. The API middleware translates the
-            // remaining provider exception into HTTP 409 conflict.
+            // Roll back the losing transaction, then retry the read. The race
+            // window — React StrictMode's double-invoked effect in dev, or two
+            // concurrent operators — is collapsed by Serializable, but a
+            // non-transactional writer (e.g. a direct insert from another
+            // path) can still win the unique-plate index. Instead of
+            // surfacing the provider's 23505 as 409 to the caller, look up
+            // the row the other writer committed and return it.
             await _uow.RollbackTransactionAsync(ct);
+
+            var winning = await _vehicles.FirstOrDefaultAsync(
+                new AIRecommendationSpecifications.VehicleByLicensePlate(normalized), ct);
+            if (winning is not null)
+            {
+                return winning;
+            }
             throw;
         }
     }

@@ -46,12 +46,16 @@ function UsersRolesPage() {
         const list = Array.isArray(result?.data) ? result.data : []
         setUsers(list)
         const activeCount = list.filter((u) => u.status === 'Active').length
-        const adminCount = list.filter((u) => String(u.role).toLowerCase() === 'admin').length
-        setKpis([
-          { label: 'Total Accounts', value: list.length },
-          { label: 'Active Today', value: activeCount },
-          { label: 'Admins', value: adminCount }
-        ])
+        const suspendedCount = list.filter((u) => u.status === 'Suspended').length
+        const pendingCount = list.filter((u) =>
+          ['Pending', 'PendingApproval', 'Inactive'].includes(u.status)
+        ).length
+        setKpis({
+          totalAccounts: list.length,
+          activeAccounts: activeCount,
+          suspendedAccounts: suspendedCount,
+          pendingInvitations: pendingCount,
+        })
         setSelectedUserId((current) => current || list[0]?.id || null)
       })
       .catch(() => active && false)
@@ -131,7 +135,7 @@ function UsersRolesPage() {
       const result = await createUser({ fullName: name, email, role, area, password: 'Temp@123' })
       if (result?.success) {
         setUsers((prev) => [...prev, result.data])
-        setKpis((prev) => prev.map((k) => k.label === 'Total Accounts' ? { ...k, value: k.value + 1 } : k))
+        setKpis((prev) => ({ ...prev, totalAccounts: (prev.totalAccounts ?? 0) + 1 }))
         setSelectedUserId(result.data.id)
         addChangeLog('Account Created', name)
         setModal((m) => ({ ...m, isOpen: false }))
@@ -183,7 +187,7 @@ function UsersRolesPage() {
     const result = await deleteUser(user.id)
     if (result?.success) {
       setUsers((prev) => prev.filter((u) => u.id !== user.id))
-      setKpis((prev) => prev.map((k) => k.label === 'Total Accounts' ? { ...k, value: Math.max(0, k.value - 1) } : k))
+      setKpis((prev) => ({ ...prev, totalAccounts: Math.max(0, (prev.totalAccounts ?? 0) - 1) }))
       showToast(`Đã xóa ${user.fullName}.`, 'success')
     } else {
       showToast(result?.message || 'Failed to delete.', 'error')
@@ -200,6 +204,14 @@ function UsersRolesPage() {
 
   const uniqueRoles = useMemo(() => ['All Roles', ...Array.from(new Set(users.map((u) => u.role).filter(Boolean)))], [users])
   const uniqueStatuses = ['All Status', 'Active', 'Suspended', 'Pending', 'Inactive']
+
+  if (!selectedUser) {
+    return (
+      <div className="bg-surface text-on-surface flex min-h-screen items-center justify-center">
+        <p className="text-on-surface-variant">Đang tải danh sách người dùng...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="bg-surface text-on-surface flex min-h-screen">
