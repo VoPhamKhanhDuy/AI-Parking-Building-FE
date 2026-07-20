@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
-import { calculateExitFee, checkExitPaymentStatus, createExitPayment, fetchExitPaymentBySession, fetchVehicleExitData, getPaymentSummary, lookupVehicleExitSession, processVehicleExit } from './vehicleExitService'
+import { calculateExitFee, checkExitPaymentStatus, createExitPayment, fetchVehicleExitData, getPaymentSummary, lookupVehicleExitSession, processVehicleExit } from './vehicleExitService'
 import './VehicleExitPage.css'
 
 const formatMoney = (value) => new Intl.NumberFormat('vi-VN').format(value || 0) + ' VND'
@@ -84,24 +84,15 @@ function VehicleExitPage() {
     try {
       const newPayment = await createExitPayment(selected.id)
       setPayment(newPayment)
-      setMessage(newPayment?.paymentId ? 'Payment QR created.' : 'Could not create payment.')
-    } catch (error) {
-      const status = error?.response?.status
-      if (status === 409) {
-        try {
-          const existing = await fetchExitPaymentBySession(selected.id)
-          if (existing?.paymentId) {
-            setPayment(existing)
-            setMessage('Existing pending payment found. Use "Check payment status" to refresh.')
-            return
-          }
-          setMessage('A payment already exists for this session.')
-        } catch {
-          setMessage('A payment already exists for this session.')
-        }
+      if (newPayment?.paymentId) {
+        setMessage(newPayment.reused
+          ? 'Existing pending payment found. Use "Check payment status" to refresh.'
+          : 'Payment QR created.')
       } else {
-        setMessage(error?.message || 'Could not create payment.')
+        setMessage('Could not create payment.')
       }
+    } catch (error) {
+      setMessage(error?.message || 'Could not create payment.')
     } finally {
       setAction('')
     }

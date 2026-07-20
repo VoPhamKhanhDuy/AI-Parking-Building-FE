@@ -84,9 +84,10 @@ function MonthlyPassPage() {
   const runAction = useCallback(async (action, successMessage) => {
     if (!selected) return
     try {
-      const updated = await action(selected.id)
+      const result = await action(selected.id)
+      const updated = result?.data
       if (updated?.id) replacePass(updated)
-      setMessage(updated?.id ? successMessage : (updated?.message || 'Action failed.'))
+      setMessage(updated?.id ? successMessage : (result?.message || 'Action failed.'))
     } catch (error) {
       setMessage(error?.message || 'Action failed.')
     }

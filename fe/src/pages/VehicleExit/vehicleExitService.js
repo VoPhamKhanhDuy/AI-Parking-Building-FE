@@ -75,18 +75,36 @@ export async function calculateExitFee(sessionId) {
 
 export async function createExitPayment(sessionId) {
   if (!sessionId) return null
-  const { data } = await api.post(`/vehicle-exits/${sessionId}/payments`, { method: 2 })
-  return {
-    paymentId: data.paymentId,
-    amount: data.amount,
-    method: data.method,
-    status: data.status,
-    transactionCode: data.transactionCode,
-    qrImageUrl: 'data:image/svg+xml;utf8,' + encodeURIComponent(
-      `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><rect width='100%' height='100%' fill='%23fff'/><text x='50%' y='50%' text-anchor='middle' font-family='monospace' font-size='14'>QR ${formatVnd(data.amount)}</text></svg>`,
-    ),
-    bankName: 'Mock Bank',
-    expiresAt: data.expiresAt,
+  try {
+    const { data } = await api.post(`/vehicle-exits/${sessionId}/payments`, { method: 2 })
+    const id = data?.paymentId || data?.PaymentId
+    if (!id) throw new Error('createExitPayment: missing paymentId in response')
+    return {
+      paymentId: id,
+      amount: data.amount ?? data.Amount,
+      method: data.method ?? data.Method,
+      status: data.status ?? data.Status,
+      transactionCode: data.transactionCode || data.TransactionCode,
+      qrImageUrl: buildMockQr(data.amount ?? data.Amount),
+      bankName: 'Mock Bank',
+      expiresAt: data.expiresAt ?? data.ExpiresAt,
+    }
+  } catch (error) {
+    const status = error?.response?.status
+    if (status === 409) {
+      try {
+        const existing = await fetchExitPaymentBySession(sessionId)
+        if (existing?.paymentId) {
+          return { ...existing, reused: true }
+        }
+      } catch {
+        // surface a friendly message below
+      }
+      const message = extractErrorMessage(error, 'A pending payment already exists for this session.')
+      throw new Error(message, { cause: error })
+    }
+    const message = extractErrorMessage(error, 'Failed to create payment')
+    throw new Error(message, { cause: error })
   }
 }
 
@@ -98,19 +116,45 @@ export async function checkExitPaymentStatus(paymentId) {
 
 export async function fetchExitPaymentBySession(sessionId) {
   if (!sessionId) return null
-  const { data } = await api.get(`/payments/by-session/${sessionId}`)
-  if (!data?.id) return null
+  try {
+    const { data } = await api.get(`/payments/by-session/${sessionId}`)
+    return shapeFromPaymentDto(data)
+  } catch (error) {
+    const status = error?.response?.status
+    if (status === 404) return null
+    logger.warn('VehicleExit', `fetchExitPaymentBySession: ${error.message}`)
+    return null
+  }
+}
+
+function extractErrorMessage(error, fallback) {
+  const data = error?.response?.data
+  const err = data?.error || data?.Error
+  const candidate = err?.message ?? data?.message ?? data?.title ?? err?.Message ?? data?.Message
+  if (typeof candidate === 'string') return candidate
+  if (candidate && typeof candidate === 'object') return candidate.message || candidate.error || fallback
+  return error?.message || fallback
+}
+
+function buildMockQr(amount) {
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><rect width='100%' height='100%' fill='%23fff'/><text x='50%' y='50%' text-anchor='middle' font-family='monospace' font-size='14'>QR ${formatVnd(amount)}</text></svg>`,
+  )
+}
+
+function shapeFromPaymentDto(data) {
+  if (!data || typeof data !== 'object') return null
+  const id = data.id || data.Id
+  if (!id) return null
   return {
-    paymentId: data.id,
-    amount: data.amount,
-    method: data.method,
-    status: data.status,
-    transactionCode: data.transactionReference || `TXN-${data.id?.slice(0, 8)}`,
-    qrImageUrl: 'data:image/svg+xml;utf8,' + encodeURIComponent(
-      `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><rect width='100%' height='100%' fill='%23fff'/><text x='50%' y='50%' text-anchor='middle' font-family='monospace' font-size='14'>QR ${formatVnd(data.amount)}</text></svg>`,
-    ),
+    paymentId: id,
+    amount: data.amount ?? data.Amount,
+    method: data.method ?? data.Method,
+    status: data.status ?? data.Status,
+    transactionCode: data.transactionReference || data.TransactionReference || `TXN-${String(id).slice(0, 8)}`,
+    qrImageUrl: buildMockQr(data.amount ?? data.Amount),
     bankName: 'Mock Bank',
-    expiresAt: data.expiresAt,
+    expiresAt: data.expiresAt ?? data.ExpiresAt,
   }
 }
 
