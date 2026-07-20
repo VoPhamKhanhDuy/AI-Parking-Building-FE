@@ -390,7 +390,7 @@ export const ZONE_SCHEMA = {
 
 export const ZONE_STRUCTURE_SCHEMA = {
   id: ['id', 'Id'],
-  name: ['name', 'Name'],
+  name: ['name', 'Name', 'zone', 'Zone'],
   location: ['location', 'Location'],
   type: ['type', 'Type'],
   capacity: ['capacity', 'Capacity'],
@@ -643,9 +643,16 @@ export function shapeRule(raw, index = 0) {
   if (!raw || typeof raw !== 'object') return null
   const n = normalizeFields(raw, RULE_SCHEMA)
   const baseFee = safeNum(n.baseFee)
-  const status = n.isActive === false
-    ? 'Inactive'
-    : (n.status || (n.isActive === true ? 'Active' : 'Active'))
+  // n.status may be a boolean if the API sends isActive instead of a string status
+  const rawIsActive = raw.isActive ?? raw.IsActive
+  let status
+  if (typeof n.status === 'boolean') {
+    status = n.status ? 'Active' : 'Inactive'
+  } else if (typeof rawIsActive === 'boolean') {
+    status = rawIsActive ? 'Active' : 'Inactive'
+  } else {
+    status = n.status || 'Active'
+  }
   return {
     id: n.id,
     code: n.code || `PRC-${String(index + 1).padStart(3, '0')}`,
