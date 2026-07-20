@@ -67,15 +67,16 @@ const STATUS_META = {
 }
 
 function Slot({ slot, selected, compatible, onSelect }) {
-  const meta = STATUS_META[slot.status]
-  const disabled = slot.status !== 'available' || !compatible
+  const statusKey = (slot.status || '').toLowerCase()
+  const meta = STATUS_META[statusKey] || { label: slot.status || 'Unknown', icon: null }
+  const disabled = statusKey !== 'available' || !compatible
   return (
-    <button className={`parking-slot ${slot.type} ${slot.status}${selected ? ' selected' : ''}${!compatible ? ' incompatible' : ''}`}
+    <button className={`parking-slot ${slot.vehicleType || slot.type || ''} ${slot.status || ''}${selected ? ' selected' : ''}${!compatible ? ' incompatible' : ''}`}
       type="button" disabled={disabled} onClick={() => onSelect(slot)}
-      aria-label={`${slot.id}, ${meta.label}${!compatible ? ', incompatible' : ''}`} aria-pressed={selected}>
-      <strong>{slot.id}</strong>
-      {meta.icon && <span className="material-symbols-outlined">{slot.type === 'motorcycle' && slot.status === 'occupied' ? 'two_wheeler' : meta.icon}</span>}
-      {slot.type === 'ev' && slot.status === 'available' && <span className="material-symbols-outlined">ev_station</span>}
+      aria-label={`${slot.slotCode || slot.id}, ${meta.label}${!compatible ? ', incompatible' : ''}`} aria-pressed={selected}>
+      <strong>{slot.slotCode || slot.id}</strong>
+      {meta.icon && <span className="material-symbols-outlined">{slot.vehicleType === 'motorcycle' && statusKey === 'occupied' ? 'two_wheeler' : meta.icon}</span>}
+      {slot.vehicleType === 'ev' && statusKey === 'available' && <span className="material-symbols-outlined">ev_station</span>}
     </button>
   )
 }
@@ -109,8 +110,8 @@ function ManualSlotPage() {
   }, [entry.vehicleType])
 
   const activeFloor = floors.find((floor) => floor.id === floorId)
-  const visibleSlots = useMemo(() => (activeFloor?.slots || []).filter((slot) => zone === 'all' || slot.type === zone), [activeFloor, zone])
-  const groupedSlots = Object.groupBy ? Object.groupBy(visibleSlots, (slot) => slot.type) : visibleSlots.reduce((groups, slot) => ({ ...groups, [slot.type]: [...(groups[slot.type] || []), slot] }), {})
+  const visibleSlots = useMemo(() => (activeFloor?.slots || []).filter((slot) => zone === 'all' || slot.vehicleType?.toLowerCase() === zone || slot.type?.toLowerCase() === zone), [activeFloor, zone])
+  const groupedSlots = Object.groupBy ? Object.groupBy(visibleSlots, (slot) => slot.vehicleType?.toLowerCase() || slot.type?.toLowerCase() || 'other') : visibleSlots.reduce((groups, slot) => { const key = slot.vehicleType?.toLowerCase() || slot.type?.toLowerCase() || 'other'; return { ...groups, [key]: [...(groups[key] || []), slot] } }, {})
 
   const chooseFloor = (id) => {
     setFloorId(id); setSelectedSlot(null); setError('')

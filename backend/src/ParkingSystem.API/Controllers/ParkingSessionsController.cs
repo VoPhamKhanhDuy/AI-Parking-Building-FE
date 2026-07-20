@@ -104,4 +104,15 @@ public class ParkingSessionsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ParkingSessionDto>> Cancel(Guid id, CancellationToken ct)
         => Ok(await _service.CancelAsync(id, ct));
+
+    /// <summary>Move an active session to a different slot (staff-only — frees old slot, claims new).</summary>
+    [HttpPost("{id:guid}/reassign-slot")]
+    [Authorize(Roles = "Admin,Manager,Staff")]
+    [ProducesResponseType(typeof(ParkingSessionDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<ParkingSessionDto>> ReassignSlot(
+        Guid id, [FromBody] ReassignSessionRequest req, CancellationToken ct)
+        => Ok(await _service.ReassignSlotAsync(id, req, ct));
 }

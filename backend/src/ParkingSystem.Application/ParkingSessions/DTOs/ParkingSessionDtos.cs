@@ -33,3 +33,8 @@ public class EndSessionRequest
 {
     public DateTime? ExitTime { get; set; }
 }
+
+public class ReassignSessionRequest
+{
+    public Guid NewSlotId { get; set; }
+}

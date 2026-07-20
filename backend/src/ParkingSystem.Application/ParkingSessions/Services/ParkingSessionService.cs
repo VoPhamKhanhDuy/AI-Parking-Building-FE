@@ -236,6 +236,85 @@ public class ParkingSessionService : IParkingSessionService
         return session.ToDto();
     }
 
+    public async Task<ParkingSessionDto> ReassignSlotAsync(Guid id, ReassignSessionRequest req, CancellationToken ct = default)
+    {
+        await using var transaction = await _uow.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct);
+
+        var session = await _sessions.FirstOrDefaultAsync(
+            new ParkingSessionSpecifications.ByIdWithDetails(id), ct)
+            ?? throw new NotFoundException(nameof(ParkingSession), id);
+
+        if (session.Status != SessionStatus.Active)
+        {
+            throw new ValidationException($"Session '{session.Id}' is {session.Status} and cannot be reassigned.");
+        }
+
+        if (session.SlotId == req.NewSlotId)
+        {
+            throw new ValidationException("The vehicle is already parked in the selected slot.");
+        }
+
+        var oldSlot = await _slots.GetByIdAsync(session.SlotId, ct)
+            ?? throw new NotFoundException(nameof(ParkingSlot), session.SlotId);
+
+        var newSlot = await _slots.GetByIdAsync(req.NewSlotId, ct)
+            ?? throw new NotFoundException(nameof(ParkingSlot), req.NewSlotId);
+
+        if (newSlot.Status == SlotStatus.Maintenance)
+        {
+            throw new ValidationException($"Slot '{newSlot.SlotCode}' is under maintenance and cannot be used.");
+        }
+
+        var newZone = newSlot.ParkingZone;
+        if (newZone == null)
+        {
+            throw new ValidationException($"Slot '{newSlot.SlotCode}' has no assigned zone.");
+        }
+
+        if (newZone.VehicleTypeId != Guid.Empty && newZone.VehicleType != null)
+        {
+            var vehicle = session.Vehicle ?? await _vehicles.GetByIdAsync(session.VehicleId, ct);
+            if (vehicle == null || vehicle.VehicleType == null)
+            {
+                throw new ValidationException($"Vehicle '{session.VehicleId}' has no vehicle type assigned.");
+            }
+            if (vehicle.VehicleTypeId != newZone.VehicleTypeId)
+            {
+                throw new ValidationException(
+                    $"Vehicle type '{vehicle.VehicleType?.Name}' is not allowed in zone '{newZone.Name}'.");
+            }
+        }
+
+        // Verify destination slot is not already taken by another active session
+        var activeOnNewSlot = await _sessions.FirstOrDefaultAsync(
+            new ParkingSessionSpecifications.ActiveBySlot(newSlot.Id), ct);
+        if (activeOnNewSlot is not null && activeOnNewSlot.Id != session.Id)
+        {
+            throw new ConflictException(
+                $"Slot '{newSlot.SlotCode}' is already occupied by another active session.");
+        }
+
+        session.SlotId = newSlot.Id;
+        session.UpdatedAt = _clock.GetUtcNow().UtcDateTime;
+
+        oldSlot.Status = SlotStatus.Available;
+        oldSlot.UpdatedAt = _clock.GetUtcNow().UtcDateTime;
+
+        newSlot.Status = SlotStatus.Occupied;
+        newSlot.UpdatedAt = _clock.GetUtcNow().UtcDateTime;
+
+        _sessions.Update(session);
+        _slots.Update(oldSlot);
+        _slots.Update(newSlot);
+        await _uow.SaveChangesAsync(ct);
+        await _uow.CommitTransactionAsync(ct);
+
+        session.Ticket = await _tickets.GetByIdAsync(session.TicketId, ct);
+        session.Vehicle = await _vehicles.GetByIdAsync(session.VehicleId, ct);
+        session.Slot = newSlot;
+        return session.ToDto();
+    }
+
     public async Task<ParkingSessionDto> CancelAsync(Guid id, CancellationToken ct = default)
     {
         var session = await _sessions.FirstOrDefaultAsync(

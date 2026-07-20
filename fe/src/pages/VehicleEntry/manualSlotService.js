@@ -89,22 +89,66 @@ export async function assignParkingSlot({ slotId, licensePlate, vehicleType, tic
       vehicleId = created.data?.id || created.data?.Id
     }
 
-    // 2) Issue ticket
-    const issued = await api.post('/tickets', {
-      vehicleId,
-      type: pickTicketType(ticketType),
-    })
-    const ticket = issued.data || {}
-    const ticketId = ticket.id || ticket.Id
+    let ticketId, ticketCode
+    try {
+      const issued = await api.post('/tickets', {
+        vehicleId,
+        type: pickTicketType(ticketType),
+      })
+      ticketId = issued.data?.id || issued.data?.Id
+      ticketCode = issued.data?.ticketCode || issued.data?.TicketCode
+    } catch (ticketError) {
+      if (ticketError.response?.status === 409) {
+        // Vehicle already has an open ticket — fetch it instead
+        const active = await api.get(`/tickets/active-by-vehicle/${vehicleId}`)
+        ticketId = active.data?.id || active.data?.Id
+        ticketCode = active.data?.ticketCode || active.data?.TicketCode
+        if (!ticketId) {
+          const msg = ticketError.response?.data?.message || 'Vehicle has open ticket but none found'
+          logger.error('ManualSlot', msg)
+          return { success: false, message: msg }
+        }
+        logger.warn('ManualSlot', 'Reusing existing active ticket for vehicle')
+      } else {
+        throw ticketError
+      }
+    }
 
-    // 3) Start parking session (claims the slot)
-    const started = await api.post('/parking-sessions', { ticketId, slotId })
-    const session = started.data || {}
+    // 3) Start parking session (claims the slot) — handle if ticket already has a session
+    let session
+    try {
+      const started = await api.post('/parking-sessions', { ticketId, slotId })
+      session = started.data || {}
+    } catch (sessionError) {
+      if (sessionError.response?.status === 409) {
+        // Ticket already has an active session — check if it's the same slot
+        const existing = await api.get(`/parking-sessions/active-by-ticket/${ticketId}`)
+        const existingSlotId = existing.data?.slotId || existing.data?.SlotId
+        if (existingSlotId === slotId) {
+          session = existing.data || {}
+          logger.warn('ManualSlot', 'Ticket already has active session on this slot, using existing')
+        } else {
+          const sessionId = existing.data?.id || existing.data?.Id
+          const oldSlot = existing.data?.slotCode || existing.data?.SlotCode
+          try {
+            const reassigned = await api.post(`/parking-sessions/${sessionId}/reassign-slot`, { newSlotId: slotId })
+            session = reassigned.data || {}
+            logger.warn('ManualSlot', `Reassigned active session from ${oldSlot} to selected slot`)
+          } catch {
+            const msg = `Vehicle is already parked in slot ${oldSlot}. Please checkout before assigning a new slot.`
+            logger.warn('ManualSlot', msg)
+            return { success: false, message: msg }
+          }
+        }
+      } else {
+        throw sessionError
+      }
+    }
     return {
       success: true,
       data: {
         sessionId: session.id || session.Id,
-        ticketCode: session.ticketCode || session.TicketCode || ticket.ticketCode || ticket.TicketCode,
+        ticketCode: session.ticketCode || session.TicketCode || ticketCode,
         entryTime: session.entryTime || session.EntryTime || new Date().toISOString(),
         slotCode: session.slotCode || session.SlotCode,
         status: session.status || session.Status,

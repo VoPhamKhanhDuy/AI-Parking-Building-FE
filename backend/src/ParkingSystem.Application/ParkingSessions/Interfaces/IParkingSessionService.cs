@@ -22,4 +22,5 @@ public interface IParkingSessionService
     Task<ParkingSessionDto> StartAsync(StartSessionRequest req, CancellationToken ct = default);
     Task<ParkingSessionDto> EndAsync(Guid id, EndSessionRequest req, CancellationToken ct = default);
     Task<ParkingSessionDto> CancelAsync(Guid id, CancellationToken ct = default);
+    Task<ParkingSessionDto> ReassignSlotAsync(Guid id, ReassignSessionRequest req, CancellationToken ct = default);
 }
