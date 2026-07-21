@@ -15,7 +15,6 @@ import './MonthlyPassPage.css'
 const EMPTY_FORM = { driver: '', licensePlate: '', vehicleType: 'Car' }
 const STATUS_OPTIONS = ['All Statuses', 'Active', 'Expiring Soon', 'Pending Approval', 'Expired']
 const VEHICLE_TYPE_OPTIONS = ['All Types', 'Car', 'Motorcycle', 'EV']
-const DATE_FILTER_OPTIONS = ['This Month', 'Next 30 Days', 'Expired']
 
 function StatusBadge({ value }) {
   const raw = String(value ?? '—')
@@ -204,9 +203,6 @@ function MonthlyPassPage() {
           <select value={vehicleType} onChange={(e) => setVehicleType(e.target.value)}>
             {VEHICLE_TYPE_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
           </select>
-          <select defaultValue="This Month">
-            {DATE_FILTER_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
-          </select>
           <button className="create-pass" onClick={openCreate}>
             <span className="material-symbols-outlined">add</span>
             Create New Pass
@@ -369,7 +365,6 @@ function PassDetail({ selected, onVerify, onRenew, onUpdate, onSuspension }) {
         <button className="primary" onClick={onVerify}>Verify Pass</button>
         <button onClick={onRenew}>Renew Pass</button>
         <button onClick={onUpdate}>Update Vehicle</button>
-        <button>View Entry History</button>
         <button className="request" onClick={onSuspension}>Request Suspension</button>
         <p>Manager approval is required for suspension.</p>
       </div>
