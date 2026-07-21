@@ -6,7 +6,8 @@ import {
   createLostTicketCase,
   findLostTicketSession,
   formatLostTicketMoney,
-  getLostTicketPageData
+  getLostTicketPageData,
+  processLostTicketPayment
 } from './lostTicketService'
 import './LostTicketPage.css'
 
@@ -33,7 +34,7 @@ function calculateDuration(start, end = Date.now()) {
   return `${hours}h ${minutes}m`
 }
 
-const DEFAULT_PAGE = { policy: { carPenalty: 0, motorcyclePenalty: 0 }, recentCases: [] }
+const DEFAULT_PAGE = { policy: { carPenalty: 0, motorcyclePenalty: 0, baseParkingFee: 50000 }, recentCases: [] }
 
 function LostTicketPage() {
   const navigate = useNavigate()
@@ -43,6 +44,7 @@ function LostTicketPage() {
   const [phone, setPhone] = useState('')
   const [vehicleType, setVehicleType] = useState('Car')
   const [session, setSession] = useState(null)
+  const [caseData, setCaseData] = useState(null)
   const [fee, setFee] = useState(null)
   const [pageData, setPageData] = useState(DEFAULT_PAGE)
   const [action, setAction] = useState('')
@@ -71,6 +73,8 @@ function LostTicketPage() {
     }
     setAction('verify')
     setMessage('')
+    setCaseData(null)
+    setFee(null)
     try {
       const result = await findLostTicketSession({ method, query: query.trim() })
       if (result?.success && result.data) {
@@ -79,13 +83,18 @@ function LostTicketPage() {
           setVehicleType(result.data.vehicleType)
         }
         setFee(null)
+        setCaseData(null)
         setMessage('Active parking session recovered.')
       } else {
         setSession(null)
         setFee(null)
+        setCaseData(null)
         setMessage(result?.message || 'No active session matches the supplied information.')
       }
     } catch (error) {
+      setSession(null)
+      setFee(null)
+      setCaseData(null)
       setMessage(error?.message || 'Verification failed.')
     } finally {
       setAction('')
@@ -97,21 +106,20 @@ function LostTicketPage() {
     setAction('fee')
     setFee(null)
     try {
-      const parkingFee = 50000
       const policy = pageData.policy || DEFAULT_PAGE.policy
       const isMotor = /motor/i.test(String(session.vehicleType || vehicleType || ''))
+      const parkingFee = policy.baseParkingFee || 50000
       const penalty = isMotor ? (policy.motorcyclePenalty || 200000) : (policy.carPenalty || 500000)
-      const discount = 0
-      const total = parkingFee + penalty - discount
+      const total = parkingFee + penalty
       setFee({
         parkingFee,
         penalty,
-        discount,
+        discount: 0,
         total,
         formattedTotal: formatLostTicketMoney(total),
-        paymentStatus: 'Unpaid'
+        paymentStatus: 'Pending'
       })
-      setMessage('Lost ticket fee calculated.')
+      setMessage('Fee calculated. Ready to process payment.')
     } catch (error) {
       setMessage(error?.message || 'Failed to calculate fee.')
     } finally {
@@ -124,15 +132,41 @@ function LostTicketPage() {
     setAction('case')
     setMessage('')
     try {
-      const result = await createLostTicketCase(session, { ownerName, phone })
-      if (!result?.success) {
-        setMessage(result?.message || 'Could not create lost ticket case.')
+      // Create the lost ticket case first
+      const createResult = await createLostTicketCase(session, { ownerName, phone })
+      if (!createResult?.success) {
+        setMessage(createResult?.message || 'Could not create lost ticket case.')
         return
       }
-      setMessage(`Case ${result.caseId || result.data?.id || '—'} created. Continue to payment before vehicle exit.`)
-      navigate(ROUTE_PATHS.payment)
+
+      setCaseData(createResult.data)
+      const caseId = createResult.caseId || createResult.data?.id
+
+      // Process payment immediately
+      const paymentResult = await processLostTicketPayment(caseId, {
+        ownerName,
+        phone,
+        paymentMethod: 'Cash',
+        processedByUserId: null
+      })
+
+      if (paymentResult?.success) {
+        setMessage(`Case ${createResult.data?.caseCode || caseId} created and payment processed successfully. Vehicle can now exit.`)
+        setFee(prev => ({ ...prev, paymentStatus: 'Paid' }))
+        // Refresh page data
+        getLostTicketPageData().then(result => {
+          if (result?.success) {
+            setPageData({
+              policy: result.data.policy || DEFAULT_PAGE.policy,
+              recentCases: result.data.recentCases || []
+            })
+          }
+        })
+      } else {
+        setMessage(`Case created (${caseId}) but payment failed: ${paymentResult?.message || 'Unknown error'}`)
+      }
     } catch (error) {
-      setMessage(error?.message || 'Could not create lost ticket case.')
+      setMessage(error?.message || 'Could not process lost ticket case.')
     } finally {
       setAction('')
     }
@@ -205,7 +239,7 @@ function LostTicketPage() {
             {session && (
               <div className="recovered-fields">
                 <label><span>Entry time</span><strong>{formatTime(session.entryTime)}</strong></label>
-                <label><span>Assigned slot</span><strong>{session.slotId || '—'}</strong></label>
+                <label><span>Assigned slot</span><strong>{session.slotCode || session.slotId || '—'}</strong></label>
                 <label><span>Parking duration</span><strong>{parkingDuration}</strong></label>
               </div>
             )}
@@ -237,11 +271,13 @@ function LostTicketPage() {
 
             <div className="lost-actions">
               <button onClick={() => {
-                setSession(null); setFee(null); setQuery(''); setOwnerName(''); setPhone(''); setMessage('')
+                setSession(null); setFee(null); setCaseData(null); setQuery(''); setOwnerName(''); setPhone(''); setMessage('')
               }}>Clear form</button>
               <button onClick={verify} disabled={action === 'verify'}>{action === 'verify' ? 'Verifying…' : 'Verify vehicle'}</button>
               <button onClick={calculate} disabled={!session || action === 'fee'}>{action === 'fee' ? 'Calculating…' : 'Calculate fee'}</button>
-              <button className="primary" disabled={!fee || action === 'case'} onClick={processCase}>Process payment & exit</button>
+              <button className="primary" disabled={!fee || action === 'case'} onClick={processCase}>
+                {action === 'case' ? 'Processing…' : 'Process payment & exit'}
+              </button>
             </div>
           </main>
 
@@ -253,11 +289,17 @@ function LostTicketPage() {
                   <div><dt>Session status</dt><dd className="active">Active</dd></div>
                   <div><dt>Ticket code</dt><dd>{session.ticketCode || '—'}</dd></div>
                   <div><dt>License plate</dt><dd>{session.licensePlate || '—'}</dd></div>
-                  <div><dt>Slot</dt><dd className="blue">{session.slotId || '—'}</dd></div>
+                  <div><dt>Slot</dt><dd className="blue">{session.slotCode || session.slotId || '—'}</dd></div>
                   <div><dt>Floor / Zone</dt><dd>{session.floorZone || '—'}</dd></div>
                   <div><dt>Entry gate</dt><dd>{session.entryGate || '—'}</dd></div>
                   <div><dt>Entry time</dt><dd>{formatTime(session.entryTime)}</dd></div>
                   <div><dt>Assignment</dt><dd>{session.assignmentMethod || 'Manual'}</dd></div>
+                  {caseData && (
+                    <>
+                      <div><dt>Case code</dt><dd>{caseData.caseCode || '—'}</dd></div>
+                      <div><dt>Payment</dt><dd className={fee?.paymentStatus === 'Paid' ? 'active' : ''}>{fee?.paymentStatus || 'Pending'}</dd></div>
+                    </>
+                  )}
                 </dl>
               ) : <p>No recovered session yet.</p>}
             </section>
@@ -265,8 +307,8 @@ function LostTicketPage() {
             <section>
               <h2><span className="material-symbols-outlined">policy</span>Lost Ticket Policy</h2>
               <ul>
-                <li>Car/EV penalty: {formatLostTicketMoney(pageData.policy?.carPenalty)}</li>
-                <li>Motorcycle penalty: {formatLostTicketMoney(pageData.policy?.motorcyclePenalty)}</li>
+                <li>Car/EV penalty: {formatLostTicketMoney(pageData.policy?.carPenalty || 500000)}</li>
+                <li>Motorcycle penalty: {formatLostTicketMoney(pageData.policy?.motorcyclePenalty || 200000)}</li>
                 <li>Staff verification required</li>
                 <li>Payment required before exit</li>
                 <li>Slot released after completion</li>
@@ -287,9 +329,9 @@ function LostTicketPage() {
               <thead>
                 <tr>
                   <th>Time</th>
+                  <th>Case code</th>
                   <th>License plate</th>
                   <th>Vehicle type</th>
-                  <th>Recovered slot</th>
                   <th>Total paid</th>
                   <th>Status</th>
                 </tr>
@@ -298,9 +340,9 @@ function LostTicketPage() {
                 {pageData.recentCases.map((item) => (
                   <tr key={item.id}>
                     <td>{formatTime(item.time)}</td>
+                    <td><b>{item.caseCode || '—'}</b></td>
                     <td><b>{item.licensePlate || '—'}</b></td>
                     <td>{item.vehicleType || '—'}</td>
-                    <td>{item.slotId || '—'}</td>
                     <td><b>{formatLostTicketMoney(item.totalPaid)}</b></td>
                     <td>
                       <span className={(item.status || 'completed').toLowerCase().replace(' ', '-')}>

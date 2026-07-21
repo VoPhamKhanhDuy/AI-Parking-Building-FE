@@ -55,5 +55,6 @@ public abstract class Specification<T> : ISpecification<T>
         Skip = skip;
         Take = take;
     }
+    protected void ApplyTake(int count) => Take = count;
     protected void ApplyNoTracking() => AsNoTracking = true;
 }

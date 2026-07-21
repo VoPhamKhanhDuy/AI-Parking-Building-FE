@@ -33,6 +33,7 @@ public class AppDbContext : DbContext
     public DbSet<MonthlyPass> MonthlyPasses => Set<MonthlyPass>();
     public DbSet<Reservation> Reservations => Set<Reservation>();
     public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<LostTicketCase> LostTicketCases => Set<LostTicketCase>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
