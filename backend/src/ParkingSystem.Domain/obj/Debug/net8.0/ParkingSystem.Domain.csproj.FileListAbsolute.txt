@@ -1,0 +1,12 @@
+D:\Ki8\SWD392\project\ParkingSystem\backend\src\ParkingSystem.Domain\bin\Debug\net8.0\ParkingSystem.Domain.deps.json
+D:\Ki8\SWD392\project\ParkingSystem\backend\src\ParkingSystem.Domain\bin\Debug\net8.0\ParkingSystem.Domain.dll
+D:\Ki8\SWD392\project\ParkingSystem\backend\src\ParkingSystem.Domain\bin\Debug\net8.0\ParkingSystem.Domain.pdb
+D:\Ki8\SWD392\project\ParkingSystem\backend\src\ParkingSystem.Domain\obj\Debug\net8.0\ParkingSystem.Domain.GeneratedMSBuildEditorConfig.editorconfig
+D:\Ki8\SWD392\project\ParkingSystem\backend\src\ParkingSystem.Domain\obj\Debug\net8.0\ParkingSystem.Domain.AssemblyInfoInputs.cache
+D:\Ki8\SWD392\project\ParkingSystem\backend\src\ParkingSystem.Domain\obj\Debug\net8.0\ParkingSystem.Domain.AssemblyInfo.cs
+D:\Ki8\SWD392\project\ParkingSystem\backend\src\ParkingSystem.Domain\obj\Debug\net8.0\ParkingSystem.Domain.csproj.CoreCompileInputs.cache
+D:\Ki8\SWD392\project\ParkingSystem\backend\src\ParkingSystem.Domain\obj\Debug\net8.0\ParkingSystem.Domain.sourcelink.json
+D:\Ki8\SWD392\project\ParkingSystem\backend\src\ParkingSystem.Domain\obj\Debug\net8.0\ParkingSystem.Domain.dll
+D:\Ki8\SWD392\project\ParkingSystem\backend\src\ParkingSystem.Domain\obj\Debug\net8.0\refint\ParkingSystem.Domain.dll
+D:\Ki8\SWD392\project\ParkingSystem\backend\src\ParkingSystem.Domain\obj\Debug\net8.0\ParkingSystem.Domain.pdb
+D:\Ki8\SWD392\project\ParkingSystem\backend\src\ParkingSystem.Domain\obj\Debug\net8.0\ref\ParkingSystem.Domain.dll

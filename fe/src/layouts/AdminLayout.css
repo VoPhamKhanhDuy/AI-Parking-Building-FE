@@ -1,0 +1,146 @@
+.admin-nav-label {
+  padding: 14px 13px 5px;
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.admin-layout .gate-pill {
+  min-width: 100px;
+}
+
+.admin-layout .shift-info strong {
+  color: #172033;
+}
+
+.admin-layout .sidebar {
+  width: 220px;
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  border-right: 1px solid #334155;
+}
+
+.admin-layout .sidebar .brand {
+  padding: 14px 14px 14px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-layout .sidebar .brand strong {
+  color: #f1f5f9;
+  font-size: 15px;
+}
+
+.admin-layout .sidebar .brand small {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.admin-layout .sidebar .brand-icon {
+  background: rgba(99, 102, 241, 0.18);
+  color: #a5b4fc;
+}
+
+.admin-layout .side-nav {
+  padding: 8px;
+}
+
+.admin-layout .side-nav a {
+  color: #cbd5e1;
+  padding: 11px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 12px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.admin-layout .side-nav a:hover {
+  background: rgba(148, 163, 184, 0.08);
+  color: #f8fafc;
+}
+
+.admin-layout .side-nav a.active {
+  background: rgba(99, 102, 241, 0.18);
+  color: #c7d2fe;
+}
+
+.admin-layout .side-nav a.active .material-symbols-outlined {
+  color: #c7d2fe;
+}
+
+.admin-layout .side-nav .material-symbols-outlined {
+  color: #94a3b8;
+  font-size: 18px;
+}
+
+.admin-layout .topbar {
+  left: 220px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-layout .layout-content {
+  margin-left: 220px;
+  background: #f8fafc;
+  max-width: none;
+}
+
+.admin-layout .admin-account-menu {
+  top: calc(100% + 7px);
+  width: 180px;
+  padding: 5px;
+  border-color: #d9e0e9;
+  border-radius: 8px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+}
+
+.admin-layout .admin-account-menu button {
+  display: flex;
+  min-height: 34px;
+  padding: 7px 9px;
+  align-items: center;
+  gap: 9px;
+  border-radius: 5px;
+  color: #344054;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.admin-layout .admin-account-menu button + button {
+  margin-top: 2px;
+  border-top: 1px solid #edf0f4;
+  border-radius: 0 0 5px 5px;
+}
+
+.admin-layout .admin-account-menu button:hover {
+  background: #f2f6fb;
+  color: #174f91;
+}
+
+.admin-layout .admin-account-menu .material-symbols-outlined {
+  width: 17px;
+  font-size: 17px;
+  font-weight: 400;
+}
+
+.admin-layout .admin-account-menu .admin-sign-out {
+  color: #9f2d26;
+}
+
+.admin-layout .admin-account-menu .admin-sign-out:hover {
+  background: #fff2f1;
+  color: #b42318;
+}
+
+@media (max-width: 767px) {
+  .admin-layout .sidebar {
+    width: 220px;
+  }
+  .admin-layout .topbar {
+    left: 0;
+  }
+  .admin-layout .layout-content {
+    margin-left: 0;
+  }
+}
