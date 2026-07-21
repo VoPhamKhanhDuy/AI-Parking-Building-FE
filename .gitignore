@@ -49,5 +49,11 @@ dist-ssr/
 .DS_Store
 Thumbs.db
 
+# Vite cache (auto-generated on dev/build)
+fe/node_modules/.vite/
+
+# Cursor IDE terminal logs
+.cursor/projects/**/terminals/
+
 # --- Misc ---
 .cursor/
