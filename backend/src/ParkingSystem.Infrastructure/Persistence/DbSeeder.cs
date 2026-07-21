@@ -23,6 +23,53 @@ public static class DbSeeder
         await SeedSampleBuildingAsync(context);
         await SeedPricingRulesAsync(context);
         await SeedVehiclesAndActiveSessionsAsync(context);
+        await FixSlotCodesAsync(context);
+    }
+
+    /// <summary>
+    /// Ensures all slots have human-readable SlotCode (e.g. "MB-001", "C-001", "EV-001").
+    /// Safe to call on every startup — only updates slots with empty or invalid SlotCode.
+    /// </summary>
+    public static async Task FixSlotCodesAsync(AppDbContext context)
+    {
+        var slots = await context.ParkingSlots
+            .Include(s => s.ParkingZone)
+            .ToListAsync();
+
+        foreach (var slot in slots)
+        {
+            var zone = slot.ParkingZone;
+            if (zone == null) continue;
+
+            // Determine prefix based on zone name
+            var prefix = zone.Name?.ToUpperInvariant() switch
+            {
+                var n when n?.Contains("MOTORBIKE") == true => "MB-",
+                var n when n?.Contains("EV") == true => "EV-",
+                _ => "C-"
+            };
+
+            // Check if SlotCode is missing or looks like a GUID (invalid)
+            var isInvalid = string.IsNullOrWhiteSpace(slot.SlotCode)
+                || Guid.TryParse(slot.SlotCode, out _)
+                || slot.SlotCode.Length > 20;
+
+            if (isInvalid)
+            {
+                // Find all slots in this zone to assign sequential number
+                var zoneSlots = slots
+                    .Where(s => s.ParkingZoneId == zone.Id)
+                    .OrderBy(s => s.CreatedAt)
+                    .ToList();
+
+                var index = zoneSlots.IndexOf(slot) + 1;
+                slot.SlotCode = $"{prefix}{index:000}";
+                slot.UpdatedAt = DateTime.UtcNow;
+                context.ParkingSlots.Update(slot);
+            }
+        }
+
+        await context.SaveChangesAsync();
     }
 
     private static async Task SeedRolesAsync(AppDbContext context)
