@@ -1,1 +1,11 @@
-{"Version":1,"Hash":"vPFPZQvZUMLay7C+g8VopeOoalpiEdlum0wYaw7gsxk=","Source":"ParkingSystem.API","BasePath":"/","Mode":"Root","ManifestType":"Build","ReferencedProjectsConfiguration":[],"DiscoveryPatterns":[],"Assets":[],"Endpoints":[]}
+{
+  "Version": 1,
+  "Hash": "xVcwd01qr1ro+GqoZJ5MT9a5zWdsX/T/9TFmgy2rOBs=",
+  "Source": "ParkingSystem.API",
+  "BasePath": "_content/ParkingSystem.API",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

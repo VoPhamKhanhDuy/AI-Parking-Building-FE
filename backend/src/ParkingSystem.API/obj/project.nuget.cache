@@ -2,7 +2,7 @@
   "version": 2,
   "dgSpecHash": "pgIj+/x58c4=",
   "success": true,
-  "projectFilePath": "D:\\Ki8\\SWD392\\project\\ParkingSystem\\backend\\src\\ParkingSystem.API\\ParkingSystem.API.csproj",
+  "projectFilePath": "D:\\SWD\\AI-Parking-Building-FE\\backend\\src\\ParkingSystem.API\\ParkingSystem.API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\5b2f278e20138a4fec8d0aadb207cc39\\nuget\\aspnetcore.healthchecks.npgsql\\8.0.2\\aspnetcore.healthchecks.npgsql.8.0.2.nupkg.sha512",
     "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\5b2f278e20138a4fec8d0aadb207cc39\\nuget\\bcrypt.net-next\\4.0.3\\bcrypt.net-next.4.0.3.nupkg.sha512",
