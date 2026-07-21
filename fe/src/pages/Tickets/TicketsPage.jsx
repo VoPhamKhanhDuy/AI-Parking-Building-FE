@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
@@ -80,6 +80,7 @@ function TicketsPage() {
   const [status, setStatus] = useState('All Statuses')
   const [loading, setLoading] = useState(true)
   const [message, setMessage] = useState('')
+  const detailRef = useRef(null)
 
   useEffect(() => {
     let active = true
@@ -117,6 +118,11 @@ function TicketsPage() {
     () => data.tickets.find((item) => item.id === selectedId) || data.tickets[0] || null,
     [data.tickets, selectedId]
   )
+
+  const viewTicket = (id) => {
+    setSelectedId(id)
+    detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   const markLost = async () => {
     if (!selected) return
@@ -218,6 +224,7 @@ function TicketsPage() {
                     <th>Slot</th>
                     <th>Entry time</th>
                     <th>Status</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -235,6 +242,11 @@ function TicketsPage() {
                       <td><b>{item.slotId || '—'}</b></td>
                       <td>{formatTime(item.entryTime)}</td>
                       <td><Badge value={item.status} /></td>
+                      <td>
+                        <button onClick={(event) => { event.stopPropagation(); viewTicket(item.id) }}>
+                          View
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -242,7 +254,7 @@ function TicketsPage() {
             )}
           </section>
 
-          <aside className="ticket-detail">
+          <aside className="ticket-detail" ref={detailRef}>
             <div className="ticket-card-header">
               <h2>Ticket Detail</h2>
               {selected && <Badge value={selected.status} />}
