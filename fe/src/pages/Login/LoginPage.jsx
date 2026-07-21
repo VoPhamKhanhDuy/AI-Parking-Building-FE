@@ -4,13 +4,6 @@ import { getDashboardByRole } from '../../routes/roleUtils'
 import { useAuth } from '../../contexts/useAuth'
 import './LoginPage.css'
 
-// Demo users for quick access
-const DEMO_USERS = [
-  { role: 'Admin', email: 'admin@parking.local', password: 'Admin@123', icon: 'admin_panel_settings', featured: true },
-  { role: 'Manager', email: 'manager@parking.local', password: 'Manager@123', icon: 'manage_accounts', featured: false },
-  { role: 'Staff', email: 'staff@parking.local', password: 'Staff@123', icon: 'support_agent', featured: false },
-]
-
 function Icon({ children, filled = false }) {
   return (
     <span className={`material-symbols-outlined${filled ? ' icon-filled' : ''}`}>
@@ -20,7 +13,6 @@ function Icon({ children, filled = false }) {
 }
 
 function LoginPage() {
-  console.log('LoginPage rendering')
   const navigate = useNavigate()
   const location = useLocation()
   const { login, loading: authLoading } = useAuth()
@@ -62,12 +54,6 @@ function LoginPage() {
       setIsSubmitting(false)
     }
   }, [form.email, form.password, login, navigate, from])
-
-  const handleDemoLogin = useCallback((demoUser) => {
-    setForm({ email: demoUser.email, password: demoUser.password, remember: false })
-    setError('')
-    setMessage(`${demoUser.role} demo account selected. Click Login to continue.`)
-  }, [])
 
   const togglePassword = useCallback(() => {
     setShowPassword((prev) => !prev)
@@ -179,30 +165,6 @@ function LoginPage() {
               )}
             </button>
           </form>
-
-          <section className="quick-access">
-            <p className="quick-title">Quick Access Demo</p>
-            <div className="demo-list">
-              {DEMO_USERS.map((user) => (
-                <button
-                  type="button"
-                  key={user.role}
-                  title={`${user.email} / ${user.password}`}
-                  className={`demo-user${user.featured ? ' featured' : ''}`}
-                  onClick={() => handleDemoLogin(user)}
-                >
-                  <span className="demo-info">
-                    <span className="demo-icon">
-                      <Icon>{user.icon}</Icon>
-                    </span>
-                    <strong>{user.role}</strong>
-                    {user.featured && <small>Main Demo</small>}
-                  </span>
-                  <Icon>chevron_right</Icon>
-                </button>
-              ))}
-            </div>
-          </section>
         </div>
 
         <a className="driver-link" href="/driver">
