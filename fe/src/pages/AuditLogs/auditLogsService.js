@@ -22,11 +22,12 @@ export async function getAuditLogById(id) {
 }
 
 // Mock data for development
-export const initialAuditKPIs = [
-  { label: 'Total Events', value: 0, trend: 'up' },
-  { label: 'Security Events', value: 0, trend: 'neutral' },
-  { label: 'Failed Logins', value: 0, trend: 'down' }
-]
+export const initialAuditKPIs = {
+  totalLogsToday: 0,
+  successfulActions: 0,
+  pendingReviews: 0,
+  failedAttempts: 0
+}
 
 export const initialAuditRecords = []
 

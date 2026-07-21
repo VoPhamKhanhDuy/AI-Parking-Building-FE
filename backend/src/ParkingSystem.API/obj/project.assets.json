@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "targets": {
     "net8.0": {
       "AspNetCore.HealthChecks.NpgSql/8.0.2": {
@@ -3758,33 +3758,41 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\SWD\\AI-Parking-Building-FE\\backend\\src\\ParkingSystem.API\\ParkingSystem.API.csproj",
+      "projectUniqueName": "D:\\Ki8\\SWD392\\project\\ParkingSystem\\backend\\src\\ParkingSystem.API\\ParkingSystem.API.csproj",
       "projectName": "ParkingSystem.API",
       "projectPath": "D:\\Ki8\\SWD392\\project\\ParkingSystem\\backend\\src\\ParkingSystem.API\\ParkingSystem.API.csproj",
       "packagesPath": "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\5b2f278e20138a4fec8d0aadb207cc39\\nuget",
       "outputPath": "D:\\Ki8\\SWD392\\project\\ParkingSystem\\backend\\src\\ParkingSystem.API\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "C:\\Users\\ADMIN\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\ASUS\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
         "net8.0": {
+          "framework": "net8.0",
           "targetAlias": "net8.0",
           "projectReferences": {
-            "D:\\SWD\\AI-Parking-Building-FE\\backend\\src\\ParkingSystem.Application\\ParkingSystem.Application.csproj": {
-              "projectPath": "D:\\SWD\\AI-Parking-Building-FE\\backend\\src\\ParkingSystem.Application\\ParkingSystem.Application.csproj"
+            "D:\\Ki8\\SWD392\\project\\ParkingSystem\\backend\\src\\ParkingSystem.Application\\ParkingSystem.Application.csproj": {
+              "projectPath": "D:\\Ki8\\SWD392\\project\\ParkingSystem\\backend\\src\\ParkingSystem.Application\\ParkingSystem.Application.csproj"
             },
-            "D:\\SWD\\AI-Parking-Building-FE\\backend\\src\\ParkingSystem.Domain\\ParkingSystem.Domain.csproj": {
-              "projectPath": "D:\\SWD\\AI-Parking-Building-FE\\backend\\src\\ParkingSystem.Domain\\ParkingSystem.Domain.csproj"
+            "D:\\Ki8\\SWD392\\project\\ParkingSystem\\backend\\src\\ParkingSystem.Domain\\ParkingSystem.Domain.csproj": {
+              "projectPath": "D:\\Ki8\\SWD392\\project\\ParkingSystem\\backend\\src\\ParkingSystem.Domain\\ParkingSystem.Domain.csproj"
             },
-            "D:\\SWD\\AI-Parking-Building-FE\\backend\\src\\ParkingSystem.Infrastructure\\ParkingSystem.Infrastructure.csproj": {
-              "projectPath": "D:\\SWD\\AI-Parking-Building-FE\\backend\\src\\ParkingSystem.Infrastructure\\ParkingSystem.Infrastructure.csproj"
+            "D:\\Ki8\\SWD392\\project\\ParkingSystem\\backend\\src\\ParkingSystem.Infrastructure\\ParkingSystem.Infrastructure.csproj": {
+              "projectPath": "D:\\Ki8\\SWD392\\project\\ParkingSystem\\backend\\src\\ParkingSystem.Infrastructure\\ParkingSystem.Infrastructure.csproj"
             }
           }
         }
@@ -3798,10 +3806,12 @@
         "enableAudit": "true",
         "auditLevel": "low",
         "auditMode": "direct"
-      }
+      },
+      "SdkAnalysisLevel": "10.0.300"
     },
     "frameworks": {
       "net8.0": {
+        "framework": "net8.0",
         "targetAlias": "net8.0",
         "dependencies": {
           "AspNetCore.HealthChecks.NpgSql": {
@@ -3834,6 +3844,24 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[8.0.27, 8.0.27]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Host.win-x64",
+            "version": "[8.0.27, 8.0.27]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Ref",
+            "version": "[8.0.27, 8.0.27]"
+          },
+          {
+            "name": "Microsoft.WindowsDesktop.App.Ref",
+            "version": "[8.0.27, 8.0.27]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.AspNetCore.App": {
             "privateAssets": "none"
@@ -3842,7 +3870,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.423/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.300/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

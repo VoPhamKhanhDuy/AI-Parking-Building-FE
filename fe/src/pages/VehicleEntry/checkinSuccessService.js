@@ -31,6 +31,7 @@ const DEFAULT_NEXT_STEPS = [
 ]
 
 export function getCheckinNextSteps() {
+  // Parameters kept for future extensibility (slotId, floor, zone)
   return DEFAULT_NEXT_STEPS
 }
 

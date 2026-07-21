@@ -213,22 +213,8 @@ public static class DbSeeder
                     Name = "B1",
                     Zones = new List<ParkingZone>
                     {
-                        new()
-                        {
-                            Name = "B1-Motorbike",
-                            VehicleTypeId = motorbikeType.Id,
-                            DistanceToExitOrElevator = 8.0,
-                            Priority = 0,
-                            Slots = GenerateSlots("MB-", 20)
-                        },
-                        new()
-                        {
-                            Name = "B1-Car",
-                            VehicleTypeId = carType.Id,
-                            DistanceToExitOrElevator = 12.0,
-                            Priority = 1,
-                            Slots = GenerateSlots("C-", 30)
-                        }
+                        CreateZone("B1-Motorbike", motorbikeType, 8.0, 0, "MB-", 20),
+                        CreateZone("B1-Car", carType, 12.0, 1, "C-", 30)
                     }
                 },
                 new()
@@ -237,22 +223,8 @@ public static class DbSeeder
                     Name = "L1",
                     Zones = new List<ParkingZone>
                     {
-                        new()
-                        {
-                            Name = "L1-EV",
-                            VehicleTypeId = evType.Id,
-                            DistanceToExitOrElevator = 5.0,
-                            Priority = 2,
-                            Slots = GenerateSlots("EV-", 6, withChargingSpot: true)
-                        },
-                        new()
-                        {
-                            Name = "L1-Car",
-                            VehicleTypeId = carType.Id,
-                            DistanceToExitOrElevator = 4.0,
-                            Priority = 0,
-                            Slots = GenerateSlots("C-", 24)
-                        }
+                        CreateZone("L1-EV", evType, 5.0, 2, "EV-", 6),
+                        CreateZone("L1-Car", carType, 4.0, 0, "C-", 24)
                     }
                 },
                 new()
@@ -261,14 +233,7 @@ public static class DbSeeder
                     Name = "L2",
                     Zones = new List<ParkingZone>
                     {
-                        new()
-                        {
-                            Name = "L2-Car",
-                            VehicleTypeId = carType.Id,
-                            DistanceToExitOrElevator = 15.0,
-                            Priority = 0,
-                            Slots = GenerateSlots("C-", 24)
-                        }
+                        CreateZone("L2-Car", carType, 15.0, 0, "C-", 24)
                     }
                 }
             }
@@ -278,18 +243,28 @@ public static class DbSeeder
         await context.SaveChangesAsync();
     }
 
-    private static List<ParkingSlot> GenerateSlots(string prefix, int count, bool withChargingSpot = false)
+    private static ParkingZone CreateZone(string name, VehicleType vehicleType, double distance, int priority, string slotPrefix, int slotCount)
     {
-        var slots = new List<ParkingSlot>(count);
-        for (var i = 1; i <= count; i++)
+        var zone = new ParkingZone
+        {
+            Name = name,
+            VehicleTypeId = vehicleType.Id,
+            DistanceToExitOrElevator = distance,
+            Priority = priority
+        };
+
+        var slots = new List<ParkingSlot>(slotCount);
+        for (var i = 1; i <= slotCount; i++)
         {
             slots.Add(new ParkingSlot
             {
-                SlotCode = $"{prefix}{i:000}",
+                ParkingZone = zone,
+                SlotCode = $"{slotPrefix}{i:000}",
                 Status = SlotStatus.Available
             });
         }
-        return slots;
+        zone.Slots = slots;
+        return zone;
     }
 
     /// <summary>

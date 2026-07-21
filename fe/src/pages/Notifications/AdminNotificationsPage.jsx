@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getNotifications, filterNotifications, markNotificationRead, markAllNotificationsRead } from './notificationsService'
+import { markAsRead, markAllAsRead } from './notificationsService'
 import { ROUTE_PATHS } from '../../routes/routePaths'
 import '../../layouts/MainLayout.css'
 
@@ -8,8 +8,8 @@ const defaultFilters = { search: '', type: 'All Types', status: 'All Statuses', 
 
 function AdminNotificationsPage() {
   const navigate = useNavigate()
-  const [notifications, setNotifications] = useState(getNotifications())
-  const [selectedId, setSelectedId] = useState(notifications[0]?.id)
+  const [notifications, setNotifications] = useState([])
+  const [selectedId, setSelectedId] = useState(null)
   const [filters, setFilters] = useState(defaultFilters)
   const [openMenu, setOpenMenu] = useState(null)
   
@@ -23,7 +23,15 @@ function AdminNotificationsPage() {
     }, 3000)
   }
 
-  const filteredItems = useMemo(() => filterNotifications(notifications, filters), [notifications, filters])
+  const filteredItems = notifications.filter((item) => {
+    const matchSearch = !filters.search || 
+      item.message?.toLowerCase().includes(filters.search.toLowerCase()) ||
+      item.licensePlate?.toLowerCase().includes(filters.search.toLowerCase())
+    const matchType = filters.type === 'All Types' || item.type === filters.type
+    const matchStatus = filters.status === 'All Statuses' || item.status === filters.status
+    return matchSearch && matchType && matchStatus
+  })
+  
   const selected = filteredItems.find((item) => item.id === selectedId) || filteredItems[0]
   const unreadCount = notifications.filter((item) => item.status === 'Unread').length
 
@@ -32,16 +40,18 @@ function AdminNotificationsPage() {
     setFilters((current) => ({ ...current, [name]: value }))
   }
 
-  const markSelectedRead = () => {
+  const markSelectedRead = async () => {
     if (selected) {
-      setNotifications((items) => markNotificationRead(items, selected.id))
+      await markAsRead(selected.id)
+      setNotifications((items) => items.map((item) => item.id === selected.id ? { ...item, status: 'Read' } : item))
       showToast(`Đã đánh dấu thông báo "${selected.message}" là Đã đọc.`, 'success')
     }
   }
 
-  const markAllRead = () => {
+  const markAllRead = async () => {
     if (!unreadCount) return
-    setNotifications((items) => markAllNotificationsRead(items))
+    await markAllAsRead()
+    setNotifications((items) => items.map((item) => ({ ...item, status: 'Read' })))
     showToast(`Đã đánh dấu toàn bộ ${unreadCount} thông báo là Đã đọc.`, 'success')
   }
 
