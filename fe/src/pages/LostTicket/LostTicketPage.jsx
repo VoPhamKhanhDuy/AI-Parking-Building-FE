@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
 import {
@@ -8,26 +7,10 @@ import {
   createLostTicketCase,
   findLostTicketSession,
   formatLostTicketMoney,
-  getLostTicketPageData
+  getLostTicketPageData,
+  processLostTicketPayment
 } from './lostTicketService'
 import './LostTicketPage.css'
-
-// NOTE: lostTicketService.js has no payment-processing export yet.
-// Kept local here (same axios/mock pattern as the rest of the service)
-// so only this page needed changing. Ideally this belongs in
-// lostTicketService.js alongside the other calls — move it there when
-// that file gets its own pass.
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api', timeout: 8000 })
-const useMockData = import.meta.env.VITE_USE_MOCK_DATA !== 'false'
-const wait = (value, delay = 400) => new Promise((resolve) => setTimeout(() => resolve(value), delay))
-
-async function processLostTicketPayment(caseId, payload) {
-  if (!useMockData) {
-    const { data } = await api.post(`/lost-tickets/${caseId}/process-payment`, payload)
-    return data
-  }
-  return wait({ id: caseId, caseCode: `LT-${String(caseId).slice(-6)}`, paymentStatus: 'Paid', ...payload })
-}
 
 const METHODS = [
   { value: 'License Plate', label: 'License Plate' },
@@ -52,7 +35,7 @@ function calculateDuration(start, end = Date.now()) {
   return `${hours}h ${minutes}m`
 }
 
-const DEFAULT_PAGE = { policy: { carPenalty: 0, motorcyclePenalty: 0, baseParkingFee: 50000 }, recentCases: [] }
+const DEFAULT_PAGE = { policy: { carPenalty: 500000, motorcyclePenalty: 200000, baseParkingFee: 50000 }, recentCases: [] }
 
 function LostTicketPage() {
   const navigate = useNavigate()
@@ -69,10 +52,11 @@ function LostTicketPage() {
   const [message, setMessage] = useState('')
   const [now, setNow] = useState(() => Date.now())
 
+  // getLostTicketPageData resolves { success, data: { policy, recentCases } }
   const loadPageData = () => getLostTicketPageData()
     .then((result) => ({
-      policy: result?.policy || DEFAULT_PAGE.policy,
-      recentCases: Array.isArray(result?.recentCases) ? result.recentCases : []
+      policy: result?.data?.policy || DEFAULT_PAGE.policy,
+      recentCases: Array.isArray(result?.data?.recentCases) ? result.data.recentCases : []
     }))
     .catch(() => DEFAULT_PAGE)
 
@@ -93,17 +77,18 @@ function LostTicketPage() {
     setCaseData(null)
     setFee(null)
     try {
-      // findLostTicketSession resolves the session object directly, or null — no {success,data} wrapper.
+      // findLostTicketSession resolves { success, data } on success,
+      // or { success: false, message } on failure — never null.
       const result = await findLostTicketSession({ method, query: query.trim() })
-      if (result) {
-        setSession(result)
-        if (result.vehicleType && result.vehicleType !== '—') {
-          setVehicleType(result.vehicleType)
+      if (result?.success) {
+        setSession(result.data)
+        if (result.data.vehicleType && result.data.vehicleType !== '—') {
+          setVehicleType(result.data.vehicleType)
         }
         setMessage('Active parking session recovered.')
       } else {
         setSession(null)
-        setMessage('No active session matches the supplied information.')
+        setMessage(result?.message || 'No active session matches the supplied information.')
       }
     } catch (error) {
       setSession(null)
@@ -118,9 +103,9 @@ function LostTicketPage() {
     setAction('fee')
     setFee(null)
     try {
-      // Delegate to the service (hits the real fee endpoint when mock is off)
-      // instead of guessing the policy math on the client.
-      const result = await calculateLostTicketFee(session.id)
+      // calculateLostTicketFee needs the session object (reads vehicleType)
+      // plus the loaded policy — both were missing before.
+      const result = await calculateLostTicketFee(session, pageData.policy)
       setFee({
         ...result,
         formattedTotal: result.formattedTotal || formatLostTicketMoney(result.total),
@@ -139,10 +124,15 @@ function LostTicketPage() {
     setAction('case')
     setMessage('')
     try {
-      // createLostTicketCase expects a session id, and returns the case
-      // object directly — no {success,data} wrapper.
-      const createdCase = await createLostTicketCase(session.id, { ownerName, phone })
-      const caseId = createdCase?.id || createdCase?.caseId
+      // createLostTicketCase expects the session object (reads session.id),
+      // and resolves { success, data, caseId }.
+      const caseResult = await createLostTicketCase(session, { ownerName, phone })
+      if (!caseResult?.success) {
+        setMessage(caseResult?.message || 'Could not create lost ticket case.')
+        return
+      }
+      const createdCase = caseResult.data
+      const caseId = createdCase?.id || caseResult.caseId
       if (!caseId) {
         setMessage('Could not create lost ticket case.')
         return
@@ -155,8 +145,13 @@ function LostTicketPage() {
         paymentMethod: 'Cash'
       })
 
+      if (!paymentResult?.success) {
+        setMessage(paymentResult?.message || 'Case created, but payment processing failed.')
+        return
+      }
+
       setMessage(`Case ${createdCase.caseCode || caseId} created and payment processed successfully. Vehicle can now exit.`)
-      setFee((prev) => ({ ...prev, paymentStatus: paymentResult?.paymentStatus || 'Paid' }))
+      setFee((prev) => ({ ...prev, paymentStatus: paymentResult.data?.paymentStatus || 'Paid' }))
 
       const refreshed = await loadPageData()
       setPageData(refreshed)
@@ -291,7 +286,7 @@ function LostTicketPage() {
                   <div><dt>Assignment</dt><dd>{session.assignmentMethod || 'Manual'}</dd></div>
                   {caseData && (
                     <>
-                      <div><dt>Case code</dt><dd>{caseData.caseCode || caseData.id || caseData.caseId || '—'}</dd></div>
+                      <div><dt>Case code</dt><dd>{caseData.caseCode || caseData.id || '—'}</dd></div>
                       <div><dt>Payment</dt><dd className={fee?.paymentStatus === 'Paid' ? 'active' : ''}>{fee?.paymentStatus || 'Pending'}</dd></div>
                     </>
                   )}

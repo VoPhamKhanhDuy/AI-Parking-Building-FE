@@ -1,158 +1,357 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
-import { getBuildings, getFloors, getParkingMap, updateParkingSlot, getZones } from './parkingMapService'
-import './ParkingMapPage.css'
+import {
+  calculateLostTicketFee,
+  createLostTicketCase,
+  findLostTicketSession,
+  formatLostTicketMoney,
+  getLostTicketPageData
+} from './lostTicketService'
+import './LostTicketPage.css'
 
-const STATUS_ICON = { Occupied: 'directions_car', Reserved: 'lock', Maintenance: 'build' }
+// NOTE: lostTicketService.js has no payment-processing export yet.
+// Kept local here (same axios/mock pattern as the rest of the service)
+// so only this page needed changing. Ideally this belongs in
+// lostTicketService.js alongside the other calls — move it there when
+// that file gets its own pass.
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api', timeout: 8000 })
+const useMockData = import.meta.env.VITE_USE_MOCK_DATA !== 'false'
+const wait = (value, delay = 400) => new Promise((resolve) => setTimeout(() => resolve(value), delay))
 
-function ParkingSlot({ slot, selected, onClick }) {
-  const typeIcon = slot.type === 'Motorcycle' ? 'two_wheeler' : slot.type === 'Electric Vehicle' ? 'ev_station' : null
-  const label = slot.slotCode || slot.id
-  return <button className={`map-slot ${(slot.status || '').toLowerCase()}${selected ? ' selected' : ''}`} onClick={() => onClick(slot.id)} aria-pressed={selected}><strong>{label}</strong>{(STATUS_ICON[slot.status] || typeIcon) && <span className="material-symbols-outlined">{STATUS_ICON[slot.status] || typeIcon}</span>}{selected && slot.vehicle && <em><small>Current session</small>{slot.vehicle}</em>}</button>
+async function processLostTicketPayment(caseId, payload) {
+  if (!useMockData) {
+    const { data } = await api.post(`/lost-tickets/${caseId}/process-payment`, payload)
+    return data
+  }
+  return wait({ id: caseId, caseCode: `LT-${String(caseId).slice(-6)}`, paymentStatus: 'Paid', ...payload })
 }
 
-function ParkingMapPage() {
+const METHODS = [
+  { value: 'License Plate', label: 'License Plate' },
+  { value: 'Ticket Code', label: 'Ticket Code' }
+]
+
+function formatTime(value) {
+  if (!value) return '—'
+  const date = value instanceof Date ? value : new Date(value)
+  if (Number.isNaN(date.getTime())) return '—'
+  return date.toLocaleString('en-GB', { hour12: false })
+}
+
+function calculateDuration(start, end = Date.now()) {
+  if (!start) return '—'
+  const startDate = new Date(start)
+  if (Number.isNaN(startDate.getTime())) return '—'
+  const diff = end - startDate.getTime()
+  if (diff < 0) return '—'
+  const hours = Math.floor(diff / 3_600_000)
+  const minutes = Math.floor((diff % 3_600_000) / 60_000)
+  return `${hours}h ${minutes}m`
+}
+
+const DEFAULT_PAGE = { policy: { carPenalty: 0, motorcyclePenalty: 0, baseParkingFee: 50000 }, recentCases: [] }
+
+function LostTicketPage() {
   const navigate = useNavigate()
-  const [data, setData] = useState({ summary: {}, slots: [], updates: [] })
-  const [selectedId, setSelectedId] = useState(null)
-  const [search, setSearch] = useState('')
-  const [status, setStatus] = useState('All Statuses')
-  const [building, setBuilding] = useState('All Buildings')
-  const [floor, setFloor] = useState('All Floors')
-  const [zone, setZone] = useState('All Zones')
-  const [vehicleType, setVehicleType] = useState('All Vehicles')
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [buildings, setBuildings] = useState([])
-  const [floors, setFloors] = useState([])
-  const [zones, setZones] = useState([])
+  const [method, setMethod] = useState('License Plate')
+  const [query, setQuery] = useState('')
+  const [ownerName, setOwnerName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [vehicleType, setVehicleType] = useState('Car')
+  const [session, setSession] = useState(null)
+  const [caseData, setCaseData] = useState(null)
+  const [fee, setFee] = useState(null)
+  const [pageData, setPageData] = useState(DEFAULT_PAGE)
+  const [action, setAction] = useState('')
+  const [message, setMessage] = useState('')
+  const [now, setNow] = useState(() => Date.now())
+
+  const loadPageData = () => getLostTicketPageData()
+    .then((result) => ({
+      policy: result?.policy || DEFAULT_PAGE.policy,
+      recentCases: Array.isArray(result?.recentCases) ? result.recentCases : []
+    }))
+    .catch(() => DEFAULT_PAGE)
 
   useEffect(() => {
-    getBuildings().then((list) => setBuildings(list.length ? list : [{ id: null, name: 'Main Parking Building' }]))
+    let active = true
+    const id = setInterval(() => setNow(Date.now()), 60_000)
+    loadPageData().then((data) => active && setPageData(data))
+    return () => { active = false; clearInterval(id) }
   }, [])
 
-  useEffect(() => {
-    const b = buildings.find((x) => x.name === building) || buildings[0]
-    if (!b?.id) return undefined
-    let active = true
-    getFloors(b.id).then((list) => {
-      if (!active) return
-      setFloors(list.map((f) => ({ ...f, label: f.name || `Floor ${f.floorNumber}` })))
-    })
-    return () => { active = false }
-  }, [building, buildings])
-
-  useEffect(() => {
-    const f = floors.find((x) => (x.name || `Floor ${x.floorNumber}`) === floor) || floors[0]
-    if (!f?.id) return undefined
-    let active = true
-    getZones(f.id).then((list) => { if (active) setZones(list) })
-    return () => { active = false }
-  }, [floor, floors])
-
-  useEffect(() => {
-    let active = true
-    const timer = setTimeout(() => {
-      setError('')
-      getParkingMap({ search, status, building, floor, zone, vehicleType })
-        .then((result) => {
-          if (!active) return
-          setData(result)
-          if (!selectedId && result.slots.length) setSelectedId(result.slots[0].id)
-        })
-        .catch(() => active && setError('Unable to load parking map.'))
-        .finally(() => active && setLoading(false))
-    }, 180)
-    return () => { active = false; clearTimeout(timer) }
-  }, [search, status, building, floor, zone, vehicleType, selectedId])
-
-  const selected = useMemo(() => data.slots.find((slot) => slot.id === selectedId) || data.slots[0] || null, [data.slots, selectedId])
-  const zoneGroups = useMemo(() => {
-    const grouped = data.slots.reduce((acc, slot) => {
-      const key = slot.type || 'Other'
-      if (!acc[key]) acc[key] = []
-      acc[key].push(slot)
-      return acc
-    }, {})
-    return Object.entries(grouped).map(([type, slots]) => ({
-      key: type.toLowerCase().replace(/\s+/g, '-'),
-      label: type,
-      name: slots[0]?.zone || type,
-      slots
-    }))
-  }, [data.slots])
-
-  const changeStatus = async (nextStatus) => {
-    if (!selected) return
-    setSaving(true); setError('')
+  const verify = async () => {
+    if (!query.trim()) {
+      setMessage('Please enter a ticket code or license plate to verify.')
+      return
+    }
+    setAction('verify')
+    setMessage('')
+    setCaseData(null)
+    setFee(null)
     try {
-      const result = await updateParkingSlot(selected.id, nextStatus)
-      setData((current) => ({
-        ...current,
-        slots: current.slots.map((slot) => slot.id === selected.id ? { ...slot, ...result.slot, status: result.slot.status || nextStatus } : slot),
-        updates: [result.update, ...current.updates]
-      }))
-      if (result.summary) {
-        setData((current) => ({ ...current, summary: result.summary }))
+      // findLostTicketSession resolves the session object directly, or null — no {success,data} wrapper.
+      const result = await findLostTicketSession({ method, query: query.trim() })
+      if (result) {
+        setSession(result)
+        if (result.vehicleType && result.vehicleType !== '—') {
+          setVehicleType(result.vehicleType)
+        }
+        setMessage('Active parking session recovered.')
+      } else {
+        setSession(null)
+        setMessage('No active session matches the supplied information.')
       }
-    } catch (requestError) {
-      setError(requestError.message || 'Could not update slot.')
+    } catch (error) {
+      setSession(null)
+      setMessage(error?.message || 'Verification failed.')
     } finally {
-      setSaving(false)
+      setAction('')
     }
   }
 
-  const summaryItems = [
-    ['Total slots', data?.summary?.totalSlots],
-    ['Available', data?.summary?.available],
-    ['Occupied', data?.summary?.occupied],
-    ['Reserved', data?.summary?.reserved],
-    ['Maintenance', data?.summary?.maintenance],
-    ['Occupancy', `${data?.summary?.occupancyRate ?? 0}%`]
-  ]
+  const calculate = async () => {
+    if (!session) return
+    setAction('fee')
+    setFee(null)
+    try {
+      // Delegate to the service (hits the real fee endpoint when mock is off)
+      // instead of guessing the policy math on the client.
+      const result = await calculateLostTicketFee(session.id)
+      setFee({
+        ...result,
+        formattedTotal: result.formattedTotal || formatLostTicketMoney(result.total),
+        paymentStatus: result.paymentStatus || 'Pending'
+      })
+      setMessage('Fee calculated. Ready to process payment.')
+    } catch (error) {
+      setMessage(error?.message || 'Failed to calculate fee.')
+    } finally {
+      setAction('')
+    }
+  }
 
-  return <MainLayout><div className="parking-page">
-    <nav className="parking-breadcrumb"><button onClick={() => navigate(ROUTE_PATHS.dashboard)}>Dashboard</button><span>/</span><b>Parking Map</b></nav>
-    <header className="parking-heading"><div><h1>Parking Map</h1><p>Real-time parking slot status by floor, zone and vehicle type.</p></div><span><i />Live data</span></header>
-    <section className="parking-summary">{summaryItems.map(([label, value]) => <div className={label.toLowerCase().replace(' ', '-')} key={label}><small>{label}</small><strong>{value ?? '—'}</strong></div>)}</section>
-    <section className="parking-filters">
-      <select aria-label="Building" value={building} onChange={(event) => { setBuilding(event.target.value); setFloor('All Floors'); setZone('All Zones') }}>
-        <option>All Buildings</option>
-        {buildings.map((b) => <option key={b.id} value={b.name}>{b.name}</option>)}
-      </select>
-      <select aria-label="Floor" value={floor} onChange={(event) => { setFloor(event.target.value); setZone('All Zones') }}>
-        <option>All Floors</option>
-        {floors.map((f) => <option key={f.id} value={f.name || `Floor ${f.floorNumber}`}>{f.name || `Floor ${f.floorNumber}`}</option>)}
-      </select>
-      <select aria-label="Zone" value={zone} onChange={(event) => setZone(event.target.value)}>
-        <option>All Zones</option>
-        {zones.map((z) => <option key={z.id} value={z.name}>{z.name}</option>)}
-      </select>
-      <select aria-label="Vehicle" value={vehicleType} onChange={(event) => setVehicleType(event.target.value)}>
-        <option>All Vehicles</option>
-        <option>Car</option>
-        <option>Motorcycle</option>
-        <option>Electric Vehicle</option>
-      </select>
-      <select aria-label="Status" value={status} onChange={(event) => setStatus(event.target.value)}>
-        <option>All Statuses</option>
-        <option>Available</option>
-        <option>Occupied</option>
-        <option>Reserved</option>
-        <option>Maintenance</option>
-      </select>
-      <label><span className="material-symbols-outlined">search</span><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search slot or license plate"/></label>
-    </section>
-    {error && <div className="parking-error">{error}</div>}
-    <div className="parking-layout"><section className="parking-map-card"><div className="parking-card-heading"><div><h2>Parking Slot Map</h2><p>{floor !== 'All Floors' ? floor : 'All floors'} · {zone !== 'All Zones' ? zone : 'All zones'} · {vehicleType !== 'All Vehicles' ? vehicleType : 'All vehicles'}</p></div><div className="parking-legend">{['Available','Occupied','Reserved','Maintenance'].map((item) => <span key={item}><i className={item.toLowerCase()} />{item}</span>)}</div></div>
-      <div className="parking-canvas">{loading ? <div className="parking-loading"><i />Loading availability…</div> : data.slots.length === 0 ? <div className="parking-loading">No slots match the selected filters.</div> : <><div className="map-marker entry"><span className="material-symbols-outlined">login</span>Entry</div><div className="map-marker lift"><span className="material-symbols-outlined">elevator</span>Lift</div><div className="parking-zones">{zoneGroups.map((group) => <section className={`parking-zone-map ${group.key}`} key={group.key}><h3><b>{group.label}</b><span>{group.name}</span><em>{group.slots.length} slots</em></h3><div className="zone-slot-grid">{group.slots.map((slot) => <ParkingSlot key={slot.id} slot={slot} selected={slot.id === selected?.id} onClick={setSelectedId}/>)}</div><div className="zone-flow"><b>ENTRY FLOW</b><span>→</span><span>→</span><span>→</span></div></section>)}</div></>}</div>
-    </section>
-    <aside className="slot-inspector"><div className="inspector-header"><div><small>Selected slot</small><h2>{selected?.slotCode || selected?.id || '—'}</h2></div><span className={`slot-status ${(selected?.status || 'unknown').toLowerCase()}`}>{selected?.status || 'Unknown'}</span></div>{selected && <div className="inspector-body"><div className="vehicle-panel"><span className="material-symbols-outlined">{selected.type === 'Motorcycle' ? 'two_wheeler' : selected.type === 'Electric Vehicle' ? 'electric_car' : 'directions_car'}</span><div><small>{selected.type || '—'}</small><strong>{selected.vehicle || 'No active vehicle'}</strong></div></div><dl><div><dt>Building</dt><dd>{selected.building || '—'}</dd></div><div><dt>Floor</dt><dd>{selected.floor || '—'}</dd></div><div><dt>Zone</dt><dd>{selected.zone || '—'}</dd></div><div><dt>Distance</dt><dd>{selected.distance ? `${selected.distance}m` : '—'}</dd></div></dl></div>}<div className="inspector-actions"><button className="primary" disabled={!selected}>View session detail</button><button disabled={!selected}>Update actual parking slot</button><div><button disabled={saving || !selected || !['Occupied','Reserved'].includes(selected.status)} onClick={() => changeStatus('Available')}>Release slot</button><button disabled={saving || !selected || selected.status === 'Maintenance'} onClick={() => changeStatus('Maintenance')}>{saving ? 'Updating…' : 'Maintenance'}</button></div></div></aside></div>
-    <section className="updates-card"><div><h2>Recent Slot Updates</h2><button>View full history →</button></div><table><thead><tr><th>Time</th><th>Slot</th><th>Vehicle</th><th>Action</th><th>Staff</th><th>Status</th></tr></thead><tbody>{data.updates.map((item) => <tr key={item.id}><td>{item.time}</td><td><b>{item.slot}</b></td><td>{item.vehicle || '—'}</td><td>{item.action}</td><td>{item.staff}</td><td><span className={`update-status ${(item.status || 'synced').toLowerCase().replace(' ', '-')}`}>{item.status}</span></td></tr>)}</tbody></table></section>
-  </div></MainLayout>
+  const processCase = async () => {
+    if (!session || !fee) return
+    setAction('case')
+    setMessage('')
+    try {
+      // createLostTicketCase expects a session id, and returns the case
+      // object directly — no {success,data} wrapper.
+      const createdCase = await createLostTicketCase(session.id, { ownerName, phone })
+      const caseId = createdCase?.id || createdCase?.caseId
+      if (!caseId) {
+        setMessage('Could not create lost ticket case.')
+        return
+      }
+      setCaseData(createdCase)
+
+      const paymentResult = await processLostTicketPayment(caseId, {
+        ownerName,
+        phone,
+        paymentMethod: 'Cash'
+      })
+
+      setMessage(`Case ${createdCase.caseCode || caseId} created and payment processed successfully. Vehicle can now exit.`)
+      setFee((prev) => ({ ...prev, paymentStatus: paymentResult?.paymentStatus || 'Paid' }))
+
+      const refreshed = await loadPageData()
+      setPageData(refreshed)
+    } catch (error) {
+      setMessage(error?.message || 'Could not process lost ticket case.')
+    } finally {
+      setAction('')
+    }
+  }
+
+  const parkingDuration = useMemo(
+    () => calculateDuration(session?.entryTime, now),
+    [session?.entryTime, now]
+  )
+
+  return (
+    <MainLayout>
+      <div className="lost-page">
+        <nav className="lost-breadcrumb">
+          <button onClick={() => navigate(ROUTE_PATHS.dashboard)}>Dashboard</button>
+          <span>/</span>
+          <b>Lost Ticket</b>
+        </nav>
+
+        <header className="lost-heading">
+          <h1>Lost Ticket</h1>
+          <p>Verify vehicle information, recover active parking sessions and process lost ticket exit requests.</p>
+        </header>
+
+        <div className="lost-layout">
+          <main className="lost-form-card">
+            <div className="lost-card-title">
+              <h2><span className="material-symbols-outlined">find_replace</span>Lost Ticket Verification Form</h2>
+              <em className={session ? 'found' : ''}><i />{session ? 'Active session found' : 'Verification required'}</em>
+            </div>
+
+            <div className="lost-fields">
+              <label>
+                <span>Search method</span>
+                <select value={method} onChange={(event) => setMethod(event.target.value)}>
+                  {METHODS.map((m) => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+              </label>
+              <label>
+                <span>{method}</span>
+                <div>
+                  <i className="material-symbols-outlined">credit_card</i>
+                  <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={method === 'Ticket Code' ? 'TKT-20260711-AB12CD' : '51A-12345'} />
+                </div>
+              </label>
+              <label>
+                <span>Vehicle type</span>
+                <select value={vehicleType} onChange={(event) => setVehicleType(event.target.value)}>
+                  <option>Car</option>
+                  <option>Motorcycle</option>
+                  <option>Electric Vehicle</option>
+                </select>
+              </label>
+              <label>
+                <span>Owner / Driver name</span>
+                <input value={ownerName} onChange={(event) => setOwnerName(event.target.value)} />
+              </label>
+              <label>
+                <span>Phone number</span>
+                <input value={phone} onChange={(event) => setPhone(event.target.value)} />
+              </label>
+              <label>
+                <span>Verification status</span>
+                <div className={`verification ${session ? 'verified' : ''}`}>
+                  <i />{session ? 'Active Session Found' : 'Not Verified'}
+                </div>
+              </label>
+            </div>
+
+            {session && (
+              <div className="recovered-fields">
+                <label><span>Entry time</span><strong>{formatTime(session.entryTime)}</strong></label>
+                <label><span>Assigned slot</span><strong>{session.slotCode || session.slotId || '—'}</strong></label>
+                <label><span>Parking duration</span><strong>{parkingDuration}</strong></label>
+              </div>
+            )}
+
+            <section className="evidence-card">
+              <h3>Verification evidence</h3>
+              {(session?.verification || ['Plate match pending', 'Vehicle type check pending', 'Active session lookup pending'])
+                .map((item) => (
+                  <p className={session ? 'ok' : ''} key={item}>
+                    <span className="material-symbols-outlined">{session ? 'check_circle' : 'radio_button_unchecked'}</span>
+                    {item}
+                  </p>
+                ))}
+            </section>
+
+            <section className="lost-fee">
+              <h3>Fee summary</h3>
+              <dl>
+                <div><dt>Parking fee</dt><dd>{fee ? formatLostTicketMoney(fee.parkingFee) : '—'}</dd></div>
+                <div><dt>Lost ticket penalty</dt><dd>{fee ? formatLostTicketMoney(fee.penalty) : '—'}</dd></div>
+                <div><dt>Discount</dt><dd>{fee ? formatLostTicketMoney(fee.discount) : '—'}</dd></div>
+                <div className="total"><dt>Total payable</dt><dd>{fee ? fee.formattedTotal : '—'}</dd></div>
+                <div className="payment"><dt>Payment status</dt><dd>{fee?.paymentStatus || 'Not calculated'}</dd></div>
+              </dl>
+              <p>After completion, the assigned slot will be released and marked Available.</p>
+            </section>
+
+            {message && <div className="lost-message">{message}</div>}
+
+            <div className="lost-actions">
+              <button onClick={() => {
+                setSession(null); setFee(null); setCaseData(null); setQuery(''); setOwnerName(''); setPhone(''); setMessage('')
+              }}>Clear form</button>
+              <button onClick={verify} disabled={action === 'verify'}>{action === 'verify' ? 'Verifying…' : 'Verify vehicle'}</button>
+              <button onClick={calculate} disabled={!session || action === 'fee'}>{action === 'fee' ? 'Calculating…' : 'Calculate fee'}</button>
+              <button className="primary" disabled={!fee || action === 'case'} onClick={processCase}>
+                {action === 'case' ? 'Processing…' : 'Process payment & exit'}
+              </button>
+            </div>
+          </main>
+
+          <aside className="lost-side">
+            <section>
+              <h2><span className="material-symbols-outlined">history</span>Recovered Session</h2>
+              {session ? (
+                <dl>
+                  <div><dt>Session status</dt><dd className="active">Active</dd></div>
+                  <div><dt>Ticket code</dt><dd>{session.ticketCode || '—'}</dd></div>
+                  <div><dt>License plate</dt><dd>{session.licensePlate || '—'}</dd></div>
+                  <div><dt>Slot</dt><dd className="blue">{session.slotCode || session.slotId || '—'}</dd></div>
+                  <div><dt>Floor / Zone</dt><dd>{session.floorZone || '—'}</dd></div>
+                  <div><dt>Entry gate</dt><dd>{session.entryGate || '—'}</dd></div>
+                  <div><dt>Entry time</dt><dd>{formatTime(session.entryTime)}</dd></div>
+                  <div><dt>Assignment</dt><dd>{session.assignmentMethod || 'Manual'}</dd></div>
+                  {caseData && (
+                    <>
+                      <div><dt>Case code</dt><dd>{caseData.caseCode || caseData.id || caseData.caseId || '—'}</dd></div>
+                      <div><dt>Payment</dt><dd className={fee?.paymentStatus === 'Paid' ? 'active' : ''}>{fee?.paymentStatus || 'Pending'}</dd></div>
+                    </>
+                  )}
+                </dl>
+              ) : <p>No recovered session yet.</p>}
+            </section>
+
+            <section>
+              <h2><span className="material-symbols-outlined">policy</span>Lost Ticket Policy</h2>
+              <ul>
+                <li>Car/EV penalty: {formatLostTicketMoney(pageData.policy?.carPenalty || 500000)}</li>
+                <li>Motorcycle penalty: {formatLostTicketMoney(pageData.policy?.motorcyclePenalty || 200000)}</li>
+                <li>Staff verification required</li>
+                <li>Payment required before exit</li>
+                <li>Slot released after completion</li>
+              </ul>
+            </section>
+          </aside>
+        </div>
+
+        <section className="lost-cases">
+          <div>
+            <h2>Recent Lost Ticket Cases</h2>
+          </div>
+          {(!Array.isArray(pageData.recentCases) || pageData.recentCases.length === 0) ? (
+            <div className="lost-empty">No recent cases.</div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Case code</th>
+                  <th>License plate</th>
+                  <th>Vehicle type</th>
+                  <th>Total paid</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pageData.recentCases.map((item) => (
+                  <tr key={item.id}>
+                    <td>{formatTime(item.time)}</td>
+                    <td><b>{item.caseCode || '—'}</b></td>
+                    <td><b>{item.licensePlate || '—'}</b></td>
+                    <td>{item.vehicleType || '—'}</td>
+                    <td><b>{formatLostTicketMoney(item.totalPaid)}</b></td>
+                    <td>
+                      <span className={(item.status || 'completed').toLowerCase().replace(' ', '-')}>
+                        {item.status || 'Completed'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </section>
+      </div>
+    </MainLayout>
+  )
 }
 
-export default ParkingMapPage
+export default LostTicketPage
