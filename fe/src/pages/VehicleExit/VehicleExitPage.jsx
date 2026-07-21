@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
@@ -21,6 +21,7 @@ function VehicleExitPage() {
   const [loading, setLoading] = useState(true)
   const [action, setAction] = useState('')
   const [message, setMessage] = useState('')
+  const actionInProgress = useRef(false)
 
   useEffect(() => {
     let active = true
@@ -44,6 +45,8 @@ function VehicleExitPage() {
   }, [selected])
 
   const verifyTicket = async () => {
+    if (actionInProgress.current) return
+    actionInProgress.current = true
     setAction('verify'); setMessage('')
     try {
       const result = await lookupVehicleExitSession(query)
@@ -60,11 +63,13 @@ function VehicleExitPage() {
       setMessage('Could not verify this ticket.')
     } finally {
       setAction('')
+      setTimeout(() => { actionInProgress.current = false }, 500)
     }
   }
 
   const calculateFee = async () => {
-    if (!selected) return
+    if (!selected || actionInProgress.current) return
+    actionInProgress.current = true
     setAction('fee')
     try {
       const calculatedFee = await calculateExitFee(selected.id)
@@ -75,11 +80,13 @@ function VehicleExitPage() {
       setMessage(error.message)
     } finally {
       setAction('')
+      setTimeout(() => { actionInProgress.current = false }, 500)
     }
   }
 
   const createQrPayment = async () => {
-    if (!selected) return
+    if (!selected || actionInProgress.current) return
+    actionInProgress.current = true
     setAction('payment')
     try {
       const newPayment = await createExitPayment(selected.id)
@@ -95,11 +102,13 @@ function VehicleExitPage() {
       setMessage(error?.message || 'Could not create payment.')
     } finally {
       setAction('')
+      setTimeout(() => { actionInProgress.current = false }, 500)
     }
   }
 
   const checkPayment = async () => {
-    if (!payment || !selected) return
+    if (!payment || !selected || actionInProgress.current) return
+    actionInProgress.current = true
     setAction('payment')
     try {
       const result = await checkExitPaymentStatus(payment.paymentId)
@@ -122,11 +131,13 @@ function VehicleExitPage() {
       }
     } finally {
       setAction('')
+      setTimeout(() => { actionInProgress.current = false }, 500)
     }
   }
 
   const completeExit = async () => {
-    if (!selected) return
+    if (!selected || actionInProgress.current) return
+    actionInProgress.current = true
     setAction('exit')
     try {
       const completed = await processVehicleExit(selected.id)
@@ -135,6 +146,7 @@ function VehicleExitPage() {
       setMessage('Could not complete the vehicle exit.')
     } finally {
       setAction('')
+      setTimeout(() => { actionInProgress.current = false }, 500)
     }
   }
 

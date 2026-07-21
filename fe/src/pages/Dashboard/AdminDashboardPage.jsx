@@ -121,6 +121,36 @@ function AdminDashboardPage() {
     })
   }
 
+  const handleUnlockAccount = () => {
+    setModal({
+      isOpen: true,
+      type: 'unlockAccount',
+      inputVal1: '',
+      inputVal2: '',
+      inputVal3: '',
+      inputVal4: '',
+    })
+  }
+
+  const handleToggleUserStatus = async (user) => {
+    const newStatus = user.status === 'Suspended' || user.status === 'Locked' ? 'Active' : 'Suspended'
+    const action = newStatus === 'Active' ? 'Mở khóa' : 'Tạm khóa'
+    
+    if (!window.confirm(`${action} tài khoản "${user.fullName || user.name}"?`)) return
+    
+    try {
+      const result = await updateUserStatus(user.id, newStatus)
+      if (result.success) {
+        showToast(`Đã ${action.toLowerCase()} tài khoản "${user.fullName || user.name}".`, 'success')
+        loadUsers()
+      } else {
+        showToast(result.message || `Không thể ${action.toLowerCase()} tài khoản.`, 'error')
+      }
+    } catch {
+      showToast('Đã xảy ra lỗi khi cập nhật trạng thái.', 'error')
+    }
+  }
+
   const handleModalConfirm = async () => {
     if (modal.type === 'newUser') {
       const name = modal.inputVal1.trim()
@@ -179,6 +209,30 @@ function AdminDashboardPage() {
         }
       } catch {
         showToast('Failed to update user status', 'error')
+      }
+    } else if (modal.type === 'unlockAccount') {
+      const targetEmail = modal.inputVal1.trim()
+      if (!targetEmail) {
+        showToast('Vui lòng nhập địa chỉ email.', 'error')
+        return
+      }
+      const matched = users.find((u) => u.email?.toLowerCase() === targetEmail.toLowerCase())
+      if (!matched) {
+        showToast('Không tìm thấy tài khoản với email đã nhập!', 'error')
+        return
+      }
+      if (matched.status !== 'Suspended' && matched.status !== 'Locked') {
+        showToast(`Tài khoản "${matched.fullName || matched.name}" không bị khóa.`, 'error')
+        return
+      }
+      try {
+        const result = await updateUserStatus(matched.id, 'Active')
+        if (result.success) {
+          showToast(`Đã mở khóa tài khoản: ${matched.fullName || matched.name}.`, 'success')
+          loadUsers()
+        }
+      } catch {
+        showToast('Failed to unlock user account', 'error')
       }
     }
 
@@ -359,6 +413,7 @@ function AdminDashboardPage() {
                         <th className="px-6 py-3 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Role</th>
                         <th className="px-6 py-3 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Status</th>
                         <th className="px-6 py-3 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Last Login</th>
+                        <th className="px-6 py-3 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-outline-variant">
@@ -384,6 +439,29 @@ function AdminDashboardPage() {
                           </td>
                           <td className="px-6 py-3 text-body-sm text-on-surface-variant">
                             {u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString('vi-VN') : 'Never'}
+                          </td>
+                          <td className="px-6 py-3">
+                            <div className="flex items-center gap-2">
+                              {(u.status === 'Suspended' || u.status === 'Locked') ? (
+                                <button
+                                  onClick={() => handleToggleUserStatus(u)}
+                                  className="flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 rounded text-[10px] font-bold hover:bg-green-100 transition-colors"
+                                  title="Mở khóa tài khoản"
+                                >
+                                  <span className="material-symbols-outlined text-[14px]">lock_open</span>
+                                  Unlock
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleToggleUserStatus(u)}
+                                  className="flex items-center gap-1 px-2 py-1 bg-red-50 text-red-700 rounded text-[10px] font-bold hover:bg-red-100 transition-colors"
+                                  title="Khóa tài khoản"
+                                >
+                                  <span className="material-symbols-outlined text-[14px]">lock</span>
+                                  Lock
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -429,6 +507,13 @@ function AdminDashboardPage() {
                 >
                   <span className="material-symbols-outlined text-[18px]">lock</span>
                   Restrict Access
+                </button>
+                <button
+                  className="flex items-center justify-center gap-2 border border-green-200 text-green-700 py-2 px-4 rounded text-sm font-bold transition-all hover:bg-green-50"
+                  onClick={handleUnlockAccount}
+                >
+                  <span className="material-symbols-outlined text-[18px]">lock_open</span>
+                  Unlock Account
                 </button>
               </div>
             </div>
@@ -549,6 +634,7 @@ function AdminDashboardPage() {
                   {modal.type === 'newUser' && 'Tạo tài khoản quản trị mới'}
                   {modal.type === 'resetCredentials' && 'Reset mật khẩu nhân viên'}
                   {modal.type === 'restrictAccess' && 'Tạm khóa tài khoản'}
+                  {modal.type === 'unlockAccount' && 'Mở khóa tài khoản'}
                 </h3>
                 <button
                   className="text-on-surface-variant hover:bg-slate-200 p-1.5 rounded-full"
@@ -606,10 +692,12 @@ function AdminDashboardPage() {
                   </>
                 )}
 
-                {(modal.type === 'resetCredentials' || modal.type === 'restrictAccess') && (
+                {(modal.type === 'resetCredentials' || modal.type === 'restrictAccess' || modal.type === 'unlockAccount') && (
                   <div className="flex flex-col gap-1">
                     <label className="text-xs font-bold text-on-surface-variant uppercase">
-                      {modal.type === 'resetCredentials' ? 'Email tài khoản cần reset' : 'Email tài khoản cần khóa'}
+                      {modal.type === 'resetCredentials' && 'Email tài khoản cần reset'}
+                      {modal.type === 'restrictAccess' && 'Email tài khoản cần khóa'}
+                      {modal.type === 'unlockAccount' && 'Email tài khoản cần mở khóa'}
                     </label>
                     <input
                       className="w-full px-3.5 py-2 border border-outline-variant rounded text-body-sm outline-none focus:ring-1 focus:ring-primary"
@@ -617,6 +705,14 @@ function AdminDashboardPage() {
                       onChange={(e) => setModal({ ...modal, inputVal1: e.target.value })}
                       placeholder="email@parking.com..."
                     />
+                  </div>
+                )}
+
+                {modal.type === 'unlockAccount' && (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm text-green-800">
+                      Tài khoản bị khóa (Suspended/Locked) sẽ được kích hoạt lại và có thể đăng nhập bình thường.
+                    </p>
                   </div>
                 )}
 

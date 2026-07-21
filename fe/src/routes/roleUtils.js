@@ -26,5 +26,6 @@ export const getDashboardByRole = (role) => {
   if (role === 'Manager') {
     return ROUTE_PATHS.managerDashboard
   }
-  return ROUTE_PATHS.dashboard
+  // Staff/Operator/Attendant → go to vehicle entry (main operation page)
+  return ROUTE_PATHS.vehicleEntry
 }

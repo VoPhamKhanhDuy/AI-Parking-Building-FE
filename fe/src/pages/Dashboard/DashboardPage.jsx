@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
 import { formatCurrency, getDashboardData, shapeDashboardEntry } from './dashboardService'
+import { ErrorBoundary } from '../../components/ErrorBoundary'
 import './DashboardPage.css'
 
-function DashboardPage() {
+function DashboardPageContent() {
   const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -278,6 +279,14 @@ function RecentEntriesSection({ activities, showAll, onToggle }) {
         </div>
       )}
     </section>
+  )
+}
+
+function DashboardPage() {
+  return (
+    <ErrorBoundary>
+      <DashboardPageContent />
+    </ErrorBoundary>
   )
 }
 
