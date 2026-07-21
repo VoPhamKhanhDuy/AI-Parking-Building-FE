@@ -4,6 +4,7 @@ import {
   shapeSession,
   formatVnd,
 } from '../../core/models/entities'
+import QRCode from 'qrcode'
 
 export { shapeSession, formatVnd } from '../../core/models/entities'
 
@@ -79,13 +80,14 @@ export async function createExitPayment(sessionId) {
     const { data } = await api.post(`/vehicle-exits/${sessionId}/payments`, { method: 2 })
     const id = data?.paymentId || data?.PaymentId
     if (!id) throw new Error('createExitPayment: missing paymentId in response')
+    const qrImageUrl = await buildMockQr(data.amount ?? data.Amount)
     return {
       paymentId: id,
       amount: data.amount ?? data.Amount,
       method: data.method ?? data.Method,
       status: data.status ?? data.Status,
       transactionCode: data.transactionCode || data.TransactionCode,
-      qrImageUrl: buildMockQr(data.amount ?? data.Amount),
+      qrImageUrl,
       bankName: 'Mock Bank',
       expiresAt: data.expiresAt ?? data.ExpiresAt,
     }
@@ -136,23 +138,33 @@ function extractErrorMessage(error, fallback) {
   return error?.message || fallback
 }
 
-function buildMockQr(amount) {
-  return 'data:image/svg+xml;utf8,' + encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><rect width='100%' height='100%' fill='%23fff'/><text x='50%' y='50%' text-anchor='middle' font-family='monospace' font-size='14'>QR ${formatVnd(amount)}</text></svg>`,
-  )
+async function buildMockQr(amount) {
+  try {
+    const qrData = `PAYMENT|${amount}|PARKING|VNPay`
+    return await QRCode.toDataURL(qrData, {
+      width: 200,
+      margin: 2,
+      color: { dark: '#000000', light: '#ffffff' }
+    })
+  } catch {
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(
+      `<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><rect width='100%' height='100%' fill='%23fff'/><text x='50%' y='50%' text-anchor='middle' font-family='monospace' font-size='12'>QR ${formatVnd(amount)}</text></svg>`,
+    )
+  }
 }
 
-function shapeFromPaymentDto(data) {
+async function shapeFromPaymentDto(data) {
   if (!data || typeof data !== 'object') return null
   const id = data.id || data.Id
   if (!id) return null
+  const qrImageUrl = await buildMockQr(data.amount ?? data.Amount)
   return {
     paymentId: id,
     amount: data.amount ?? data.Amount,
     method: data.method ?? data.Method,
     status: data.status ?? data.Status,
     transactionCode: data.transactionReference || data.TransactionReference || `TXN-${String(id).slice(0, 8)}`,
-    qrImageUrl: buildMockQr(data.amount ?? data.Amount),
+    qrImageUrl,
     bankName: 'Mock Bank',
     expiresAt: data.expiresAt ?? data.ExpiresAt,
   }
