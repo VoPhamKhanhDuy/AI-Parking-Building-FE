@@ -7,6 +7,7 @@ const VEHICLE_TYPE_LABEL_BY_CATEGORY = {
   Motorcycle: 'Motorbike',
   ElectricVehicle: 'Electric Vehicle',
   EV: 'Electric Vehicle',
+  'Electric Vehicle': 'Electric Vehicle',
 }
 
 const TICKET_TYPE_BY_LABEL = {
@@ -74,8 +75,12 @@ export async function assignManualSlot(slotId, ticketId) {
 export async function assignParkingSlot({ slotId, licensePlate, vehicleType, ticketType }) {
   if (!slotId) return { success: false, message: 'Missing slotId' }
   if (!licensePlate) return { success: false, message: 'Missing licensePlate' }
+  
+  // Fallback to 'Car' if vehicleType is empty/undefined
+  const safeVehicleType = vehicleType && vehicleType.trim() ? vehicleType : 'Car'
+  
   try {
-    const vehicleTypeId = await getVehicleTypeId(vehicleType)
+    const vehicleTypeId = await getVehicleTypeId(safeVehicleType)
     const normalizedPlate = String(licensePlate).trim().toUpperCase()
 
     // 1) Lookup or create vehicle
