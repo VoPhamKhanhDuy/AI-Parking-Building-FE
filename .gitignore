@@ -1,4 +1,9 @@
-# Logs
+# Combined ignores for the ParkingSystem monorepo.
+# The per-project .gitignore in backend/ and fe/ cover the bulk of cases,
+# but tooling that walks the repo from the root (VSCode, GitHub web UI,
+# CodeQL, etc.) needs a root-level file to honor the same rules.
+
+# --- Logs ---
 logs
 *.log
 npm-debug.log*
@@ -7,19 +12,48 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# --- .NET / backend ---
+bin/
+obj/
+out/
+TestResults/
+coverage/
+*.user
+*.suo
+*.trx
+*.coverage
+appsettings.Local.json
+appsettings.*.Local.json
+.secrets/
+
+# --- Node / frontend ---
+node_modules/
+dist/
+dist-ssr/
 .env
+.env.local
 *.local
 
-# Editor directories and files
-.vscode/*
+# --- IDEs / editors ---
+.vs/
+.vscode/
 !.vscode/extensions.json
+.idea/
 .idea
-.DS_Store
-*.suo
+*.sw?
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+
+# Vite cache (auto-generated on dev/build)
+fe/node_modules/.vite/
+
+# Cursor IDE terminal logs
+.cursor/projects/**/terminals/
+
+# --- Misc ---
+.cursor/

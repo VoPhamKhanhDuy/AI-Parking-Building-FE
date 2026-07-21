@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import ManagerLayout from '../../layouts/ManagerLayout'
-import { getStaffActivity, submitStaffActivityAction } from './staffActivityService'
+import { getStaffActivity } from './staffActivityService'
 import './StaffActivityPage.css'
 
 function Status({ children }) {
@@ -21,7 +21,6 @@ function StaffActivityPage() {
   const [data, setData] = useState(null)
   const [selectedId, setSelectedId] = useState('STF-2026-001')
   const [filters, setFilters] = useState(defaultFilters)
-  const [notice, setNotice] = useState('')
 
   useEffect(() => { getStaffActivity().then(setData) }, [])
   const staff = useMemo(() => data?.staff.filter((item) => matchesFilters(item, filters)) ?? [], [data, filters])
@@ -32,11 +31,6 @@ function StaffActivityPage() {
     setFilters(nextFilters)
     const visibleStaff = data.staff.filter((item) => matchesFilters(item, nextFilters))
     if (!visibleStaff.some((item) => item.id === selectedId) && visibleStaff.length) setSelectedId(visibleStaff[0].id)
-  }
-  const runAction = async (action, message) => {
-    await submitStaffActivityAction(action, { staffId: selected.id })
-    setNotice(message)
-    window.setTimeout(() => setNotice(''), 2500)
   }
 
   if (!data) return <ManagerLayout><div className="staff-loading">Loading staff activity...</div></ManagerLayout>
@@ -57,17 +51,13 @@ function StaffActivityPage() {
         </div>
 
         <aside className="staff-side-column">
-          <section className="staff-card selected-staff"><header><div><small>Selected staff</small><h3>{selected.name}</h3></div><Status>{selected.status}</Status></header><dl><div><dt>Staff ID</dt><dd>{selected.id}</dd></div><div><dt>Role</dt><dd>{selected.role}</dd></div><div><dt>Assigned Area</dt><dd>{selected.area}</dd></div><div><dt>Current Status</dt><dd><Status>{selected.status}</Status></dd></div><div><dt>Shift Time</dt><dd>{selected.shiftTime}</dd></div><div><dt>Last Activity</dt><dd>{selected.lastActivity}</dd></div><div><dt>Handled Exits</dt><dd>{selected.exits}</dd></div><div><dt>Payments Processed</dt><dd>{selected.payments}</dd></div><div><dt>Pending Cases</dt><dd className={selected.pending ? 'pending-value' : ''}>{selected.pending}</dd></div></dl><div className="staff-detail-actions"><button className="primary" onClick={() => runAction('view-log', `${selected.name} activity log opened in mock mode.`)}>View Activity Log</button><button onClick={() => runAction('review-cases', `${selected.pending} pending cases selected for review.`)}>Review Pending Cases</button><button onClick={() => runAction('send-message', `Message composer opened for ${selected.name}.`)}>Send Message</button></div></section>
+          <section className="staff-card selected-staff"><header><div><small>Selected staff</small><h3>{selected.name}</h3></div><Status>{selected.status}</Status></header><dl><div><dt>Staff ID</dt><dd>{selected.id}</dd></div><div><dt>Role</dt><dd>{selected.role}</dd></div><div><dt>Assigned Area</dt><dd>{selected.area}</dd></div><div><dt>Current Status</dt><dd><Status>{selected.status}</Status></dd></div><div><dt>Shift Time</dt><dd>{selected.shiftTime}</dd></div><div><dt>Last Activity</dt><dd>{selected.lastActivity}</dd></div><div><dt>Handled Exits</dt><dd>{selected.exits}</dd></div><div><dt>Payments Processed</dt><dd>{selected.payments}</dd></div><div><dt>Pending Cases</dt><dd className={selected.pending ? 'pending-value' : ''}>{selected.pending}</dd></div></dl></section>
 
           <section className="staff-card pending-reviews"><header><div><h3>Pending Staff Reviews</h3><p>Manager attention required</p></div></header><div>{data.pendingReviews.map((item) => <article key={item.reference}><div><strong>{item.reference}</strong><p>{item.text}</p></div><Status>{item.priority}</Status></article>)}</div></section>
         </aside>
       </div>
 
       <section className="staff-card recent-staff-activity"><header><div><h3>Recent Staff Activities</h3><p>Latest actions during the current shift</p></div></header><div className="staff-table-wrap"><table><thead><tr><th>Time</th><th>Staff</th><th>Activity</th><th>Reference</th><th>Area</th><th>Status</th></tr></thead><tbody>{data.activities.map((item) => <tr key={`${item.time}-${item.reference}`}><td>{item.time}</td><td><strong>{item.staff}</strong></td><td>{item.activity}</td><td>{item.reference}</td><td>{item.area}</td><td><Status>{item.status}</Status></td></tr>)}</tbody></table></div></section>
-
-      <section className="manager-staff-footer"><div><h3>Manager Notes</h3><p>{data.managerNote}</p></div><div><button onClick={() => runAction('export', 'Staff activity exported in mock mode.')}>Export Staff Activity</button><button onClick={() => runAction('review-pending', 'Pending staff cases opened for review.')}>Review Pending Cases</button><button className="primary" onClick={() => runAction('send-summary', 'Shift summary sent to Operations Team.')}>Send Shift Summary</button></div></section>
-
-      {notice && <div className="staff-notice" role="status">{notice}</div>}
     </div>
   </ManagerLayout>
 }

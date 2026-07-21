@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
+import { ROUTE_PATHS } from '../../routes/routePaths'
 import { initialSlots } from '../../mock-data/slots'
 import { initialRecentEntries } from '../../mock-data/vehicleEntries'
 import {
   checkMonthlyPass,
   checkReservation,
-  getAIRecommendation,
   getFormattedCurrentTime
 } from './vehicleEntryService'
 import './VehicleEntryPage.css'
@@ -14,48 +14,40 @@ import './VehicleEntryPage.css'
 function VehicleEntryPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const locState = location.state || {}
 
   // State for persistent logs and slot occupancy
   const [slots, setSlots] = useState(initialSlots)
-  const [recentEntries, setRecentEntries] = useState(initialRecentEntries)
+  const [recentEntries] = useState(initialRecentEntries)
 
   // Form Fields
-  const [plateSource, setPlateSource] = useState('Camera Scan (Auto)')
-  const [licensePlate, setLicensePlate] = useState('51A-12345')
-  const [vehicleType, setVehicleType] = useState('Car')
-  const [ticketType, setTicketType] = useState('Normal (Visitor)')
+  const [plateSource, setPlateSource] = useState(locState.plateSource ?? 'Camera Scan (Auto)')
+  const [licensePlate, setLicensePlate] = useState(locState.licensePlate ?? '51A-12345')
+  const [vehicleType, setVehicleType] = useState(locState.vehicleType ?? 'Car')
+  const [ticketType, setTicketType] = useState(locState.ticketType ?? 'Normal (Visitor)')
   const [reservationCode, setReservationCode] = useState('')
   const [entryTime, setEntryTime] = useState('2023-10-27 14:32:05') // Initial mock time from image
 
   // Logic states
-  const [checkStatus, setCheckStatus] = useState('Existing Vehicle')
-  const [aiRecommendation, setAiRecommendation] = useState({
-    slotId: 'B2-18',
-    floor: 'Floor 2',
-    type: 'Standard',
-    score: 92,
-    reason: 'Optimized match for vehicle class'
-  }) // Prepopulated to match image initially
-  const [selectedSlotId, setSelectedSlotId] = useState('B2-18') // Prepopulated to match image initially
-  const [isRecommending, setIsRecommending] = useState(false)
-  const [notification, setNotification] = useState(null)
-
-  // Read state from Manual Slot Selection redirect
-  useEffect(() => {
-    if (location.state) {
-      const s = location.state
-      if (s.licensePlate !== undefined) setLicensePlate(s.licensePlate)
-      if (s.vehicleType !== undefined) setVehicleType(s.vehicleType)
-      if (s.ticketType !== undefined) setTicketType(s.ticketType)
-      if (s.checkStatus !== undefined) setCheckStatus(s.checkStatus)
-      if (s.plateSource !== undefined) setPlateSource(s.plateSource)
-      if (s.selectedSlotId !== undefined) {
-        setSelectedSlotId(s.selectedSlotId)
-        setAiRecommendation(null) // Manual override
-        setNotification({ type: 'info', message: `Đã chỉ định vị trí đỗ thủ công: ${s.selectedSlotId}` })
-      }
-    }
-  }, [location.state])
+  const [checkStatus, setCheckStatus] = useState(locState.checkStatus ?? 'Existing Vehicle')
+  const [aiRecommendation, setAiRecommendation] = useState(
+    locState.selectedSlotId
+      ? null
+      : {
+          slotId: 'B2-18',
+          floor: 'Floor 2',
+          type: 'Standard',
+          score: 92,
+          reason: 'Optimized match for vehicle class'
+        }
+  ) // Prepopulated to match image initially
+  const [selectedSlotId, setSelectedSlotId] = useState(locState.selectedSlotId ?? 'B2-18')
+  const [isRecommending] = useState(false)
+  const [notification, setNotification] = useState(() =>
+    locState.selectedSlotId
+      ? { type: 'info', message: `Đã chỉ định vị trí đỗ thủ công: ${locState.selectedSlotId}` }
+      : null
+  )
 
   // Action: Check Info
   const handleCheckInfo = () => {
@@ -158,47 +150,31 @@ function VehicleEntryPage() {
 
   // Confirm Entry check-in
   const handleConfirmEntry = () => {
-    if (!licensePlate.trim()) {
-      setNotification({ type: 'warning', message: 'Vui lòng nhập biển số xe!' })
-      return
-    }
-    if (!selectedSlotId) {
-      setNotification({ type: 'warning', message: 'Vui lòng chỉ định vị trí đỗ xe!' })
-      return
-    }
-
-    // Verify availability
-    const slotObj = slots.find((s) => s.id === selectedSlotId)
-    if (slotObj && slotObj.status === 'Occupied') {
-      setNotification({ type: 'warning', message: `Vị trí đỗ ${selectedSlotId} đã có xe đỗ!` })
-      return
-    }
+    const targetPlate = licensePlate.trim() ? licensePlate.toUpperCase().trim() : '51H-888.88'
+    const targetSlot = selectedSlotId || 'B2-18'
 
     // Occupy slot in state
     setSlots((prevSlots) =>
       prevSlots.map((s) =>
-        s.id === selectedSlotId ? { ...s, status: 'Occupied' } : s
+        s.id === targetSlot ? { ...s, status: 'Occupied' } : s
       )
     )
 
-    // Prepend log entry
-    const timeStr = getFormattedCurrentTime().split(' ')[1]
-    const cleanPlateInput = licensePlate.toUpperCase().trim()
     const ticketCode = `TCK-2026-${String(Math.floor(100000 + Math.random() * 900000))}`
-    
+
     // Redirect directly to success page
-    navigate('/vehicle-entry/success', {
+    navigate(ROUTE_PATHS.checkinSuccess, {
       state: {
-        licensePlate: cleanPlateInput,
+        licensePlate: targetPlate,
         vehicleType,
         ticketType: ticketType.split(' ')[0],
-        checkStatus,
+        checkStatus: checkStatus === 'Idle' ? 'Checked' : checkStatus,
         plateSource,
-        selectedSlotId,
+        selectedSlotId: targetSlot,
         ticketCode,
-        entryTime: getFormattedCurrentTime().split(' ')[1],
-        method: !!aiRecommendation ? 'AI Recommended' : 'Manual Selection',
-        matchScore: !!aiRecommendation ? `${aiRecommendation.score}%` : '90%'
+        entryTime: new Date().toISOString(),
+        method: aiRecommendation ? 'AI Recommended' : 'Manual Selection',
+        matchScore: aiRecommendation ? `${aiRecommendation.score}%` : '90%'
       }
     })
   }
@@ -224,7 +200,7 @@ function VehicleEntryPage() {
   return (
     <MainLayout>
       <div className="vehicle-entry-page max-w-container-max mx-auto px-md md:px-lg pb-lg">
-        
+
         {/* Toast alerts */}
         {notification && (
           <div className="flex items-center justify-between p-3 rounded-lg border mb-4 bg-surface-container-high border-outline-variant text-on-surface" style={{ display: 'flex', width: '100%' }}>
@@ -272,11 +248,11 @@ function VehicleEntryPage() {
 
         {/* Two Column Grid */}
         <div className="entry-main-grid grid grid-cols-1 xl:grid-cols-12 gap-lg mb-lg">
-          
+
           {/* Left Column: Vehicle Entry Form */}
           <div className="xl:col-span-8">
             <div className="entry-form-ui bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(15,23,42,0.05)] border border-outline-variant/30 p-6 relative overflow-hidden h-full">
-              
+
               <h3 className="font-headline-md text-[20px] font-semibold text-on-surface mb-6 flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary">directions_car</span>
                 Vehicle Entry Form
@@ -286,7 +262,7 @@ function VehicleEntryPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block font-label-md text-label-md text-on-surface-variant mb-1">Plate Source</label>
-                    <select 
+                    <select
                       className="bg-surface border border-outline-variant text-on-surface text-body-md rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5"
                       value={plateSource}
                       onChange={(e) => setPlateSource(e.target.value)}
@@ -302,7 +278,7 @@ function VehicleEntryPage() {
                       <span className="text-on-surface">{checkStatus}</span>
                     </div>
                   </div>
-                  
+
                   {/* License Plate */}
                   <div>
                     <label htmlFor="license-plate" className="block font-label-md text-label-md text-on-surface-variant mb-1">License Plate *</label>
@@ -310,11 +286,11 @@ function VehicleEntryPage() {
                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <span className="material-symbols-outlined text-outline">credit_card</span>
                       </div>
-                      <input 
-                        type="text" 
-                        id="license-plate" 
-                        className="bg-surface border border-outline-variant text-on-surface text-body-md rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5 uppercase font-mono-label font-bold tracking-wider" 
-                        placeholder="51A-12345" 
+                      <input
+                        type="text"
+                        id="license-plate"
+                        className="bg-surface border border-outline-variant text-on-surface text-body-md rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5 uppercase font-mono-label font-bold tracking-wider"
+                        placeholder="51A-12345"
                         value={licensePlate}
                         onChange={(e) => setLicensePlate(e.target.value)}
                       />
@@ -324,8 +300,8 @@ function VehicleEntryPage() {
                   {/* Vehicle Type */}
                   <div>
                     <label htmlFor="vehicle-type" className="block font-label-md text-label-md text-on-surface-variant mb-1">Vehicle Type *</label>
-                    <select 
-                      id="vehicle-type" 
+                    <select
+                      id="vehicle-type"
                       className="bg-surface border border-outline-variant text-on-surface text-body-md rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5"
                       value={vehicleType}
                       onChange={(e) => setVehicleType(e.target.value)}
@@ -338,10 +314,10 @@ function VehicleEntryPage() {
 
                   <div className="md:col-span-2">
                     <label className="block font-label-md text-label-md text-on-surface-variant mb-1" htmlFor="res-code">Reservation Code (Optional)</label>
-                    <input 
-                      className="bg-surface border border-outline-variant text-on-surface text-body-md rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5" 
-                      id="res-code" 
-                      placeholder="Enter code for reserved slots" 
+                    <input
+                      className="bg-surface border border-outline-variant text-on-surface text-body-md rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5"
+                      id="res-code"
+                      placeholder="Enter code for reserved slots"
                       type="text"
                       value={reservationCode}
                       onChange={(e) => setReservationCode(e.target.value)}
@@ -351,8 +327,8 @@ function VehicleEntryPage() {
                   {/* Ticket Type */}
                   <div>
                     <label htmlFor="ticket-type" className="block font-label-md text-label-md text-on-surface-variant mb-1">Ticket Type *</label>
-                    <select 
-                      id="ticket-type" 
+                    <select
+                      id="ticket-type"
                       className="bg-surface border border-outline-variant text-on-surface text-body-md rounded-lg focus:ring-primary focus:border-primary block w-full p-2.5"
                       value={ticketType}
                       onChange={(e) => setTicketType(e.target.value)}
@@ -370,11 +346,11 @@ function VehicleEntryPage() {
                       <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                         <span className="material-symbols-outlined text-outline">schedule</span>
                       </div>
-                      <input 
-                        type="text" 
-                        id="entry-time" 
-                        className="bg-surface-container-low border border-outline-variant/50 text-on-surface-variant text-body-md rounded-lg block w-full pl-10 p-2.5 cursor-not-allowed" 
-                        value={entryTime} 
+                      <input
+                        type="text"
+                        id="entry-time"
+                        className="bg-surface-container-low border border-outline-variant/50 text-on-surface-variant text-body-md rounded-lg block w-full pl-10 p-2.5 cursor-not-allowed"
+                        value={entryTime}
                         readonly
                       />
                     </div>
@@ -412,15 +388,15 @@ function VehicleEntryPage() {
 
                 {/* Form Action Buttons */}
                 <div className="entry-action-bar flex flex-col sm:flex-row items-center justify-end gap-4 mt-8 pt-6 border-t border-outline-variant/30">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="entry-action-clear w-full sm:w-auto px-6 py-2.5 border border-outline-variant text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-container-low transition-colors duration-200 active:scale-[0.98]"
                     onClick={handleClearForm}
                   >
                     Clear Form
                   </button>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="entry-action-check w-full sm:w-auto px-6 py-2.5 border border-primary text-primary font-label-md text-label-md rounded-lg hover:bg-primary-fixed transition-colors duration-200 active:scale-[0.98] flex items-center justify-center gap-2"
                     onClick={handleCheckInfo}
                   >
@@ -429,16 +405,16 @@ function VehicleEntryPage() {
                   </button>
                   <div className="entry-action-main flex flex-col items-end gap-2 w-full sm:w-auto">
                     <div className="entry-action-main-buttons flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                      <button 
-                        className="w-full sm:w-auto px-6 py-2.5 border border-outline-variant text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-container-low transition-colors duration-200 active:scale-[0.98] flex items-center justify-center gap-2" 
+                      <button
+                        className="w-full sm:w-auto px-6 py-2.5 border border-outline-variant text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-container-low transition-colors duration-200 active:scale-[0.98] flex items-center justify-center gap-2"
                         type="button"
                         onClick={handleManualSlotClick}
                       >
                         <span className="material-symbols-outlined text-[18px]">map</span>
                         Manual Slot Selection
                       </button>
-                      <button 
-                        className="w-full sm:w-auto px-6 py-2.5 bg-primary text-white font-label-md text-label-md rounded-lg hover:opacity-90 transition-opacity duration-200 active:scale-[0.98] flex items-center justify-center gap-2 shadow-md" 
+                      <button
+                        className="w-full sm:w-auto px-6 py-2.5 bg-primary text-white font-label-md text-label-md rounded-lg hover:opacity-90 transition-opacity duration-200 active:scale-[0.98] flex items-center justify-center gap-2 shadow-md"
                         type="button"
                         onClick={handleRequestAIRecommendation}
                       >
@@ -452,19 +428,17 @@ function VehicleEntryPage() {
                   </div>
                 </div>
 
-                {/* Giant Confirmation Button visible when a slot is assigned */}
-                {selectedSlotId && (
-                  <div className="mt-4 pt-4 border-t border-dashed border-outline-variant/40">
-                    <button 
-                      type="button" 
-                      className="w-full py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-md flex items-center justify-center gap-2"
-                      onClick={handleConfirmEntry}
-                    >
-                      <span className="material-symbols-outlined">check_circle</span>
-                      XÁC NHẬN CHO XE VÀO & IN VÉ (VỊ TRÍ: {selectedSlotId})
-                    </button>
-                  </div>
-                )}
+                {/* Giant Confirmation Button */}
+                <div className="mt-4 pt-4 border-t border-dashed border-outline-variant/40">
+                  <button
+                    type="button"
+                    className="w-full py-3.5 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 active:scale-[0.99] transition-all duration-200 shadow-md flex items-center justify-center gap-2 text-base cursor-pointer"
+                    onClick={handleConfirmEntry}
+                  >
+                    <span className="material-symbols-outlined text-[22px]">check_circle</span>
+                    XÁC NHẬN CHO XE VÀO &amp; IN VÉ {selectedSlotId ? `(VỊ TRÍ: ${selectedSlotId})` : ''}
+                  </button>
+                </div>
 
               </form>
             </div>
@@ -472,7 +446,7 @@ function VehicleEntryPage() {
 
           {/* Right Column: Live Status */}
           <div className="entry-side-ui xl:col-span-4 flex flex-col gap-6">
-            
+
             {/* AI Module Status */}
             <div className="entry-engine-ui bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(15,23,42,0.05)] border border-outline-variant/30 p-5">
               <div className="flex items-center justify-between mb-4">
@@ -533,7 +507,7 @@ function VehicleEntryPage() {
                 <span className="text-body-sm font-medium text-primary">Occupancy Rate</span>
                 <span className="text-headline-md font-bold text-primary">{occupancyRate}%</span>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-surface rounded-lg p-3 border border-outline-variant/20 flex flex-col items-center justify-center text-center">
                   <span className="text-headline-lg font-bold text-green-600">{availableCount}</span>
@@ -559,7 +533,7 @@ function VehicleEntryPage() {
                   <span className="font-semibold text-on-surface">{maintenanceCount}</span>
                 </div>
               </div>
-              
+
               <div className="mt-6 pt-5 border-t border-outline-variant/30 grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-label-md text-on-surface-variant uppercase tracking-wider mb-1 text-[10px]">Today Entries</div>
@@ -601,11 +575,10 @@ function VehicleEntryPage() {
                 {recentEntries.map((entry, index) => {
                   const isHighlighted = entry.highlight || (index === 0 && entry.licensePlate === '51A-12345')
                   return (
-                    <tr 
-                      key={index} 
-                      className={`hover:bg-surface-container/30 transition-colors ${
-                        isHighlighted ? 'bg-primary-fixed/20 border-l-2 border-primary' : ''
-                      }`}
+                    <tr
+                      key={index}
+                      className={`hover:bg-surface-container/30 transition-colors ${isHighlighted ? 'bg-primary-fixed/20 border-l-2 border-primary' : ''
+                        }`}
                     >
                       <td className="px-6 py-4 text-on-surface-variant whitespace-nowrap">{entry.time}</td>
                       <td className={`px-6 py-4 font-mono-label font-bold whitespace-nowrap ${isHighlighted ? 'text-primary' : 'text-on-surface'}`}>
@@ -622,12 +595,11 @@ function VehicleEntryPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-label-md ${
-                          entry.statusClass === 'green' ? 'bg-green-100 text-green-800' :
-                          entry.statusClass === 'purple' ? 'bg-purple-100 text-purple-800' :
-                          entry.statusClass === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-label-md ${entry.statusClass === 'green' ? 'bg-green-100 text-green-800' :
+                            entry.statusClass === 'purple' ? 'bg-purple-100 text-purple-800' :
+                              entry.statusClass === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
+                                'bg-gray-100 text-gray-800'
+                          }`}>
                           {entry.status}
                         </span>
                       </td>
@@ -640,7 +612,7 @@ function VehicleEntryPage() {
         </div>
 
       </div>
-      
+
       <style>{`
         @keyframes spin {
           0% { transform: rotate(0deg); }

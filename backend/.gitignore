@@ -1,0 +1,28 @@
+# Build artifacts
+bin/
+obj/
+out/
+
+# IDE
+.vs/
+.idea/
+*.user
+*.suo
+
+# Test results
+TestResults/
+coverage/
+*.trx
+*.coverage
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local config
+appsettings.Local.json
+appsettings.*.Local.json
+.secrets/

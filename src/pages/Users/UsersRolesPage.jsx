@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { initialUserKPIs, initialUsersList, rolePermissionMap, initialUserChanges } from './usersRolesService'
 import { ROUTE_PATHS } from '../../routes/routePaths'
 import { formatCurrentTime } from '../Dashboard/dashboardService'
+import { downloadCSV } from '../../utils/exportUtils'
 import '../../layouts/MainLayout.css'
 
 function UsersRolesPage() {
@@ -10,7 +11,18 @@ function UsersRolesPage() {
 
   // Real-time states
   const [kpis, setKpis] = useState(initialUserKPIs)
-  const [users, setUsers] = useState(initialUsersList)
+  const [users, setUsers] = useState(() => {
+    const saved = localStorage.getItem('ai_parking_users_list')
+    if (saved) {
+      try { return JSON.parse(saved) } catch (e) { console.error(e) }
+    }
+    return initialUsersList
+  })
+
+  useEffect(() => {
+    localStorage.setItem('ai_parking_users_list', JSON.stringify(users))
+  }, [users])
+
   const [userChanges, setUserChanges] = useState(initialUserChanges)
   const [selectedUserEmail, setSelectedUserEmail] = useState('an.nguyen@parking.vn')
   const [openMenu, setOpenMenu] = useState(null)
@@ -419,6 +431,24 @@ function UsersRolesPage() {
                     >
                       + Add User
                     </button>
+                    <button 
+                      className="bg-surface-container-high text-on-surface border border-outline-variant px-3 py-1 rounded text-body-sm font-semibold active:scale-[0.98] transition-all hover:bg-surface-container flex items-center gap-1"
+                      onClick={() => {
+                        downloadCSV('users_directory.csv', filteredUsers, [
+                          { key: 'name', label: 'Name' },
+                          { key: 'email', label: 'Email' },
+                          { key: 'role', label: 'Role' },
+                          { key: 'area', label: 'Area' },
+                          { key: 'status', label: 'Status' },
+                          { key: 'lastLogin', label: 'Last Login' },
+                          { key: 'createdDate', label: 'Created Date' }
+                        ])
+                        showToast('Đã xuất file CSV danh sách người dùng thành công!', 'success')
+                      }}
+                    >
+                      <span className="material-symbols-outlined text-[16px]">download</span>
+                      Export
+                    </button>
                   </div>
                 </div>
 
@@ -476,13 +506,6 @@ function UsersRolesPage() {
                     </tbody>
                   </table>
                 </div>
-
-                <div className="p-2.5 bg-surface-container-lowest border-t border-outline-variant flex justify-center">
-                  <button className="text-primary font-bold text-[10px] uppercase tracking-wider hover:underline" onClick={() => window.alert('Đang tải danh sách người dùng...')}>
-                    View Full User Directory
-                  </button>
-                </div>
-
               </div>
             </div>
 

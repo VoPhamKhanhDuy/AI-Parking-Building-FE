@@ -35,9 +35,9 @@ export const getAIRecommendation = (vehicleType, ticketType, slots = []) => {
 
   // 1. If it's a reservation and matches pre-assigned slot, try to assign it.
   // Otherwise, we query standard slots.
-  let recommendedSlot = null
-  let score = 95
-  let reason = 'Optimized match for vehicle class'
+  let recommendedSlot
+  let score
+  let reason
 
   if (vehicleType === 'Motorcycle') {
     // Find Basement Motorbike slot

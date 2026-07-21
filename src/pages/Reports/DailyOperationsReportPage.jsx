@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import ManagerLayout from '../../layouts/ManagerLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
 import { exportReport } from './reportsService'
-import { getDailyOperationsReport, reviewDailyOperationsReport } from './dailyOperationsReportService'
+import { getDailyOperationsReport } from './dailyOperationsReportService'
+import { downloadCSV } from '../../utils/exportUtils'
 import './DailyOperationsReportPage.css'
 
 function Status({ children }) {
@@ -21,16 +22,18 @@ function DetailRow({ label, value, note }) {
 function DailyOperationsReportPage() {
   const navigate = useNavigate()
   const [data, setData] = useState(null)
-  const [reviewed, setReviewed] = useState(false)
+  const [reviewed] = useState(false)
   const [notice, setNotice] = useState('')
 
   useEffect(() => { getDailyOperationsReport().then(setData) }, [])
   const notify = (message) => { setNotice(message); window.setTimeout(() => setNotice(''), 2500) }
-  const handleExport = async (type) => { await exportReport(data.report.id, type); notify(`${data.report.id} exported as ${type} in mock mode.`) }
-  const reviewReport = async (action) => {
-    await reviewDailyOperationsReport(data.report.id, action)
-    if (action === 'reviewed') setReviewed(true)
-    notify(action === 'reviewed' ? 'Report marked as reviewed.' : 'Report sent to Operations Team.')
+  const handleExport = async (type) => {
+    await exportReport(data.report.id, type)
+    downloadCSV(`daily_operations_report_${data.report.id}.csv`, data.kpis, [
+      { key: 'label', label: 'Metric' },
+      { key: 'value', label: 'Value' }
+    ])
+    notify(`Đã xuất file báo cáo ${data.report.id} thành công!`)
   }
 
   if (!data) return <ManagerLayout><div className="daily-loading">Loading report detail...</div></ManagerLayout>
@@ -84,10 +87,7 @@ function DailyOperationsReportPage() {
           </section>
 
           <section className="manager-notes">
-            <header><span>05</span><div><h3>Manager Notes</h3><p>Internal review comment</p></div></header>
-            <blockquote>{data.managerNote}</blockquote>
             <div className="approval-details"><span>Reviewed By<strong>Parking Facility Manager</strong></span><span>Review Status<strong>{reviewed ? 'Reviewed' : 'Waiting for final review'}</strong></span><span>Last Updated<strong>Today 17:35</strong></span></div>
-            <div className="approval-actions"><button className="primary" onClick={() => reviewReport('reviewed')}>Mark Report Reviewed</button><button onClick={() => reviewReport('sent')}>Send to Operations Team</button></div>
           </section>
         </div>
 

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import ManagerLayout from '../../layouts/ManagerLayout'
-import { getPricingRules, updatePricingRule } from './pricingService'
+import { getPricingRules } from './pricingService'
 import './PricingRulesPage.css'
 
 function Status({ children }) {
@@ -40,11 +40,6 @@ function PricingRulesPage() {
     window.setTimeout(() => setNotice(''), 2500)
   }
 
-  const deactivate = async () => {
-    await updatePricingRule(selected.code, { status: 'Inactive' })
-    notify(`${selected.code} deactivation request recorded.`)
-  }
-
   const selectCategory = (item) => {
     if (item === 'Monthly Pass') {
       document.querySelector('.monthly-pricing')?.scrollIntoView({ behavior: 'smooth' })
@@ -70,7 +65,6 @@ function PricingRulesPage() {
     <div className="pricing-page">
       <header className="pricing-heading">
         <div><p>Dashboard <span>/</span> Pricing Rules</p><h1>Pricing Rules Management</h1><h2>Manage parking fees, vehicle-based pricing, overtime charges, monthly pass fees, reservation fees, and lost ticket penalties.</h2></div>
-        <button className="create-rule" onClick={() => notify('New pricing rule form opened in mock mode.')}>Create New Rule</button>
       </header>
 
       <section className="pricing-kpis">{data.summaries.map((item) => <article key={item.label}><small>{item.label}</small><strong className={item.tone ?? ''}>{item.value}</strong><span>{item.note}</span></article>)}</section>
@@ -89,7 +83,6 @@ function PricingRulesPage() {
         <aside className="pricing-card rule-detail">
           <header><div><small>Selected rule</small><h3>{selected.code}</h3></div><Status>{selected.status}</Status></header>
           <dl><div><dt>Category</dt><dd>{selected.detailCategory}</dd></div><div><dt>Vehicle Type</dt><dd>{selected.vehicleType}</dd></div><div><dt>Base Fee</dt><dd>{selected.baseFee}</dd></div><div><dt>Additional Fee</dt><dd>{selected.additionalFee}</dd></div><div><dt>Grace Period</dt><dd>{selected.gracePeriod}</dd></div><div><dt>Effective Date</dt><dd>{selected.effectiveDate}</dd></div><div><dt>Applied To</dt><dd>{selected.appliedTo}</dd></div><div><dt>Status</dt><dd><Status>{selected.status}</Status></dd></div></dl>
-          <div className="rule-actions"><button className="primary" onClick={() => notify(`${selected.code} editor opened.`)}>Edit Rule</button><button onClick={() => notify(`${selected.code} duplicated in mock mode.`)}>Duplicate Rule</button><button className="danger" onClick={deactivate}>Deactivate Rule</button></div>
         </aside>
       </div>
 

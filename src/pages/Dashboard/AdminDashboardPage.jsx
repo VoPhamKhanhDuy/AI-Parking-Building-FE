@@ -10,7 +10,18 @@ function AdminDashboardPage() {
 
   // Dynamic state management
   const [filterQuery, setFilterQuery] = useState('')
-  const [users, setUsers] = useState(mockAdminUsers)
+  const [users, setUsers] = useState(() => {
+    const saved = localStorage.getItem('ai_parking_users_list')
+    if (saved) {
+      try { return JSON.parse(saved) } catch (e) { console.error(e) }
+    }
+    return mockAdminUsers
+  })
+
+  useEffect(() => {
+    localStorage.setItem('ai_parking_users_list', JSON.stringify(users))
+  }, [users])
+
   const [kpis, setKpis] = useState(mockAdminKPIs)
   const [auditLogs, setAuditLogs] = useState(mockAuditActivity)
   const [openMenu, setOpenMenu] = useState(null)
@@ -401,12 +412,6 @@ function AdminDashboardPage() {
                     </tbody>
                   </table>
                 </div>
-
-                <div className="p-2.5 bg-surface-container-lowest border-t border-outline-variant flex justify-center">
-                  <button className="text-primary font-bold text-[10px] uppercase tracking-wider hover:underline" onClick={() => window.alert('Đang tải danh sách tài khoản')}>
-                    View Full User Directory
-                  </button>
-                </div>
               </div>
 
               {/* Account Distribution (Simplified horizontal) */}
@@ -506,7 +511,7 @@ function AdminDashboardPage() {
           <section className="glass-card rounded-lg overflow-hidden bg-white">
             <div className="px-5 py-3 border-b border-outline-variant flex justify-between items-center bg-white">
               <h3 className="font-body-lg font-bold text-on-surface">Recent Audit Activity</h3>
-              <button className="text-primary font-bold text-[10px] uppercase tracking-wider hover:underline" onClick={() => window.alert('Đang tải danh sách log đầy đủ')}>
+              <button className="text-primary font-bold text-[10px] uppercase tracking-wider hover:underline" onClick={() => navigate(ROUTE_PATHS.auditLogs)}>
                 Full Audit Log
               </button>
             </div>

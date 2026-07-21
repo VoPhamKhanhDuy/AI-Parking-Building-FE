@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import ManagerLayout from '../../layouts/ManagerLayout'
-import { ROUTE_PATHS } from '../../routes/routePaths'
 import { getManagerDashboard } from './managerDashboardService'
 import './ManagerDashboardPage.css'
 
@@ -16,7 +15,6 @@ function StatusBadge({ children, tone = 'normal' }) {
 }
 
 function ManagerDashboardPage() {
-  const navigate = useNavigate()
   const location = useLocation()
   const [data, setData] = useState(null)
 
@@ -26,12 +24,6 @@ function ManagerDashboardPage() {
   }, [data, location.hash])
 
   if (!data) return <ManagerLayout><div className="manager-loading">Loading dashboard...</div></ManagerLayout>
-
-  const actions = [
-    ['assessment', 'View Reports', ROUTE_PATHS.reports],
-    ['account_balance_wallet', 'Manage Pricing Rules', ROUTE_PATHS.pricing],
-    ['apartment', 'Manage Parking Structure', ROUTE_PATHS.parkingStructure],
-  ]
 
   return <ManagerLayout>
     <div className="manager-page">
@@ -61,8 +53,6 @@ function ManagerDashboardPage() {
         <div className="manager-card-title"><div><h3>Staff Activity Overview</h3><p>Current shift performance across operating areas</p></div><StatusBadge>8 Active</StatusBadge></div>
         <div className="manager-table-wrap"><table><thead><tr>{tableHeadings.staff.map((heading)=><th key={heading}>{heading}</th>)}</tr></thead><tbody>{data.staff.map((row)=><tr key={row.staff}><td><strong>{row.staff}</strong></td><td>{row.role}</td><td>{row.area}</td><td>{row.entries}</td><td>{row.exits}</td><td>{row.payments}</td><td><StatusBadge>{row.status}</StatusBadge></td></tr>)}</tbody></table></div>
       </section>
-
-      <section className="manager-card quick-actions"><div className="manager-card-title"><div><h3>Quick Manager Actions</h3><p>Common facility management tasks</p></div></div><div>{actions.map(([icon,label,path])=><button key={label} onClick={()=>navigate(path)}><span className="material-symbols-outlined">{icon}</span>{label}</button>)}<button onClick={()=>navigate(ROUTE_PATHS.staffActivity)}><span className="material-symbols-outlined">badge</span>Review Staff Activity</button></div></section>
 
       <section className="manager-card activity-card"><div className="manager-card-title"><div><h3>Recent Manager Activity</h3><p>Latest reviews and operational updates</p></div></div><div className="manager-table-wrap"><table><thead><tr>{tableHeadings.activities.map((heading)=><th key={heading}>{heading}</th>)}</tr></thead><tbody>{data.activities.map((row)=><tr key={`${row.time}-${row.reference}`}><td>{row.time}</td><td><strong>{row.activity}</strong></td><td>{row.reference}</td><td>{row.performedBy}</td><td><StatusBadge tone={row.status}>{row.status}</StatusBadge></td></tr>)}</tbody></table></div></section>
     </div>

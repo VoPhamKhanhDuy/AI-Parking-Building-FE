@@ -59,7 +59,7 @@ function MainLayout({ children }) {
           </div>
           <div className="menu-anchor">
             <button className="icon-button" aria-label="Settings" onClick={() => setOpenMenu(openMenu === 'settings' ? null : 'settings')}><span className="material-symbols-outlined">settings</span></button>
-            {openMenu === 'settings' && <div className="action-menu compact staff-settings-menu"><button onClick={() => navigate(ROUTE_PATHS.profile)}><span className="material-symbols-outlined">person</span><span>View profile</span></button><button onClick={() => navigate(`${ROUTE_PATHS.profile}#account-security`)}><span className="material-symbols-outlined">manage_accounts</span><span>Account settings</span></button><button className="staff-settings-signout" onClick={logout}><span className="material-symbols-outlined">logout</span><span>Sign out</span></button></div>}
+            {openMenu === 'settings' && <div className="action-menu compact staff-settings-menu"><button onClick={() => navigate(ROUTE_PATHS.profile)}><span className="material-symbols-outlined">person</span><span>View profile</span></button><button className="staff-settings-signout" onClick={logout}><span className="material-symbols-outlined">logout</span><span>Sign out</span></button></div>}
           </div>
           <span className="top-divider" />
           <div className="menu-anchor">

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { initialAuditKPIs, initialAuditRecords, initialSecurityEvents } from './auditLogsService'
 import { ROUTE_PATHS } from '../../routes/routePaths'
 import { formatCurrentTime } from '../Dashboard/dashboardService'
+import { downloadCSV } from '../../utils/exportUtils'
 import '../../layouts/MainLayout.css'
 
 function AuditLogsPage() {
@@ -10,8 +11,8 @@ function AuditLogsPage() {
 
   // Real-time states
   const [kpis, setKpis] = useState(initialAuditKPIs)
-  const [records, setRecords] = useState(initialAuditRecords)
-  const [securityEvents, setSecurityEvents] = useState(initialSecurityEvents)
+  const [records] = useState(initialAuditRecords)
+  const [securityEvents] = useState(initialSecurityEvents)
   const [selectedLogId, setSelectedLogId] = useState('AUD-2026-00128')
   const [openMenu, setOpenMenu] = useState(null)
   const [time, setTime] = useState(() => formatCurrentTime ? formatCurrentTime() : new Date().toLocaleTimeString('en-GB'))
@@ -43,11 +44,11 @@ function AuditLogsPage() {
 
   // Filter logs list
   const filteredRecords = records.filter((r) => {
-    const matchesSearch = r.action.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          r.target.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          r.performedBy.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          r.origin.toLowerCase().includes(searchQuery.toLowerCase())
-    
+    const matchesSearch = r.action.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.target.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.performedBy.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.origin.toLowerCase().includes(searchQuery.toLowerCase())
+
     const matchesAction = actionFilter === 'All Actions' || r.action.includes(actionFilter)
     const matchesResult = resultFilter === 'All Results' || r.result === resultFilter
 
@@ -64,10 +65,24 @@ function AuditLogsPage() {
     }, 3000)
   }
 
+  const handleExportAll = () => {
+    downloadCSV('system_audit_logs.csv', filteredRecords, [
+      { key: 'id', label: 'Log ID' },
+      { key: 'timestamp', label: 'Timestamp' },
+      { key: 'performedBy', label: 'Performed By' },
+      { key: 'action', label: 'Action' },
+      { key: 'target', label: 'Target' },
+      { key: 'origin', label: 'Origin IP' },
+      { key: 'result', label: 'Result' },
+      { key: 'description', label: 'Description' }
+    ])
+    showToast('Đã xuất file CSV nhật ký hệ thống thành công!', 'success')
+  }
+
   // Action: Mark Reviewed
   const handleMarkReviewed = () => {
     showToast(`Đã đánh dấu nhật ký kiểm toán ${selectedLog.id} là Đã kiểm duyệt (Reviewed) thành công!`, 'success')
-    
+
     // Decrement pending review count
     setKpis((prev) => ({
       ...prev,
@@ -82,12 +97,17 @@ function AuditLogsPage() {
 
   // Action: Export Record
   const handleExportRecord = () => {
-    showToast(`Đang xuất dữ liệu chi tiết của log record ${selectedLog.id} sang định dạng JSON/CSV...`, 'success')
-  }
-
-  // Action: Export All Logs
-  const handleExportAll = () => {
-    showToast(`Đang xuất toàn bộ ${filteredRecords.length} dòng dữ liệu nhật ký kiểm toán hôm nay...`, 'success')
+    downloadCSV(`audit_log_${selectedLog.id}.csv`, [selectedLog], [
+      { key: 'id', label: 'Log ID' },
+      { key: 'timestamp', label: 'Timestamp' },
+      { key: 'performedBy', label: 'Performed By' },
+      { key: 'action', label: 'Action' },
+      { key: 'target', label: 'Target' },
+      { key: 'origin', label: 'Origin IP' },
+      { key: 'result', label: 'Result' },
+      { key: 'description', label: 'Description' }
+    ])
+    showToast(`Đã xuất dữ liệu chi tiết của log record ${selectedLog.id} thành công!`, 'success')
   }
 
   // List of filters
@@ -96,9 +116,10 @@ function AuditLogsPage() {
 
   return (
     <div className="bg-surface text-on-surface flex min-h-screen">
-      
+
       {/* Dynamic styling for glass-card */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .glass-card {
             background: white;
             border: 1px solid #e2e8f0;
@@ -138,7 +159,7 @@ function AuditLogsPage() {
 
       {/* Main Content Area */}
       <main className="flex-1 ml-[240px] flex flex-col min-w-0">
-        
+
         {/* TopNavBar */}
         <header className="h-14 flex items-center justify-between px-8 bg-white border-b border-outline-variant sticky top-0 z-30">
           <div className="flex items-center gap-8">
@@ -180,7 +201,7 @@ function AuditLogsPage() {
 
         {/* Content Canvas */}
         <div className="p-4 space-y-4 max-w-[1280px] mx-auto w-full">
-          
+
           {/* Page Header */}
           <section>
             <h2 className="font-headline-md text-headline-md text-on-surface">Audit Logs</h2>
@@ -221,30 +242,30 @@ function AuditLogsPage() {
 
           {/* Main Section */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            
+
             {/* Left: User & Role Overview */}
             <div className="lg:col-span-8 space-y-4">
-              
+
               {/* Filter controls panel */}
               <div className="glass-card rounded-lg p-4 flex flex-wrap items-center gap-3 mb-4 bg-white">
                 <div className="relative flex-1 min-w-[200px]">
-                  <input 
-                    className="w-full pl-9 pr-4 py-1.5 bg-surface-container-low border border-outline-variant rounded text-body-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none" 
-                    placeholder="Search logs..." 
+                  <input
+                    className="w-full pl-9 pr-4 py-1.5 bg-surface-container-low border border-outline-variant rounded text-body-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                    placeholder="Search logs..."
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
                   <span className="material-symbols-outlined absolute left-2.5 top-2 text-on-surface-variant text-[18px]">search</span>
                 </div>
-                <select 
+                <select
                   className="bg-surface-container-low border border-outline-variant rounded text-body-sm px-3 py-1.5 outline-none"
                   value={actionFilter}
                   onChange={(e) => setActionFilter(e.target.value)}
                 >
                   {uniqueActions.map((act) => <option key={act}>{act}</option>)}
                 </select>
-                <select 
+                <select
                   className="bg-surface-container-low border border-outline-variant rounded text-body-sm px-3 py-1.5 outline-none"
                   value={resultFilter}
                   onChange={(e) => setResultFilter(e.target.value)}
@@ -255,7 +276,7 @@ function AuditLogsPage() {
                   <span className="material-symbols-outlined text-[18px]">calendar_today</span>
                   Today
                 </button>
-                <button 
+                <button
                   className="ml-auto flex items-center gap-2 bg-primary text-white px-4 py-1.5 rounded text-body-sm font-bold active:scale-[0.98] transition-all"
                   onClick={handleExportAll}
                 >
@@ -285,8 +306,8 @@ function AuditLogsPage() {
                       {filteredRecords.map((log) => {
                         const isSelected = selectedLog.id === log.id
                         return (
-                          <tr 
-                            key={log.id} 
+                          <tr
+                            key={log.id}
                             className={`cursor-pointer transition-colors ${isSelected ? 'bg-primary/5 font-medium' : 'hover:bg-surface-container-low/30'}`}
                             onClick={() => setSelectedLogId(log.id)}
                           >
@@ -296,12 +317,11 @@ function AuditLogsPage() {
                             <td className="px-6 py-3 text-body-sm text-on-surface-variant">{log.performedBy}</td>
                             <td className="px-6 py-3 text-body-sm text-on-surface-variant">{log.origin}</td>
                             <td className="px-6 py-3">
-                              <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
-                                log.result === 'Success' ? 'bg-green-50 text-green-700' :
-                                log.result === 'Failed' ? 'bg-red-50 text-red-700' :
-                                log.result === 'Pending' ? 'bg-slate-105 text-slate-600 bg-slate-100' :
-                                'bg-primary/10 text-primary'
-                              }`}>
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${log.result === 'Success' ? 'bg-green-50 text-green-700' :
+                                  log.result === 'Failed' ? 'bg-red-50 text-red-700' :
+                                    log.result === 'Pending' ? 'bg-slate-105 text-slate-600 bg-slate-100' :
+                                      'bg-primary/10 text-primary'
+                                }`}>
                                 {log.result}
                               </span>
                             </td>
@@ -317,11 +337,11 @@ function AuditLogsPage() {
 
             {/* Right Column: Detailed Inspector */}
             <div className="lg:col-span-4 space-y-4">
-              
+
               {/* Selected log details */}
               <div className="glass-card rounded-lg p-5 bg-white">
                 <h3 className="font-body-lg font-bold text-on-surface mb-4 leading-snug">{selectedLog.action}</h3>
-                
+
                 <div className="space-y-3 mb-6 text-sm">
                   <div className="flex justify-between text-body-sm">
                     <span className="text-on-surface-variant">Log ID</span>
@@ -349,10 +369,9 @@ function AuditLogsPage() {
                   </div>
                   <div className="flex justify-between items-center text-body-sm">
                     <span className="text-on-surface-variant">Result</span>
-                    <span className={`font-bold ${
-                      selectedLog.result === 'Success' ? 'text-green-700' :
-                      selectedLog.result === 'Failed' ? 'text-red-600' : 'text-slate-600'
-                    }`}>{selectedLog.result}</span>
+                    <span className={`font-bold ${selectedLog.result === 'Success' ? 'text-green-700' :
+                        selectedLog.result === 'Failed' ? 'text-red-600' : 'text-slate-600'
+                      }`}>{selectedLog.result}</span>
                   </div>
                 </div>
 
@@ -361,19 +380,19 @@ function AuditLogsPage() {
                 </p>
 
                 <div className="space-y-2">
-                  <button 
+                  <button
                     className="w-full bg-primary hover:bg-blue-700 text-white py-2 rounded text-sm font-bold transition-all active:scale-[0.98]"
                     onClick={handleMarkReviewed}
                   >
                     Mark Reviewed
                   </button>
-                  <button 
+                  <button
                     className="w-full border border-outline-variant hover:bg-slate-50 text-on-surface py-2 rounded text-sm font-bold transition-all active:scale-[0.98]"
                     onClick={handleViewTargetUser}
                   >
                     View Target User
                   </button>
-                  <button 
+                  <button
                     className="w-full border border-outline-variant hover:bg-slate-50 text-on-surface py-2 rounded text-sm font-bold transition-all active:scale-[0.98]"
                     onClick={handleExportRecord}
                   >
