@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { ROUTE_PATHS } from '../../routes/routePaths'
+import { getDashboardByRole } from '../../routes/roleUtils'
 import { useAuth } from '../../contexts/useAuth'
 import './LoginPage.css'
 
@@ -10,16 +10,6 @@ const DEMO_USERS = [
   { role: 'Manager', email: 'manager@parking.local', password: 'Manager@123', icon: 'manage_accounts', featured: false },
   { role: 'Staff', email: 'staff@parking.local', password: 'Staff@123', icon: 'support_agent', featured: false },
 ]
-
-// Role to dashboard mapping
-const ROLE_DASHBOARD_MAP = {
-  Admin: ROUTE_PATHS.adminDashboard,
-  SystemAdmin: ROUTE_PATHS.adminDashboard,
-  Manager: ROUTE_PATHS.managerDashboard,
-  FacilityManager: ROUTE_PATHS.managerDashboard,
-}
-
-const getDashboardByRole = (role) => ROLE_DASHBOARD_MAP[role] || ROUTE_PATHS.dashboard
 
 function Icon({ children, filled = false }) {
   return (

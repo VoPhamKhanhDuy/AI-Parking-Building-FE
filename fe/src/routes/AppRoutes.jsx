@@ -2,10 +2,10 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/useAuth'
 import { ROUTE_PATHS } from './routePaths'
 import { RequireAuth, RedirectIfAuth } from './AuthGuard'
+import { getDashboardByRole } from './roleUtils'
 
 // Lazy-loaded page imports
 import LoginPage from '../pages/Login/LoginPage'
-import DashboardPage from '../pages/Dashboard/DashboardPage'
 import AdminDashboardPage from '../pages/Dashboard/AdminDashboardPage'
 import ManagerDashboardPage from '../pages/ManagerDashboard/ManagerDashboardPage'
 import ManagerProfilePage from '../pages/ManagerProfile/ManagerProfilePage'
@@ -71,21 +71,11 @@ function DashboardRedirect() {
     return <div>Loading...</div>
   }
 
-  // If no user, redirect to login
   if (!user) {
     return <Navigate to={ROUTE_PATHS.login} replace />
   }
 
-  const role = user?.role || user?.Role
-
-  if (role === 'Admin' || role === 'SystemAdmin') {
-    return <Navigate to={ROUTE_PATHS.adminDashboard} replace />
-  }
-  if (role === 'Manager') {
-    return <Navigate to={ROUTE_PATHS.managerDashboard} replace />
-  }
-  // Staff, Operator, Attendant -> Staff Dashboard (render directly)
-  return <DashboardPage />
+  return <Navigate to={getDashboardByRole(user?.role || user?.Role)} replace />
 }
 
 // Role constants

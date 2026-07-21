@@ -8,6 +8,17 @@ import {
 
 export { shapeUser } from '../../core/models/entities'
 
+function extractErrorMessage(error, fallback) {
+  const payload = error.response?.data
+  return (
+    payload?.error?.message ||
+    payload?.message ||
+    payload?.title ||
+    error.message ||
+    fallback
+  )
+}
+
 export async function getUsers() {
   try {
     const { data } = await api.get('/users')
@@ -24,7 +35,7 @@ export async function createUser(userData) {
     return { success: true, data: shapeUser(data) }
   } catch (error) {
     logger.error('Users', `Failed to create: ${error.message}`)
-    return { success: false, message: error.response?.data?.message || 'Failed to create user' }
+    return { success: false, message: extractErrorMessage(error, 'Failed to create user') }
   }
 }
 
@@ -34,7 +45,7 @@ export async function updateUser(id, userData) {
     return { success: true, data: shapeUser(data) }
   } catch (error) {
     logger.error('Users', `Failed to update: ${error.message}`)
-    return { success: false, message: error.response?.data?.message || 'Failed to update user' }
+    return { success: false, message: extractErrorMessage(error, 'Failed to update user') }
   }
 }
 
@@ -44,7 +55,7 @@ export async function deleteUser(id) {
     return { success: true }
   } catch (error) {
     logger.error('Users', `Failed to delete: ${error.message}`)
-    return { success: false, message: 'Failed to delete user' }
+    return { success: false, message: extractErrorMessage(error, 'Failed to delete user') }
   }
 }
 
@@ -54,7 +65,7 @@ export async function updateUserStatus(id, status) {
     return { success: true, data: shapeUser(data) }
   } catch (error) {
     logger.error('Users', `Failed to update status: ${error.message}`)
-    return { success: false }
+    return { success: false, message: extractErrorMessage(error, 'Failed to update user status') }
   }
 }
 

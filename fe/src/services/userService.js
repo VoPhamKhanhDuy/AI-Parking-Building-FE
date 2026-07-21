@@ -25,9 +25,10 @@ export async function getUsers() {
   }
   try {
     const { data } = await api.get('/users')
-    return { success: true, data }
+    const items = Array.isArray(data) ? data : (Array.isArray(data?.value) ? data.value : (Array.isArray(data?.items) ? data.items : []))
+    return { success: true, data: items }
   } catch (error) {
-    return { success: false, message: error.response?.data?.message || 'Failed to load users' }
+    return { success: false, message: extractErrorMessage(error, 'Failed to load users') }
   }
 }
 
@@ -41,7 +42,7 @@ export async function getUserById(id) {
     const { data } = await api.get(`/users/${id}`)
     return { success: true, data }
   } catch (error) {
-    return { success: false, message: error.response?.data?.message || 'User not found' }
+    return { success: false, message: extractErrorMessage(error, 'User not found') }
   }
 }
 
@@ -60,7 +61,7 @@ export async function createUser(userData) {
     const { data } = await api.post('/users', userData)
     return { success: true, data }
   } catch (error) {
-    return { success: false, message: error.response?.data?.message || 'Failed to create user' }
+    return { success: false, message: extractErrorMessage(error, 'Failed to create user') }
   }
 }
 
@@ -73,7 +74,7 @@ export async function updateUser(id, userData) {
     const { data } = await api.put(`/users/${id}`, userData)
     return { success: true, data }
   } catch (error) {
-    return { success: false, message: error.response?.data?.message || 'Failed to update user' }
+    return { success: false, message: extractErrorMessage(error, 'Failed to update user') }
   }
 }
 
@@ -86,7 +87,7 @@ export async function updateUserStatus(id, status) {
     const { data } = await api.patch(`/users/${id}/status`, { status })
     return { success: true, data }
   } catch (error) {
-    return { success: false, message: error.response?.data?.message || 'Failed to update user status' }
+    return { success: false, message: extractErrorMessage(error, 'Failed to update user status') }
   }
 }
 
@@ -99,7 +100,7 @@ export async function deleteUser(id) {
     await api.delete(`/users/${id}`)
     return { success: true }
   } catch (error) {
-    return { success: false, message: error.response?.data?.message || 'Failed to delete user' }
+    return { success: false, message: extractErrorMessage(error, 'Failed to delete user') }
   }
 }
 
@@ -122,8 +123,21 @@ export async function getRoles() {
     const { data } = await api.get('/roles')
     return { success: true, data }
   } catch (error) {
-    return { success: false, message: error.response?.data?.message || 'Failed to load roles' }
+    return { success: false, message: extractErrorMessage(error, 'Failed to load roles') }
   }
+}
+
+// ==================== Error helpers ====================
+
+function extractErrorMessage(error, fallback) {
+  const payload = error.response?.data
+  return (
+    payload?.error?.message ||
+    payload?.message ||
+    payload?.title ||
+    error.message ||
+    fallback
+  )
 }
 
 // ==================== Mock Data ====================

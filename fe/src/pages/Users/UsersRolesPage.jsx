@@ -14,6 +14,9 @@ import {
 import { ROUTE_PATHS } from '../../routes/routePaths'
 import '../../layouts/MainLayout.css'
 
+// Roles accepted by the backend (must match SystemRoles constants)
+const VALID_ROLES = ['Admin', 'Manager', 'Staff', 'Driver']
+
 function UsersRolesPage() {
   const navigate = useNavigate()
 
@@ -32,8 +35,9 @@ function UsersRolesPage() {
     type: '',
     inputVal1: '',
     inputVal2: '',
-    inputVal3: 'Parking Staff',
-    inputVal4: 'Entry Gate A'
+    inputVal3: 'Staff',
+    inputVal4: 'Entry Gate A',
+    inputVal5: ''
   })
 
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
@@ -90,7 +94,7 @@ function UsersRolesPage() {
   }, [])
 
   const handleAddUser = useCallback(() => {
-    setModal({ isOpen: true, type: 'addUser', inputVal1: '', inputVal2: '', inputVal3: 'Parking Staff', inputVal4: 'Entry Gate A' })
+    setModal({ isOpen: true, type: 'addUser', inputVal1: '', inputVal2: '', inputVal3: 'Staff', inputVal4: 'Entry Gate A', inputVal5: '' })
   }, [])
 
   const handleEditRole = useCallback(() => {
@@ -128,11 +132,20 @@ function UsersRolesPage() {
       const email = modal.inputVal2.trim()
       const role = modal.inputVal3.trim()
       const area = modal.inputVal4.trim()
+      const password = modal.inputVal5
       if (!name || !email) {
         showToast('Vui lòng điền đầy đủ họ tên và email.', 'error')
         return
       }
-      const result = await createUser({ fullName: name, email, role, area, password: 'Temp@123' })
+      if (!VALID_ROLES.includes(role)) {
+        showToast(`Role không hợp lệ. Chỉ chấp nhận: ${VALID_ROLES.join(', ')}.`, 'error')
+        return
+      }
+      if (!password || password.length < 6) {
+        showToast('Mật khẩu phải có ít nhất 6 ký tự.', 'error')
+        return
+      }
+      const result = await createUser({ fullName: name, email, role, area, password })
       if (result?.success) {
         setUsers((prev) => [...prev, result.data])
         setKpis((prev) => ({ ...prev, totalAccounts: (prev.totalAccounts ?? 0) + 1 }))
@@ -617,6 +630,10 @@ function UsersRolesPage() {
                   <div className="flex flex-col gap-1">
                     <label className="text-xs font-bold text-on-surface-variant uppercase">Khu vực làm việc</label>
                     <input className="w-full px-3.5 py-2 border border-outline-variant rounded text-body-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary" value={modal.inputVal4} onChange={(e) => setModal({...modal, inputVal4: e.target.value})} placeholder="Entry Gate A..." />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase">Mật khẩu khởi tạo</label>
+                    <input type="password" className="w-full px-3.5 py-2 border border-outline-variant rounded text-body-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary" value={modal.inputVal5} onChange={(e) => setModal({...modal, inputVal5: e.target.value})} placeholder="Ít nhất 6 ký tự..." autoComplete="new-password" />
                   </div>
                 </>
               )}

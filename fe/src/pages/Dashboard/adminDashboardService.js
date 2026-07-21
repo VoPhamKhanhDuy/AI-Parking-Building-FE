@@ -1,42 +1,144 @@
-/**
- * Service managing System Admin dashboard statistics, user directories, and audit activity.
- */
+import { api } from '../../core/api/apiClient'
+import logger from '../../core/utils/logger'
 
-export const mockAdminKPIs = {
-  totalAccounts: 42,
-  activeUsers: 34,
-  suspendedAccounts: 2,
-  pendingRequests: 3
+function formatCurrency(amount) {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+    minimumFractionDigits: 0,
+  }).format(amount || 0)
 }
 
-export const mockAdminUsers = [
-  { name: 'Nguyễn Văn An', email: 'an.nguyen@parking.vn', role: 'Parking Staff', area: 'Entry Gate A', status: 'Active', lastLogin: 'Today 14:20' },
-  { name: 'Trần Minh Quân', email: 'quan.tran@parking.vn', role: 'Facility Manager', area: 'Building A', status: 'Active', lastLogin: 'Today 13:45' },
-  { name: 'Lê Hoàng Nam', email: 'nam.le@parking.vn', role: 'System Admin', area: 'System Control', status: 'Active', lastLogin: 'Today 12:10' },
-  { name: 'Phạm Thu Hà', email: 'ha.pham@parking.vn', role: 'Parking Staff', area: 'Exit Gate B', status: 'Suspended', lastLogin: 'Yesterday 18:05' },
-  { name: 'Đỗ Gia Huy', email: 'huy.do@parking.vn', role: 'Parking Staff', area: 'Zone B', status: 'Pending', lastLogin: 'Not logged in' },
-  { name: 'Bùi Anh Tuấn', email: 'tuan.bui@parking.vn', role: 'Field Support', area: 'Lot D', status: 'Active', lastLogin: 'Today 09:15' },
-  { name: 'Ngô Thùy Linh', email: 'linh.ngo@parking.vn', role: 'Manager', area: 'Building C', status: 'Active', lastLogin: 'Yesterday 14:10' },
-  { name: 'Hoàng Kim Ngân', email: 'ngan.hoang@parking.vn', role: 'Field Support', area: 'Building A', status: 'Active', lastLogin: 'Today 08:30' },
-]
-
-export const mockAccountDistribution = [
-  { label: 'Parking Staff', count: 28, percentage: '66%', bgClass: 'bg-primary' },
-  { label: 'Facility Managers', count: 6, percentage: '14%', bgClass: 'bg-secondary' },
-  { label: 'System Administrators', count: 3, percentage: '7%', bgClass: 'bg-slate-500' },
-  { label: 'Support Accounts', count: 5, percentage: '12%', bgClass: 'bg-outline' },
-]
-
-export const mockSecurityOverview = {
-  loginPolicy: 'Compliance',
-  failedLogins: 4,
-  lockedAccounts: 2,
-  pendingResets: 1,
-  adminGrants: 0
+function formatTime(date) {
+  if (!date) return '—'
+  const d = new Date(date)
+  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
 }
 
-export const mockAuditActivity = [
-  { timestamp: 'Today 17:30:11', action: 'Role Authorization Updated', subject: 'Nguyễn Văn An', origin: '192.168.1.14', result: 'Success', resultClass: 'text-green-700' },
-  { timestamp: 'Today 16:45:05', action: 'Credential Reset Requested', subject: 'Phạm Thu Hà', origin: '192.168.1.14', result: 'Pending', resultClass: 'text-slate-500' },
-  { timestamp: 'Today 15:20:44', action: 'Account Suspension Issued', subject: 'Lê Minh Khoa', origin: '192.168.1.14', result: 'Success', resultClass: 'text-green-700' }
-]
+function buildMockAdminDashboard() {
+  return {
+    kpis: [
+      { label: 'Total Accounts', value: 0 },
+      { label: 'Active Users', value: 0 },
+      { label: 'Suspended', value: 0 },
+      { label: 'Total Slots', value: 524 },
+      { label: 'Occupancy Rate', value: '76%' },
+      { label: 'Today Revenue', value: '12,850,000 VND' },
+    ],
+    userOverview: {
+      totalAccounts: 0,
+      activeUsers: 0,
+      suspendedAccounts: 0,
+      pendingRequests: 2,
+    },
+    occupancy: {
+      zones: [
+        { zone: 'Zone A', vehicleType: 'Motorcycle', total: 120, occupied: 82, available: 38, occupancy: '68%', status: 'Normal' },
+        { zone: 'Zone B', vehicleType: 'Car', total: 284, occupied: 220, available: 64, occupancy: '77%', status: 'High' },
+        { zone: 'Zone C', vehicleType: 'EV Charging', total: 80, occupied: 60, available: 20, occupancy: '75%', status: 'Normal' },
+        { zone: 'Zone D', vehicleType: 'Reserved / VIP', total: 40, occupied: 30, available: 10, occupancy: '75%', status: 'Normal' },
+      ],
+      facilityBreakdown: [
+        { label: 'Floor 1', value: '82%', note: 'High occupancy' },
+        { label: 'Floor 2', value: '73%', note: 'Normal' },
+        { label: 'Floor 3', value: '34%', note: 'Maintenance monitored' },
+      ],
+    },
+    revenue: [
+      { label: 'Today Revenue', value: '12,850,000 VND' },
+      { label: 'Cash Payment', value: '3,200,000 VND' },
+      { label: 'QR Payment', value: '7,550,000 VND' },
+      { label: 'Card Payment', value: '2,100,000 VND' },
+    ],
+    adminActivity: [
+      { time: 'Today 17:30', activity: 'Updated Nguyễn Văn An role permissions', reference: 'USR-0042', performedBy: 'admin@parking.local', status: 'Success' },
+      { time: 'Today 15:20', activity: 'Suspended Lê Minh Khoa account', reference: 'USR-0017', performedBy: 'admin@parking.local', status: 'Success' },
+      { time: 'Today 09:05', activity: 'Administrator portal login', reference: 'IT Admin Workstation', performedBy: 'admin@parking.local', status: 'Success' },
+    ],
+    alerts: [
+      { text: 'Zone B occupancy is high', severity: 'High' },
+      { text: '3 pending payment cases need review', severity: 'Medium' },
+      { text: '1 lost ticket case waiting for confirmation', severity: 'Medium' },
+    ],
+  }
+}
+
+export async function getAdminDashboard() {
+  try {
+    const [usersRes, dashRes, occupancyRes] = await Promise.allSettled([
+      api.get('/users'),
+      api.get('/dashboard'),
+      api.get('/dashboard/occupancy'),
+    ])
+
+    const rawUsers = usersRes.status === 'fulfilled' ? usersRes.value.data : null
+    const users = Array.isArray(rawUsers)
+      ? rawUsers
+      : Array.isArray(rawUsers?.value)
+      ? rawUsers.value
+      : Array.isArray(rawUsers?.items)
+      ? rawUsers.items
+      : []
+
+    const dashData = dashRes.status === 'fulfilled' ? dashRes.value.data : null
+    const occupancyData = occupancyRes.status === 'fulfilled' ? occupancyRes.value.data : null
+
+    const stats = dashData?.stats || dashData?.Stats || {}
+    const userOverview = {
+      totalAccounts: users.length,
+      activeUsers: users.filter((u) => (u.status || u.Status) === 'Active').length,
+      suspendedAccounts: users.filter((u) => ['Suspended', 'Locked'].includes(u.status || u.Status)).length,
+      pendingRequests: stats.pendingPayments ?? stats.PendingPayments ?? 0,
+    }
+
+    const zones = []
+    const buildings = Array.isArray(occupancyData?.buildings) ? occupancyData.buildings : []
+    buildings.forEach((building) => {
+      const floors = building.floors || building.Floors
+      if (!Array.isArray(floors)) return
+      floors.forEach((floor) => {
+        const total = Number(floor.TotalSlots ?? floor.totalSlots ?? 0) || 0
+        const occupied = Number(floor.OccupiedSlots ?? floor.occupiedSlots ?? 0) || 0
+        const pctRaw = Number(floor.OccupancyRate ?? floor.occupancyRate ?? 0) || 0
+        zones.push({
+          zone: floor.FloorName || floor.floorName || `Floor`,
+          vehicleType: 'Mixed',
+          total,
+          occupied,
+          available: Math.max(0, total - occupied),
+          occupancy: `${Math.round(pctRaw)}%`,
+          status: pctRaw > 85 ? 'High' : 'Normal',
+        })
+      })
+    })
+
+    const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0)
+    const kpis = [
+      { label: 'Total Accounts', value: userOverview.totalAccounts },
+      { label: 'Active Users', value: userOverview.activeUsers },
+      { label: 'Suspended', value: userOverview.suspendedAccounts },
+      { label: 'Total Slots', value: num(stats.TotalSlots ?? stats.totalSlots) },
+      { label: 'Occupancy Rate', value: `${num(stats.OccupancyRate ?? stats.occupancyRate)}%` },
+      { label: 'Today Revenue', value: formatCurrency(num(stats.TodayRevenue ?? stats.todayRevenue)) },
+    ]
+
+    const mock = buildMockAdminDashboard()
+
+    return {
+      kpis,
+      userOverview,
+      occupancy: {
+        zones: zones.length ? zones : mock.occupancy.zones,
+        facilityBreakdown: mock.occupancy.facilityBreakdown,
+      },
+      revenue: Array.isArray(dashData?.revenue) && dashData.revenue.length ? dashData.revenue : mock.revenue,
+      adminActivity: mock.adminActivity,
+      alerts: Array.isArray(dashData?.alerts) && dashData.alerts.length ? dashData.alerts : mock.alerts,
+    }
+  } catch (error) {
+    logger.error('AdminDashboard', `Failed to load: ${error.message}`)
+    return buildMockAdminDashboard()
+  }
+}
+
+export { formatCurrency, formatTime }
