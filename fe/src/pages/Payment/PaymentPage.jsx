@@ -131,8 +131,14 @@ function PaymentPage() {
   const refund = async () => {
     if (!selected) return
     try {
-      const updated = await requestPaymentRefund(selected.id)
-      if (!updated) return
+      // requestPaymentRefund resolves { success, data } (or { success: false }
+      // on failure) — it never returns the payment object directly.
+      const result = await requestPaymentRefund(selected.id)
+      if (!result?.success) {
+        setMessage('Failed to process refund.')
+        return
+      }
+      const updated = result.data
       setData((current) => ({
         ...current,
         transactions: current.transactions.map((item) => item.id === updated.id ? updated : item)
@@ -202,11 +208,6 @@ function PaymentPage() {
             <option>Reservation</option>
             <option>Pass Validation</option>
           </select>
-          <select>
-            <option>Today</option>
-            <option>Last 7 days</option>
-            <option>This month</option>
-          </select>
         </section>
 
         {message && <div className="payment-message">{message}</div>}
@@ -232,7 +233,6 @@ function PaymentPage() {
                       <th>Method</th>
                       <th>Type</th>
                       <th>Status</th>
-                      <th />
                     </tr>
                   </thead>
                   <tbody>
@@ -254,11 +254,6 @@ function PaymentPage() {
                         <td>{item.method || '—'}</td>
                         <td>{item.type || '—'}</td>
                         <td><Status value={item.status} /></td>
-                        <td>
-                          <button aria-label="View payment">
-                            <span className="material-symbols-outlined">chevron_right</span>
-                          </button>
-                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -267,12 +262,6 @@ function PaymentPage() {
             )}
             <div className="payment-pagination">
               <span>Showing 1–{data.transactions.length} of {data.transactions.length}</span>
-              <div>
-                <button disabled>Prev</button>
-                <button className="active">1</button>
-                <button>2</button>
-                <button>Next</button>
-              </div>
             </div>
           </section>
 
@@ -319,7 +308,6 @@ function PaymentPage() {
         <section className="payment-activity">
           <div>
             <h2>Recent Payment Activity</h2>
-            <button>View all activity →</button>
           </div>
           {data.activities.length === 0 ? (
             <div className="payment-empty">No recent activity.</div>

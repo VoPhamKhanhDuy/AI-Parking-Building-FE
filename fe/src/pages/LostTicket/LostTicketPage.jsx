@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
 import {
+  calculateLostTicketFee,
   createLostTicketCase,
   findLostTicketSession,
   formatLostTicketMoney,
@@ -34,7 +35,7 @@ function calculateDuration(start, end = Date.now()) {
   return `${hours}h ${minutes}m`
 }
 
-const DEFAULT_PAGE = { policy: { carPenalty: 0, motorcyclePenalty: 0, baseParkingFee: 50000 }, recentCases: [] }
+const DEFAULT_PAGE = { policy: { carPenalty: 500000, motorcyclePenalty: 200000, baseParkingFee: 50000 }, recentCases: [] }
 
 function LostTicketPage() {
   const navigate = useNavigate()
@@ -51,18 +52,18 @@ function LostTicketPage() {
   const [message, setMessage] = useState('')
   const [now, setNow] = useState(() => Date.now())
 
+  // getLostTicketPageData resolves { success, data: { policy, recentCases } }
+  const loadPageData = () => getLostTicketPageData()
+    .then((result) => ({
+      policy: result?.data?.policy || DEFAULT_PAGE.policy,
+      recentCases: Array.isArray(result?.data?.recentCases) ? result.data.recentCases : []
+    }))
+    .catch(() => DEFAULT_PAGE)
+
   useEffect(() => {
     let active = true
     const id = setInterval(() => setNow(Date.now()), 60_000)
-    getLostTicketPageData()
-      .then((result) => {
-        if (!active) return
-        setPageData({
-          policy: result?.data?.policy || DEFAULT_PAGE.policy,
-          recentCases: Array.isArray(result?.data?.recentCases) ? result.data.recentCases : []
-        })
-      })
-      .catch(() => active && setPageData(DEFAULT_PAGE))
+    loadPageData().then((data) => active && setPageData(data))
     return () => { active = false; clearInterval(id) }
   }, [])
 
@@ -76,25 +77,21 @@ function LostTicketPage() {
     setCaseData(null)
     setFee(null)
     try {
+      // findLostTicketSession resolves { success, data } on success,
+      // or { success: false, message } on failure — never null.
       const result = await findLostTicketSession({ method, query: query.trim() })
-      if (result?.success && result.data) {
+      if (result?.success) {
         setSession(result.data)
         if (result.data.vehicleType && result.data.vehicleType !== '—') {
           setVehicleType(result.data.vehicleType)
         }
-        setFee(null)
-        setCaseData(null)
         setMessage('Active parking session recovered.')
       } else {
         setSession(null)
-        setFee(null)
-        setCaseData(null)
         setMessage(result?.message || 'No active session matches the supplied information.')
       }
     } catch (error) {
       setSession(null)
-      setFee(null)
-      setCaseData(null)
       setMessage(error?.message || 'Verification failed.')
     } finally {
       setAction('')
@@ -106,18 +103,13 @@ function LostTicketPage() {
     setAction('fee')
     setFee(null)
     try {
-      const policy = pageData.policy || DEFAULT_PAGE.policy
-      const isMotor = /motor/i.test(String(session.vehicleType || vehicleType || ''))
-      const parkingFee = policy.baseParkingFee || 50000
-      const penalty = isMotor ? (policy.motorcyclePenalty || 200000) : (policy.carPenalty || 500000)
-      const total = parkingFee + penalty
+      // calculateLostTicketFee needs the session object (reads vehicleType)
+      // plus the loaded policy — both were missing before.
+      const result = await calculateLostTicketFee(session, pageData.policy)
       setFee({
-        parkingFee,
-        penalty,
-        discount: 0,
-        total,
-        formattedTotal: formatLostTicketMoney(total),
-        paymentStatus: 'Pending'
+        ...result,
+        formattedTotal: result.formattedTotal || formatLostTicketMoney(result.total),
+        paymentStatus: result.paymentStatus || 'Pending'
       })
       setMessage('Fee calculated. Ready to process payment.')
     } catch (error) {
@@ -132,39 +124,37 @@ function LostTicketPage() {
     setAction('case')
     setMessage('')
     try {
-      // Create the lost ticket case first
-      const createResult = await createLostTicketCase(session, { ownerName, phone })
-      if (!createResult?.success) {
-        setMessage(createResult?.message || 'Could not create lost ticket case.')
+      // createLostTicketCase expects the session object (reads session.id),
+      // and resolves { success, data, caseId }.
+      const caseResult = await createLostTicketCase(session, { ownerName, phone })
+      if (!caseResult?.success) {
+        setMessage(caseResult?.message || 'Could not create lost ticket case.')
         return
       }
+      const createdCase = caseResult.data
+      const caseId = createdCase?.id || caseResult.caseId
+      if (!caseId) {
+        setMessage('Could not create lost ticket case.')
+        return
+      }
+      setCaseData(createdCase)
 
-      setCaseData(createResult.data)
-      const caseId = createResult.caseId || createResult.data?.id
-
-      // Process payment immediately
       const paymentResult = await processLostTicketPayment(caseId, {
         ownerName,
         phone,
-        paymentMethod: 'Cash',
-        processedByUserId: null
+        paymentMethod: 'Cash'
       })
 
-      if (paymentResult?.success) {
-        setMessage(`Case ${createResult.data?.caseCode || caseId} created and payment processed successfully. Vehicle can now exit.`)
-        setFee(prev => ({ ...prev, paymentStatus: 'Paid' }))
-        // Refresh page data
-        getLostTicketPageData().then(result => {
-          if (result?.success) {
-            setPageData({
-              policy: result.data.policy || DEFAULT_PAGE.policy,
-              recentCases: result.data.recentCases || []
-            })
-          }
-        })
-      } else {
-        setMessage(`Case created (${caseId}) but payment failed: ${paymentResult?.message || 'Unknown error'}`)
+      if (!paymentResult?.success) {
+        setMessage(paymentResult?.message || 'Case created, but payment processing failed.')
+        return
       }
+
+      setMessage(`Case ${createdCase.caseCode || caseId} created and payment processed successfully. Vehicle can now exit.`)
+      setFee((prev) => ({ ...prev, paymentStatus: paymentResult.data?.paymentStatus || 'Paid' }))
+
+      const refreshed = await loadPageData()
+      setPageData(refreshed)
     } catch (error) {
       setMessage(error?.message || 'Could not process lost ticket case.')
     } finally {
@@ -296,7 +286,7 @@ function LostTicketPage() {
                   <div><dt>Assignment</dt><dd>{session.assignmentMethod || 'Manual'}</dd></div>
                   {caseData && (
                     <>
-                      <div><dt>Case code</dt><dd>{caseData.caseCode || '—'}</dd></div>
+                      <div><dt>Case code</dt><dd>{caseData.caseCode || caseData.id || '—'}</dd></div>
                       <div><dt>Payment</dt><dd className={fee?.paymentStatus === 'Paid' ? 'active' : ''}>{fee?.paymentStatus || 'Pending'}</dd></div>
                     </>
                   )}
@@ -320,7 +310,6 @@ function LostTicketPage() {
         <section className="lost-cases">
           <div>
             <h2>Recent Lost Ticket Cases</h2>
-            <button>View full log →</button>
           </div>
           {(!Array.isArray(pageData.recentCases) || pageData.recentCases.length === 0) ? (
             <div className="lost-empty">No recent cases.</div>

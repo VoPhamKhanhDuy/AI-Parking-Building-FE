@@ -121,8 +121,14 @@ function TicketsPage() {
   const markLost = async () => {
     if (!selected) return
     try {
-      const updated = await markTicketLost(selected.id)
-      if (!updated) return
+      // markTicketLost resolves { success, data } — it never returns the
+      // ticket directly, so we must check success and read result.data.
+      const result = await markTicketLost(selected.id)
+      if (!result?.success) {
+        setMessage('Failed to mark as lost.')
+        return
+      }
+      const updated = result.data
       setData((current) => ({
         ...current,
         tickets: current.tickets.map((item) => item.id === updated.id ? updated : item)
@@ -141,7 +147,6 @@ function TicketsPage() {
     ['Monthly Tickets', data.stats?.monthlyTickets]
   ]
 
-  const actionLabel = selected && safeString(selected.status).startsWith('Pending') ? 'Review' : 'View'
   const canMarkLost = selected && selected.ticketType !== 'Lost Ticket'
 
   return (
@@ -190,16 +195,6 @@ function TicketsPage() {
             <option>Pending Payment</option>
             <option>Closed</option>
           </select>
-          <select>
-            <option>All Floors</option>
-            <option>Basement</option>
-            <option>Floor 1</option>
-            <option>Floor 2</option>
-          </select>
-          <select>
-            <option>Today</option>
-            <option>Last 7 days</option>
-          </select>
         </section>
 
         {message && <div className="tickets-message">{message}</div>}
@@ -223,7 +218,6 @@ function TicketsPage() {
                     <th>Slot</th>
                     <th>Entry time</th>
                     <th>Status</th>
-                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -241,7 +235,6 @@ function TicketsPage() {
                       <td><b>{item.slotId || '—'}</b></td>
                       <td>{formatTime(item.entryTime)}</td>
                       <td><Badge value={item.status} /></td>
-                      <td><button>{actionLabel}</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -274,7 +267,6 @@ function TicketsPage() {
                   <div><dt>Staff</dt><dd>{selected.staff || '—'}</dd></div>
                 </dl>
                 <div className="ticket-actions">
-                  <button className="primary">View session detail</button>
                   <button onClick={() => navigate(ROUTE_PATHS.vehicleExit)}>Process vehicle exit</button>
                   <button className="danger" disabled={!canMarkLost} onClick={markLost}>Mark as lost ticket</button>
                   <button onClick={() => window.print()}>Print ticket</button>
@@ -289,7 +281,6 @@ function TicketsPage() {
         <section className="ticket-activity">
           <div>
             <h2>Recent Ticket Activity</h2>
-            <button>View full activity log →</button>
           </div>
           {data.activities.length === 0 ? (
             <div className="ticket-empty">No recent activity.</div>

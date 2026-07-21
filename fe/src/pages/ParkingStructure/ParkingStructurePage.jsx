@@ -52,7 +52,20 @@ function ParkingStructurePage() {
       showNotice(`${detail.zone} maintenance request has been recorded (offline).`)
       return
     }
-    await updateZone(detail.id, { status: 'Maintenance' })
+    // updateZone resolves { success, data } (or { success: false } on
+    // failure) — it never throws, so we must check success explicitly
+    // and refresh local state on success instead of assuming it worked.
+    const result = await updateZone(detail.id, { status: 'Maintenance' })
+    if (!result?.success) {
+      showNotice(`Failed to update ${detail.zone}. Please try again.`)
+      return
+    }
+    setData((current) => ({
+      ...current,
+      zones: current.zones.map((item) =>
+        item.id === detail.id ? { ...item, status: 'Maintenance' } : item
+      )
+    }))
     showNotice(`${detail.zone} maintenance request has been recorded.`)
   }
 
@@ -121,7 +134,7 @@ function ParkingStructurePage() {
           </section>
 
           <section className="structure-card updates">
-            <header><div><h3>Recent updates</h3><p>Structure and maintenance activity</p></div><button>View all</button></header>
+            <header><div><h3>Recent updates</h3><p>Structure and maintenance activity</p></div></header>
             <div className="updates-list">{(data.recentUpdates || []).map((item, index) => <article key={item.id ?? `${item.time ?? 't'}-${item.area ?? 'a'}-${index}`}>
               <time>{item.time || '—'}</time>
               <div><strong>{item.update || '—'}</strong><span>{item.area || '—'} · {item.staff || '—'}</span></div>
