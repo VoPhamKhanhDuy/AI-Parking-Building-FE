@@ -99,7 +99,7 @@ function UsersRolesPage() {
 
   const handleEditRole = useCallback(() => {
     if (!selectedUser) return
-    setModal({ isOpen: true, type: 'editRole', inputVal1: selectedUser.role, inputVal2: '', inputVal3: '', inputVal4: '' })
+    setModal({ isOpen: true, type: 'editUser', inputVal1: selectedUser.fullName || '', inputVal2: selectedUser.email || '', inputVal3: selectedUser.role || 'Staff', inputVal4: selectedUser.area || '' })
   }, [selectedUser])
 
   const handleResetPassword = useCallback(() => {
@@ -109,12 +109,12 @@ function UsersRolesPage() {
 
   const handleSuspendAccount = useCallback(() => {
     if (!selectedUser) return
-    if (selectedUser.status === 'Suspended') {
+    if (selectedUser.status === 'Suspended' || selectedUser.status === 'Disabled') {
       updateUserStatus(selectedUser.id, 'Active')
         .then((result) => {
           if (result?.success) {
             setUsers((prev) => prev.map((u) => u.id === selectedUser.id ? { ...u, ...result.data } : u))
-            addChangeLog('Status Changed', selectedUser.fullName)
+            addChangeLog('Account Reactivated', selectedUser.fullName)
             showToast(`Đã kích hoạt lại tài khoản ${selectedUser.fullName}.`, 'success')
           } else {
             showToast(result?.message || 'Failed to reactivate.', 'error')
@@ -158,17 +158,27 @@ function UsersRolesPage() {
       }
       return
     }
-    if (modal.type === 'editRole') {
-      const newRole = modal.inputVal1.trim()
-      if (!newRole || !selectedUser) return
-      const result = await updateUser(selectedUser.id, { role: newRole })
+    if (modal.type === 'editUser') {
+      const fullName = modal.inputVal1.trim()
+      const email = modal.inputVal2.trim()
+      const role = modal.inputVal3.trim()
+      const area = modal.inputVal4.trim()
+      if (!fullName || !email) {
+        showToast('Vui lòng điền đầy đủ họ tên và email.', 'error')
+        return
+      }
+      if (!VALID_ROLES.includes(role)) {
+        showToast(`Role không hợp lệ. Chỉ chấp nhận: ${VALID_ROLES.join(', ')}.`, 'error')
+        return
+      }
+      const result = await updateUser(selectedUser.id, { fullName, email, role, area })
       if (result?.success) {
         setUsers((prev) => prev.map((u) => u.id === selectedUser.id ? { ...u, ...result.data } : u))
-        addChangeLog('Role Updated', selectedUser.fullName)
+        addChangeLog('Account Updated', selectedUser.fullName)
         setModal((m) => ({ ...m, isOpen: false }))
-        showToast(`Đã cập nhật vai trò của ${selectedUser.fullName}.`, 'success')
+        showToast(`Đã cập nhật thông tin của ${selectedUser.fullName}.`, 'success')
       } else {
-        showToast(result?.message || 'Failed to update role.', 'error')
+        showToast(result?.message || 'Failed to update user.', 'error')
       }
       return
     }
@@ -528,13 +538,13 @@ function UsersRolesPage() {
                   </button>
                   <button 
                     className={`w-full py-2 border rounded text-sm font-bold active:scale-[0.98] transition-all ${
-                      selectedUser.status === 'Suspended' 
-                        ? 'border-green-200 text-green-700 hover:bg-green-50' 
+                      selectedUser.status === 'Suspended' || selectedUser.status === 'Disabled'
+                        ? 'border-green-200 text-green-700 hover:bg-green-50'
                         : 'border-error/30 text-error hover:bg-error/5'
                     }`}
                     onClick={handleSuspendAccount}
                   >
-                    {selectedUser.status === 'Suspended' ? 'Reactivate Account' : 'Suspend Account'}
+                    {selectedUser.status === 'Suspended' || selectedUser.status === 'Disabled' ? 'Reactivate Account' : 'Suspend Account'}
                   </button>
                 </div>
               </div>
@@ -607,7 +617,7 @@ function UsersRolesPage() {
             <header className="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-slate-50">
               <h3 className="font-body-lg font-bold text-on-surface">
                 {modal.type === 'addUser' && 'Thêm thành viên hệ thống mới'}
-                {modal.type === 'editRole' && 'Cập nhật vai trò thành viên'}
+                {modal.type === 'editUser' && 'Chỉnh sửa thông tin thành viên'}
                 {modal.type === 'resetPassword' && 'Reset mật khẩu thành viên'}
                 {modal.type === 'suspendAccount' && 'Tạm khóa tài khoản'}
               </h3>
@@ -642,11 +652,27 @@ function UsersRolesPage() {
                 </>
               )}
 
-              {modal.type === 'editRole' && (
-                <div className="flex flex-col gap-1">
-                  <label className="text-xs font-bold text-on-surface-variant uppercase">Nhập vai trò mới cho {selectedUser.fullName}</label>
-                  <input className="w-full px-3.5 py-2 border border-outline-variant rounded text-body-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary" value={modal.inputVal1} onChange={(e) => setModal({...modal, inputVal1: e.target.value})} placeholder="Parking Staff..." />
-                </div>
+              {modal.type === 'editUser' && (
+                <>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase">Họ và tên</label>
+                    <input className="w-full px-3.5 py-2 border border-outline-variant rounded text-body-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary" value={modal.inputVal1} onChange={(e) => setModal({...modal, inputVal1: e.target.value})} placeholder="Họ và tên..." />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase">Email</label>
+                    <input className="w-full px-3.5 py-2 border border-outline-variant rounded text-body-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary" value={modal.inputVal2} onChange={(e) => setModal({...modal, inputVal2: e.target.value})} placeholder="email@parking.vn..." />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase">Vai trò</label>
+                    <select className="w-full px-3.5 py-2 border border-outline-variant rounded text-body-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary" value={modal.inputVal3} onChange={(e) => setModal({...modal, inputVal3: e.target.value})}>
+                      {VALID_ROLES.map((r) => <option key={r}>{r}</option>)}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="text-xs font-bold text-on-surface-variant uppercase">Khu vực làm việc</label>
+                    <input className="w-full px-3.5 py-2 border border-outline-variant rounded text-body-sm outline-none focus:ring-1 focus:ring-primary focus:border-primary" value={modal.inputVal4} onChange={(e) => setModal({...modal, inputVal4: e.target.value})} placeholder="Entry Gate A..." />
+                  </div>
+                </>
               )}
 
               {modal.type === 'resetPassword' && (
