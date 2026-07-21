@@ -51,11 +51,11 @@ export async function updateUser(id, userData) {
 
 export async function deleteUser(id) {
   try {
-    await api.delete(`/users/${id}`)
-    return { success: true }
+    const { data } = await api.patch(`/users/${id}/status`, { status: 2 })
+    return { success: true, data: shapeUser(data), softDeleted: true }
   } catch (error) {
-    logger.error('Users', `Failed to delete: ${error.message}`)
-    return { success: false, message: extractErrorMessage(error, 'Failed to delete user') }
+    logger.error('Users', `Failed to disable: ${error.message}`)
+    return { success: false, message: extractErrorMessage(error, 'Failed to disable user') }
   }
 }
 

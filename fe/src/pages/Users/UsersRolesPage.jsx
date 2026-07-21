@@ -196,14 +196,18 @@ function UsersRolesPage() {
 
   const handleDelete = useCallback(async (user) => {
     if (!user) return
-    if (!window.confirm(`Xóa tài khoản ${user.fullName}?`)) return
+    if (!window.confirm(`Vô hiệu hóa tài khoản ${user.fullName}? User sẽ không thể đăng nhập nhưng dữ liệu được giữ lại.`)) return
     const result = await deleteUser(user.id)
     if (result?.success) {
-      setUsers((prev) => prev.filter((u) => u.id !== user.id))
-      setKpis((prev) => ({ ...prev, totalAccounts: Math.max(0, (prev.totalAccounts ?? 0) - 1) }))
-      showToast(`Đã xóa ${user.fullName}.`, 'success')
+      setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, status: 'Disabled' } : u)))
+      setKpis((prev) => ({
+        ...prev,
+        totalAccounts: Math.max(0, (prev.totalAccounts ?? 0) - 1),
+        suspendedAccounts: (prev.suspendedAccounts ?? 0) + 1,
+      }))
+      showToast(`Đã vô hiệu hóa ${user.fullName}.`, 'success')
     } else {
-      showToast(result?.message || 'Failed to delete.', 'error')
+      showToast(result?.message || 'Failed to disable user.', 'error')
     }
   }, [showToast])
 
@@ -442,11 +446,11 @@ function UsersRolesPage() {
                                 edit
                               </button>
                               <button
-                                className="text-error material-symbols-outlined ml-2"
-                                title="Delete"
+                                className="text-orange-600 material-symbols-outlined ml-2"
+                                title="Disable user"
                                 onClick={(e) => { e.stopPropagation(); handleDelete(user) }}
                               >
-                                delete
+                                block
                               </button>
                             </td>
                           </tr>
