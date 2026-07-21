@@ -26,6 +26,8 @@ using ParkingSystem.Application.Reservations.Services;
     using ParkingSystem.Application.AIRecommendations.Services;
 using ParkingSystem.Application.Tickets.Interfaces;
 using ParkingSystem.Application.Tickets.Services;
+using ParkingSystem.Application.LostTickets.Interfaces;
+using ParkingSystem.Application.LostTickets.Services;
 using ParkingSystem.Application.VehicleExits.Interfaces;
 using ParkingSystem.Application.VehicleExits.Services;
 using ParkingSystem.Application.Vehicles.Interfaces;
@@ -84,6 +86,9 @@ public static class ApplicationServiceCollectionExtensions
 
         // Monthly passes
         services.AddScoped<IMonthlyPassService, MonthlyPassService>();
+
+        // Lost tickets
+        services.AddScoped<ILostTicketService, LostTicketService>();
 
         // AI recommendations
         services.AddScoped<IAIRecommendationService, AIRecommendationService>();

@@ -160,4 +160,13 @@ public static class ParkingSlotSpecifications
     /// <summary>Slots available for recommendation; stays in Application layer (EF-independent).</summary>
     public static Expression<Func<ParkingSlot, bool>> AvailableExpr(SlotStatus status = SlotStatus.Available)
         => s => s.Status == status;
+
+    public sealed class OrphanSlots : Specification<ParkingSlot>
+    {
+        public OrphanSlots()
+        {
+            AddCriteria(s => s.ParkingZoneId == Guid.Empty);
+            AddInclude(s => s.ParkingZone);
+        }
+    }
 }

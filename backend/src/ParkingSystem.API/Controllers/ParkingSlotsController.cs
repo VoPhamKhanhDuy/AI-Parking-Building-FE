@@ -59,4 +59,12 @@ public class ParkingSlotsController : ControllerBase
         await _service.DeleteAsync(id, ct);
         return NoContent();
     }
+
+    [HttpDelete("orphans")]
+    [Authorize(Roles = "Admin,Manager")]
+    public async Task<ActionResult<int>> CleanupOrphanSlots(CancellationToken ct)
+    {
+        var deleted = await _service.CleanupOrphanSlotsAsync(ct);
+        return Ok(new { deletedCount = deleted, message = $"Removed {deleted} slot(s) without a zone." });
+    }
 }

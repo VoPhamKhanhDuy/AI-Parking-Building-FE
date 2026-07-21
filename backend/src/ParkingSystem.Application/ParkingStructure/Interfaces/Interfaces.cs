@@ -37,4 +37,5 @@ public interface IParkingSlotService
     Task<IReadOnlyList<ParkingSlotDto>> CreateBulkAsync(CreateParkingSlotsBulkRequest req, CancellationToken ct = default);
     Task<ParkingSlotDto> UpdateAsync(Guid id, UpdateParkingSlotRequest req, CancellationToken ct = default);
     Task DeleteAsync(Guid id, CancellationToken ct = default);
+    Task<int> CleanupOrphanSlotsAsync(CancellationToken ct = default);
 }

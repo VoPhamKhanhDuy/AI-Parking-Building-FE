@@ -135,4 +135,17 @@ public class ParkingSlotService : IParkingSlotService
         _slots.Update(s);
         await _uow.SaveChangesAsync(ct);
     }
+
+    public async Task<int> CleanupOrphanSlotsAsync(CancellationToken ct = default)
+    {
+        var orphans = await _slots.ListAsync(new ParkingSlotSpecifications.OrphanSlots(), ct);
+        foreach (var slot in orphans)
+        {
+            slot.IsDeleted = true;
+            slot.UpdatedAt = DateTime.UtcNow;
+            _slots.Update(slot);
+        }
+        await _uow.SaveChangesAsync(ct);
+        return orphans.Count;
+    }
 }
