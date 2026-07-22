@@ -3,6 +3,8 @@ using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using ParkingSystem.Application.Auth.Interfaces;
 using ParkingSystem.Application.Auth.Services;
+using ParkingSystem.Application.CheckIn.Interfaces;
+using ParkingSystem.Application.CheckIn.Services;
 using ParkingSystem.Application.MonthlyPasses.Interfaces;
 using ParkingSystem.Application.MonthlyPasses.Services;
 using ParkingSystem.Application.Notifications.Interfaces;
@@ -92,6 +94,9 @@ public static class ApplicationServiceCollectionExtensions
 
         // AI recommendations
         services.AddScoped<IAIRecommendationService, AIRecommendationService>();
+
+        // Vehicle check-in orchestrator (atomic Vehicle + Ticket + Session + Slot + AI log)
+        services.AddScoped<ICheckInService, CheckInService>();
 
         return services;
     }

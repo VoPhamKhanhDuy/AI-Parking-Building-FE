@@ -1,6 +1,8 @@
+using Microsoft.Extensions.Logging;
 using ParkingSystem.Application.Common.Exceptions;
 using ParkingSystem.Application.Common.Interfaces;
 using ParkingSystem.Application.Common.Mappings;
+using ParkingSystem.Application.ParkingSessions.Specifications;
 using ParkingSystem.Application.Vehicles.DTOs;
 using ParkingSystem.Application.Vehicles.Interfaces;
 using ParkingSystem.Application.Vehicles.Specifications;
@@ -13,18 +15,24 @@ public class VehicleService : IVehicleService
     private readonly IRepository<Vehicle> _vehicles;
     private readonly IRepository<VehicleType> _vehicleTypes;
     private readonly IRepository<User> _users;
+    private readonly IRepository<ParkingSession> _sessions;
     private readonly IUnitOfWork _uow;
+    private readonly ILogger<VehicleService> _logger;
 
     public VehicleService(
         IRepository<Vehicle> vehicles,
         IRepository<VehicleType> vehicleTypes,
         IRepository<User> users,
-        IUnitOfWork uow)
+        IRepository<ParkingSession> sessions,
+        IUnitOfWork uow,
+        ILogger<VehicleService> logger)
     {
         _vehicles = vehicles;
         _vehicleTypes = vehicleTypes;
         _users = users;
+        _sessions = sessions;
         _uow = uow;
+        _logger = logger;
     }
 
     public async Task<IReadOnlyList<VehicleDto>> ListAsync(
@@ -56,7 +64,21 @@ public class VehicleService : IVehicleService
 
     public async Task<VehicleDto> CreateAsync(CreateVehicleRequest req, CancellationToken ct = default)
     {
+        // Validate input BEFORE opening a transaction so we fail fast on bad data.
+        if (req is null) throw new ValidationException("Request body is required.");
+        if (req.VehicleTypeId == Guid.Empty)
+        {
+            throw new ValidationException("VehicleTypeId is required.");
+        }
         var plate = VehicleSpecifications.NormalizePlate(req.LicensePlate);
+        if (string.IsNullOrWhiteSpace(plate))
+        {
+            throw new ValidationException("LicensePlate is required.");
+        }
+
+        // Serializable transaction closes the check-then-insert race when two staff
+        // register the same plate at the same instant.
+        await using var transaction = await _uow.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct);
 
         // Unique check on normalized plate.
         var existing = await _vehicles.FirstOrDefaultAsync(
@@ -67,13 +89,13 @@ public class VehicleService : IVehicleService
         }
 
         var vehicleType = await _vehicleTypes.GetByIdAsync(req.VehicleTypeId, ct)
-            ?? throw new ValidationException($"VehicleType '{req.VehicleTypeId}' does not exist.");
+            ?? throw new NotFoundException(nameof(VehicleType), req.VehicleTypeId);
 
         if (req.OwnerUserId.HasValue)
         {
             var owner = await _users.GetByIdAsync(req.OwnerUserId.Value, ct)
-                ?? throw new ValidationException($"Owner user '{req.OwnerUserId}' does not exist.");
-            _ = owner; // Suppress unused variable warning
+                ?? throw new NotFoundException(nameof(User), req.OwnerUserId.Value);
+            _ = owner;
         }
 
         var vehicle = new Vehicle
@@ -88,12 +110,18 @@ public class VehicleService : IVehicleService
 
         await _vehicles.AddAsync(vehicle, ct);
         await _uow.SaveChangesAsync(ct);
+        await _uow.CommitTransactionAsync(ct);
 
         vehicle.VehicleType = vehicleType;
         if (vehicle.OwnerUserId.HasValue)
         {
             vehicle.OwnerUser = await _users.GetByIdAsync(vehicle.OwnerUserId.Value, ct);
         }
+
+        _logger.LogInformation(
+            "Vehicle registered. VehicleId={VehicleId} Plate={Plate} VehicleTypeId={VehicleTypeId}",
+            vehicle.Id, plate, vehicleType.Id);
+
         return vehicle.ToDto();
     }
 

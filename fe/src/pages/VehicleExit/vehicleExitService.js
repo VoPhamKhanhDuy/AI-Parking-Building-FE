@@ -4,6 +4,7 @@ import {
   shapeSession,
   formatVnd,
 } from '../../core/models/entities'
+import { normalizePlate } from '../../core/utils/vehicleValidation'
 import QRCode from 'qrcode'
 
 export { shapeSession, formatVnd } from '../../core/models/entities'
@@ -30,47 +31,47 @@ export async function fetchVehicleExitData() {
 
 export async function lookupVehicleExitSession(query) {
   if (!query || !String(query).trim()) return null
+  // Send both raw and normalized so backend (which may store UPPERCASE) can match.
+  const raw = String(query).trim()
+  const normalized = normalizePlate(raw)
   try {
-    const { data } = await api.get('/vehicle-exits/lookup', { params: { query } })
-    return shapeSession(data)
+    const { data } = await api.get('/vehicle-exits/lookup', { params: { query: normalized !== raw ? normalized : raw } })
+    const shaped = shapeSession(data)
+    if (shaped) return shaped
   } catch (error) {
     logger.warn('VehicleExit', `lookup fallback: ${error.message}`)
-    const matches = await fetchActiveSessions()
-    const normalized = String(query).trim().toLowerCase()
-    return matches.sessions.find((s) =>
-      s.licensePlate?.toLowerCase() === normalized ||
-      s.ticketCode?.toLowerCase() === normalized,
-    ) || null
   }
+  // Fallback: client-side scan against the active sessions list, normalising plates.
+  const matches = await fetchActiveSessions()
+  const needle = normalized
+  return matches.sessions.find((s) =>
+    normalizePlate(s.licensePlate || '') === needle ||
+    String(s.ticketCode || '').trim().toUpperCase() === raw.toUpperCase(),
+  ) || null
 }
 
 export async function calculateExitFee(sessionId) {
-  if (!sessionId) return null
+  if (!sessionId) {
+    const error = new Error('Missing session id for fee calculation')
+    throw error
+  }
   try {
     const { data } = await api.post(`/vehicle-exits/${sessionId}/calculate-fee`)
     return {
-      baseFee: formatVnd(data.unitPricePerHour),
-      surcharge: formatVnd(data.surcharge),
+      baseFee: formatVnd(data.unitPricePerHour ?? data.UnitPricePerHour),
+      surcharge: formatVnd(data.surcharge ?? data.Surcharge),
       discount: '0 VND',
-      total: data.totalFee,
-      formattedTotal: formatVnd(data.totalFee),
-      hours: data.durationHours,
-      pricePerHour: data.unitPricePerHour,
-      overtimeSurchargePerHour: data.overtimeSurchargePerHour,
-      ruleDescription: data.pricingRuleDescription,
+      total: data.totalFee ?? data.TotalFee,
+      formattedTotal: formatVnd(data.totalFee ?? data.TotalFee),
+      hours: data.durationHours ?? data.DurationHours,
+      pricePerHour: data.unitPricePerHour ?? data.UnitPricePerHour,
+      overtimeSurchargePerHour: data.overtimeSurchargePerHour ?? data.OvertimeSurchargePerHour,
+      ruleDescription: data.pricingRuleDescription ?? data.PricingRuleDescription,
       raw: data,
     }
   } catch (error) {
-    logger.warn('VehicleExit', `calculateExitFee fallback: ${error.message}`)
-    return {
-      baseFee: '—',
-      surcharge: '0 VND',
-      discount: '0 VND',
-      total: 0,
-      formattedTotal: '0 VND',
-      hours: 0,
-      raw: null,
-    }
+    logger.error('VehicleExit', `calculateExitFee failed: ${error.message}`)
+    throw new Error(extractErrorMessage(error, 'Failed to calculate exit fee'), { cause: error })
   }
 }
 
@@ -171,13 +172,13 @@ async function shapeFromPaymentDto(data) {
 }
 
 export async function processVehicleExit(sessionId) {
-  if (!sessionId) return null
+  if (!sessionId) throw new Error('Missing session id for vehicle exit')
   try {
     const { data } = await api.post(`/vehicle-exits/${sessionId}/complete`)
     return data
   } catch (error) {
-    logger.warn('VehicleExit', `processVehicleExit fallback: ${error.message}`)
-    return { id: sessionId, status: 'Completed', exitTime: new Date().toISOString() }
+    logger.error('VehicleExit', `processVehicleExit failed: ${error.message}`)
+    throw new Error(extractErrorMessage(error, 'Failed to complete vehicle exit'), { cause: error })
   }
 }
 

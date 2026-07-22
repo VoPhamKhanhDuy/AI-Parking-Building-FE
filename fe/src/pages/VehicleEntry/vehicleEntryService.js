@@ -3,7 +3,6 @@ import logger from '../../core/utils/logger'
 import {
   sanitizeParams,
   stripUnsupportedParams,
-  safeArray,
   unwrapList,
   shapeVehicle,
 } from '../../core/models/entities'
@@ -106,7 +105,13 @@ export async function checkMonthlyPass(licensePlate) {
 }
 
 export async function getVehicleTypes() {
-  return { success: true, data: safeArray([]) }
+  try {
+    const { data } = await api.get('/vehicles/types')
+    return { success: true, data: unwrapList(data).map((t) => ({ id: t.id || t.Id, name: t.name || t.Name, category: t.category ?? t.Category })).filter(Boolean) }
+  } catch (error) {
+    logger.error('VehicleEntry', `Failed to get vehicle types: ${error.message}`)
+    return { success: false, data: [], message: error.message }
+  }
 }
 
 export async function startParkingSession(payload) {
@@ -117,8 +122,9 @@ export async function startParkingSession(payload) {
     const { data } = await api.post('/parking-sessions', body)
     return { success: true, data }
   } catch (error) {
-    logger.error('VehicleEntry', `Start session failed: ${error.response?.data?.message || error.message}`)
-    return { success: false, message: error.response?.data?.message || 'Failed to start session' }
+    const message = error.response?.data?.message || error.response?.data?.Message || error.message || 'Failed to start session'
+    logger.error('VehicleEntry', `Start session failed: ${message}`)
+    return { success: false, message }
   }
 }
 

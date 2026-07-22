@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Microsoft.Extensions.Logging;
 using ParkingSystem.Application.Common.Exceptions;
 using ParkingSystem.Application.Common.Extensions;
 using ParkingSystem.Application.Common.Interfaces;
@@ -26,6 +27,7 @@ public class ParkingTicketService : IParkingTicketService
     private readonly IRepository<ParkingSlot> _slots;
     private readonly IUnitOfWork _uow;
     private readonly TimeProvider _clock;
+    private readonly ILogger<ParkingTicketService> _logger;
 
     public ParkingTicketService(
         IRepository<ParkingTicket> tickets,
@@ -34,7 +36,8 @@ public class ParkingTicketService : IParkingTicketService
         IRepository<ParkingSession> sessions,
         IRepository<ParkingSlot> slots,
         IUnitOfWork uow,
-        TimeProvider clock)
+        TimeProvider clock,
+        ILogger<ParkingTicketService> logger)
     {
         _tickets = tickets;
         _vehicles = vehicles;
@@ -43,6 +46,7 @@ public class ParkingTicketService : IParkingTicketService
         _slots = slots;
         _uow = uow;
         _clock = clock;
+        _logger = logger;
     }
 
     public async Task<IReadOnlyList<ParkingTicketDto>> ListAsync(
@@ -79,10 +83,33 @@ public class ParkingTicketService : IParkingTicketService
 
     public async Task<ParkingTicketDto> IssueAsync(IssueTicketRequest req, CancellationToken ct = default)
     {
+        if (req.VehicleId == Guid.Empty)
+        {
+            throw new ValidationException("VehicleId is required.");
+        }
+
+        // Use a Serializable transaction so the "no-active-session + no-open-ticket" checks
+        // and the ticket insert happen atomically. Prevents two attendants from issuing
+        // tickets to the same vehicle simultaneously.
+        await using var transaction = await _uow.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct);
+
         var vehicle = await _vehicles.FirstOrDefaultAsync(
             new VehicleSpecifications.ByIdWithDetails(req.VehicleId), ct)
-            ?? throw new ValidationException($"Vehicle '{req.VehicleId}' does not exist.");
+            ?? throw new NotFoundException(nameof(Vehicle), req.VehicleId);
 
+        // 1. Block if the vehicle already has an active parking session
+        //    (catches the case where a staff member issues a NEW ticket while another
+        //    attendant is mid-check-in for the same vehicle).
+        var activeSession = await _sessions.FirstOrDefaultAsync(
+            new ParkingSessionSpecifications.ActiveByVehicle(req.VehicleId), ct);
+        if (activeSession is not null)
+        {
+            throw new ConflictException(
+                $"Vehicle '{vehicle.LicensePlate}' is already checked in (session '{activeSession.Id}'). " +
+                "End the active session before issuing a new ticket.");
+        }
+
+        // 2. Block if the vehicle already has an Issued/Active ticket
         var openTicket = await _tickets.FirstOrDefaultAsync(
             new ParkingTicketSpecifications.ActiveByVehicle(req.VehicleId), ct);
         if (openTicket is not null)
@@ -103,13 +130,21 @@ public class ParkingTicketService : IParkingTicketService
 
         await _tickets.AddAsync(ticket, ct);
         await _uow.SaveChangesAsync(ct);
+        await _uow.CommitTransactionAsync(ct);
 
         ticket.Vehicle = vehicle;
+
+        _logger.LogInformation(
+            "Parking ticket issued. TicketId={TicketId} TicketCode={TicketCode} VehicleId={VehicleId} Plate={Plate} Type={Type}",
+            ticket.Id, ticket.TicketCode, vehicle.Id, vehicle.LicensePlate, ticket.Type);
+
         return ticket.ToDto();
     }
 
     public async Task<ParkingTicketDto> CheckInAsync(Guid id, DateTime? entryTime, CancellationToken ct = default)
     {
+        await using var transaction = await _uow.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct);
+
         var ticket = await _tickets.FirstOrDefaultAsync(
             new ParkingTicketSpecifications.ByIdWithDetails(id), ct)
             ?? throw new NotFoundException(nameof(ParkingTicket), id);
@@ -133,6 +168,12 @@ public class ParkingTicketService : IParkingTicketService
         ticket.UpdatedAt = _clock.GetUtcNow().UtcDateTime;
         _tickets.Update(ticket);
         await _uow.SaveChangesAsync(ct);
+        await _uow.CommitTransactionAsync(ct);
+
+        _logger.LogInformation(
+            "Ticket flagged Active. TicketId={TicketId} TicketCode={TicketCode} EntryTime={EntryTime:o}",
+            ticket.Id, ticket.TicketCode, ticket.EntryTime);
+
         return ticket.ToDto();
     }
 
@@ -193,6 +234,8 @@ public class ParkingTicketService : IParkingTicketService
 
     public async Task<ParkingTicketDto> CancelAsync(Guid id, CancelTicketRequest req, CancellationToken ct = default)
     {
+        await using var transaction = await _uow.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct);
+
         var ticket = await _tickets.FirstOrDefaultAsync(
             new ParkingTicketSpecifications.ByIdWithDetails(id), ct)
             ?? throw new NotFoundException(nameof(ParkingTicket), id);
@@ -232,6 +275,12 @@ public class ParkingTicketService : IParkingTicketService
         }
 
         await _uow.SaveChangesAsync(ct);
+        await _uow.CommitTransactionAsync(ct);
+
+        _logger.LogInformation(
+            "Parking ticket cancelled. TicketId={TicketId} TicketCode={TicketCode} CascadeSessionCancelled={Cascade}",
+            ticket.Id, ticket.TicketCode, activeSession != null);
+
         return ticket.ToDto();
     }
 

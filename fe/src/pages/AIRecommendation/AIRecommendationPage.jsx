@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
 import { buildRecommendationPayload, getSlotRecommendation } from './aiRecommendationService'
+import { assignParkingSlot } from '../VehicleEntry/manualSlotService'
 import './AIRecommendationPage.css'
 
 const DEFAULT_ENTRY = { licensePlate: '51A-12345', vehicleType: 'Car', ticketType: 'Normal', checkStatus: 'Existing Vehicle', plateSource: 'Camera Scan' }
@@ -16,7 +17,9 @@ function AIRecommendationPage() {
   const [details, setDetails] = useState(null)
   const [selectedSlotId, setSelectedSlotId] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [submitError, setSubmitError] = useState('')
 
   const { licensePlate, vehicleType, ticketType } = entry
 
@@ -51,16 +54,47 @@ function AIRecommendationPage() {
 
   const goBack = () => navigate(ROUTE_PATHS.vehicleEntry, { state: entry })
   const openManualMap = () => navigate(ROUTE_PATHS.manualSlot, { state: entry })
-  const confirmSlot = () => navigate(ROUTE_PATHS.checkinSuccess, {
-    state: {
-      ...entry,
-      selectedSlotId,
-      ticketCode: `TCK-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
-      entryTime: new Date().toISOString(),
-      method: 'AI Recommended',
-      matchScore: `${details.score}%`
+  const confirmSlot = async () => {
+    if (submitting) return
+    const slot = [...previewSlots, ...alternatives].find((s) => s.id === selectedSlotId)
+    const slotId = slot?.id || selectedSlotId
+    const slotCode = slot?.slotCode || selectedSlotId
+    if (!slotId) {
+      setSubmitError('Vui lòng chọn một vị trí đỗ xe.')
+      return
     }
-  })
+
+    setSubmitting(true)
+    setSubmitError('')
+    try {
+      const assignment = await assignParkingSlot({
+        slotId,
+        licensePlate: entry.licensePlate,
+        vehicleType: entry.vehicleType,
+        ticketType: entry.ticketType,
+      })
+      if (!assignment.success) {
+        setSubmitError(assignment.message || 'Không thể gán vị trí này.')
+        return
+      }
+      navigate(ROUTE_PATHS.checkinSuccess, {
+        state: {
+          ...entry,
+          selectedSlotId: slotCode,
+          assignedSlot: slotCode,
+          ticketCode: assignment.data?.ticketCode,
+          entryTime: assignment.data?.entryTime || new Date().toISOString(),
+          method: 'AI Recommended',
+          matchScore: `${details.score}%`,
+          sessionId: assignment.data?.sessionId,
+        }
+      })
+    } catch (requestError) {
+      setSubmitError(requestError?.response?.data?.message || requestError?.message || 'Không thể gán vị trí này.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   const chooseNextAlternative = () => {
     if (!alternatives.length) return
@@ -130,7 +164,7 @@ function AIRecommendationPage() {
 
           <aside className="ai-decision-card">
             <h2>Staff Decision</h2>
-            <div className="ai-decision-body"><dl><div><dt>Recommendation:</dt><dd>{selectedSlotId ? previewSlots.find((s) => s.id === selectedSlotId)?.slotCode || selectedSlotId : '—'}</dd></div><div><dt>Status:</dt><dd className="pending">Pending</dd></div><div><dt>Mode:</dt><dd>AI-assisted</dd></div></dl><div className="ai-decision-actions"><button className="primary" onClick={confirmSlot}>Confirm Recommended Slot</button><button onClick={chooseNextAlternative}>Choose Alternative</button><button onClick={openManualMap}>Manual Slot Selection</button></div></div>
+            <div className="ai-decision-body"><dl><div><dt>Recommendation:</dt><dd>{selectedSlotId ? previewSlots.find((s) => s.id === selectedSlotId)?.slotCode || selectedSlotId : '—'}</dd></div><div><dt>Status:</dt><dd className="pending">Pending</dd></div><div><dt>Mode:</dt><dd>AI-assisted</dd></div></dl>{submitError && <div className="ai-submit-error" role="alert"><span className="material-symbols-outlined">error</span>{submitError}</div>}<div className="ai-decision-actions"><button className="primary" onClick={confirmSlot} disabled={submitting}>{submitting ? <><span className="manual-spinner small" />Đang gán…</> : 'Confirm Recommended Slot'}</button><button onClick={chooseNextAlternative} disabled={submitting}>Choose Alternative</button><button onClick={openManualMap} disabled={submitting}>Manual Slot Selection</button></div></div>
             <div className="ai-decision-footer"><button onClick={goBack}>Back to Vehicle Entry</button></div>
           </aside>
         </div>

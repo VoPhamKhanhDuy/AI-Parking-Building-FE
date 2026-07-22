@@ -522,7 +522,7 @@ export function shapeStats(raw) {
   return { ...FALLBACK_STATS, ...normalizeFields(raw, STATS_SCHEMA) }
 }
 
-export function shapeActivity(raw, index = 0) {
+export function shapeActivity(raw) {
   if (!raw || typeof raw !== 'object') return null
   const n = normalizeFields(raw, ACTIVITY_SCHEMA)
   return {
@@ -960,18 +960,29 @@ export function normalizePaymentDto(raw) {
 
 export function shapeSession(dto) {
   if (!dto) return null
+  // Backend .NET returns PascalCase; fall back to camelCase for mock/older shapes.
+  const id = dto.id ?? dto.Id
+  const ticketCode = dto.ticketCode ?? dto.TicketCode
+  const ticketId = dto.ticketId ?? dto.TicketId
+  const licensePlate = dto.licensePlate ?? dto.LicensePlate
+  const vehicleType = dto.vehicleType ?? dto.VehicleType ?? ''
+  const slotCode = dto.slotCode ?? dto.SlotCode
+  const slotId = dto.slotId ?? dto.SlotId
+  const entryTime = dto.entryTime ?? dto.EntryTime
+  const status = dto.status ?? dto.Status
+  const paymentStatus = dto.paymentStatus ?? dto.PaymentStatus
   return {
-    id: dto.id,
-    ticketCode: dto.ticketCode,
-    ticketId: dto.ticketId,
-    licensePlate: dto.licensePlate,
-    vehiclePlate: dto.licensePlate,
-    vehicleType: dto.vehicleType || '',
-    slotCode: dto.slotCode,
-    slotId: dto.slotId,
-    entryTime: dto.entryTime,
-    status: dto.status,
-    paymentStatus: dto.paymentStatus,
+    id,
+    ticketCode,
+    ticketId,
+    licensePlate,
+    vehiclePlate: licensePlate,
+    vehicleType,
+    slotCode,
+    slotId,
+    entryTime,
+    status,
+    paymentStatus,
     paymentMethod: 'QR Payment',
   }
 }

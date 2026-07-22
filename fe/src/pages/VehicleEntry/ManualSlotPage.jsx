@@ -4,6 +4,7 @@ import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
 import { getBuildings, getFloors, getZones, getSlotsByZone } from '../ParkingMap/parkingMapService'
 import { assignParkingSlot, isCompatible } from './manualSlotService'
+import { validateLicensePlate } from '../../core/utils/vehicleValidation'
 import './ManualSlotPage.css'
 
 function getFloorStats(floor) {
@@ -56,9 +57,9 @@ const DEFAULT_ENTRY = {
 
 const ZONES = [
   { value: 'all', label: 'All zones' },
-  { value: 'motorcycle', label: 'Zone A · Motorcycle' },
-  { value: 'car', label: 'Zone B · Car' },
-  { value: 'ev', label: 'Zone C · EV charging' },
+  { value: 'motorcycle', label: 'Zone A | Motorcycle' },
+  { value: 'car', label: 'Zone B | Car' },
+  { value: 'ev', label: 'Zone C | EV charging' },
 ]
 
 const STATUS_META = {
@@ -92,6 +93,7 @@ function ManualSlotPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [plateError, setPlateError] = useState('')
 
   useEffect(() => {
     let active = true
@@ -118,15 +120,20 @@ function ManualSlotPage() {
   }
 
   const confirmSelection = async () => {
-    if (!selectedSlot) return setError('Please select an available, compatible slot.')
-    setSubmitting(true); setError('')
+    const plateValidation = validateLicensePlate(entry.licensePlate)
+    if (plateValidation) {
+      setPlateError(plateValidation)
+      return
+    }
+    if (!selectedSlot) return setError('Vui lòng chọn một vị trí trống phù hợp.')
+    setSubmitting(true); setError(''); setPlateError('')
     try {
       const assignment = await assignParkingSlot({ slotId: selectedSlot.id, licensePlate: entry.licensePlate, vehicleType: entry.vehicleType, ticketType: entry.ticketType })
       if (!assignment.success) {
         setError(assignment.message || 'Could not assign this slot.')
         return
       }
-      navigate(ROUTE_PATHS.checkinSuccess, { state: { ...entry, selectedSlotId: selectedSlot.id, ticketCode: assignment.data.ticketCode, entryTime: assignment.data.entryTime, method: 'Manual Selection', matchScore: 'Staff selected', sessionId: assignment.data.sessionId } })
+      navigate(ROUTE_PATHS.checkinSuccess, { state: { ...entry, selectedSlotId: selectedSlot.slotCode, ticketCode: assignment.data.ticketCode, entryTime: assignment.data.entryTime, method: 'Manual Selection', matchScore: 'Staff selected', sessionId: assignment.data.sessionId, assignedSlot: selectedSlot.slotCode } })
     } catch (requestError) {
       const message = typeof requestError.response?.data?.message === 'string'
         ? requestError.response.data.message
@@ -156,6 +163,7 @@ function ManualSlotPage() {
           {floors.map((floor) => { const stats = getFloorStats(floor); return <button key={floor.id} role="tab" aria-selected={floor.id === floorId} onClick={() => chooseFloor(floor.id)}><span>{floor.name}</span><small>{stats.occupancy}% occupied</small></button> })}
         </div>
 
+        {plateError && <div className="manual-alert plate-error" role="alert"><span className="material-symbols-outlined">warning</span>{plateError}</div>}
         {error && <div className="manual-alert" role="alert"><span className="material-symbols-outlined">error</span>{error}</div>}
 
         <div className="slot-workspace">
@@ -182,9 +190,9 @@ function ManualSlotPage() {
           </section>
 
           <aside className="slot-details">
-            <div className="details-header"><div><small>Selected slot</small><h2>{selectedSlot?.id || 'None'}</h2></div>{selectedSlot && <span>Available</span>}</div>
+            <div className="details-header"><div><small>Selected slot</small><h2>{selectedSlot?.slotCode || selectedSlot?.id || 'None'}</h2></div>{selectedSlot && <span>Available</span>}</div>
             {selectedSlot ? <div className="details-body">
-              <div className="slot-visual"><span>Zone {selectedSlot.zone}</span><strong>{selectedSlot.id}</strong><small>{selectedSlot.floor}</small></div>
+              <div className="slot-visual"><span>Zone {selectedSlot.zone}</span><strong>{selectedSlot.slotCode || selectedSlot.id}</strong><small>{selectedSlot.floor}</small></div>
               <dl><div><dt>Floor</dt><dd>{selectedSlot.floor}</dd></div><div><dt>Status</dt><dd className="available-text"><i />Available</dd></div><div><dt>Space type</dt><dd>{selectedSlot.type === 'ev' ? 'EV charging' : selectedSlot.type}</dd></div><div><dt>Vehicle match</dt><dd>Compatible</dd></div><div><dt>Reservation conflict</dt><dd>None</dd></div><div><dt>Distance to exit</dt><dd>{selectedSlot.distanceToExit} m</dd></div><div><dt>Distance to elevator</dt><dd>{selectedSlot.distanceToElevator} m</dd></div></dl>
               <p className="operator-note"><span className="material-symbols-outlined">info</span>Confirm the space only after checking the live status and vehicle compatibility.</p>
             </div> : <div className="empty-selection"><span className="material-symbols-outlined">touch_app</span><h3>Select a parking space</h3><p>Available and compatible spaces can be selected from the map.</p></div>}

@@ -32,11 +32,21 @@ export function buildRecommendationPayload(recommended, vehicle) {
   }
 }
 
+// Helper to convert UUID-like slot codes to readable format
+function normalizeSlotCode(slotCode, defaultPrefix = 'Slot') {
+  if (!slotCode) return '—'
+  // If it looks like a UUID (36 chars with dashes), convert to readable format
+  if (slotCode.length === 36 && slotCode.includes('-')) {
+    return `${defaultPrefix}-${slotCode.slice(-4).toUpperCase()}`
+  }
+  return slotCode
+}
+
 function buildPreviewGrid(recommended) {
   const recommendedCard = recommended?.recommendedSlotId
     ? [{
         id: recommended.recommendedSlotId,
-        slotCode: recommended.recommendedSlotCode,
+        slotCode: normalizeSlotCode(recommended.recommendedSlotCode, 'C'),
         type: 'Car',
         score: safeNumber(recommended.score, 90),
         status: 'Recommended',
@@ -48,7 +58,7 @@ function buildPreviewGrid(recommended) {
 
   const alternativeCards = (recommended?.alternatives || []).slice(0, 5).map((alt) => ({
     id: alt.slotId,
-    slotCode: alt.slotCode,
+    slotCode: normalizeSlotCode(alt.slotCode, 'C'),
     type: 'Car',
     score: safeNumber(alt.score, 75),
     status: 'Alternative',
@@ -72,7 +82,7 @@ function buildAlternativeList(recommended) {
   if (!recommended) return []
   const alts = (recommended.alternatives || []).map((a) => ({
     id: a.slotId,
-    slotCode: a.slotCode,
+    slotCode: normalizeSlotCode(a.slotCode, 'C'),
     type: 'Car',
     score: safeNumber(a.score, 75),
     reason: a.reason,
@@ -80,7 +90,7 @@ function buildAlternativeList(recommended) {
   if (recommended.recommendedSlotId) {
     alts.unshift({
       id: recommended.recommendedSlotId,
-      slotCode: recommended.recommendedSlotCode,
+      slotCode: normalizeSlotCode(recommended.recommendedSlotCode, 'C'),
       type: 'Car',
       score: safeNumber(recommended.score, 90),
       reason: 'Best match',
@@ -90,6 +100,16 @@ function buildAlternativeList(recommended) {
 }
 
 function buildDetails(recommended, vehicle) {
+  // Helper to detect and convert UUID-like strings to readable slot codes
+  const normalizeSlotId = (slotCode, fallback) => {
+    if (!slotCode) return fallback
+    // If it looks like a UUID (36 chars with dashes), convert to readable format
+    if (slotCode.length === 36 && slotCode.includes('-')) {
+      return fallback || `Slot ${slotCode.slice(-6)}`
+    }
+    return slotCode
+  }
+
   if (!recommended) {
     return {
       score: 92,
@@ -108,10 +128,11 @@ function buildDetails(recommended, vehicle) {
       reason: 'Optimal based on vehicle type and availability',
     }
   }
+  const readableSlotCode = normalizeSlotId(recommended.recommendedSlotCode, '—')
   return {
     score: safeNumber(recommended.score, 0),
-    slotId: recommended.recommendedSlotCode || '—',
-    slot: recommended.recommendedSlotCode || '—',
+    slotId: readableSlotCode,
+    slot: readableSlotCode,
     floor: recommended.recommendedFloorName || '—',
     zone: recommended.recommendedZoneName || '—',
     status: recommended.recommendedSlotId ? 'Recommended' : 'Unavailable',

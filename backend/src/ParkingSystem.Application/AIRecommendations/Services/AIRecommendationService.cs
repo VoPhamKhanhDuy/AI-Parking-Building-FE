@@ -71,6 +71,12 @@ public class AIRecommendationService : IAIRecommendationService
             }
         }
 
+        _logger.LogInformation(
+            "AI recommendation produced. VehicleId={VehicleId} Plate={Plate} Category={Category} RecommendedSlotId={RecommendedSlotId} Alternatives={AltCount} LatencyMs={LatencyMs} Unavailable={Unavailable}",
+            vehicle?.Id, req.LicensePlate, req.VehicleCategory, payload.RecommendedSlotId,
+            payload.Alternatives.Count, stopwatch.ElapsedMilliseconds,
+            payload.Alternatives.Count == 0 && candidates.Count == 0);
+
         return payload;
     }
 

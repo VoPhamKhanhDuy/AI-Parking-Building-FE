@@ -6,10 +6,11 @@ import {
   checkMonthlyPass,
   checkReservation,
   getVehicleTypes,
-  startParkingSession,
   getFormattedCurrentTime
 } from './vehicleEntryService'
+import { assignParkingSlot } from './manualSlotService'
 import { ROUTE_PATHS } from '../../routes/routePaths'
+import { validateLicensePlate, normalizePlate } from '../../core/utils/vehicleValidation'
 import './VehicleEntryPage.css'
 
 // Preset scan data for dev demo
@@ -46,6 +47,7 @@ function VehicleEntryPage() {
   const [aiRecommendation, setAiRecommendation] = useState(null)
   const [selectedSlot, setSelectedSlot] = useState(null)
   const [notification, setNotification] = useState(null)
+  const [validationError, setValidationError] = useState('')
 
   // Use ref to track if location state was initialized (only on mount)
   const initialized = useRef(false)
@@ -96,14 +98,16 @@ function VehicleEntryPage() {
 
   // Check Info handler
   const handleCheckInfo = useCallback(async () => {
-    if (!licensePlate.trim()) {
-      setNotification({ type: 'warning', message: 'Vui long nhap bien so xe!' })
+    const plateError = validateLicensePlate(licensePlate)
+    if (plateError) {
+      setValidationError(plateError)
       return
     }
 
-    const cleanPlate = licensePlate.toUpperCase().trim()
+    const cleanPlate = normalizePlate(licensePlate)
     setLoading(true)
     setNotification(null)
+    setValidationError('')
 
     try {
       // Check vehicle in system
@@ -145,49 +149,57 @@ function VehicleEntryPage() {
 
   // Navigate to AI Recommendation
   const handleRequestAIRecommendation = useCallback(() => {
-    if (!licensePlate.trim()) {
-      setNotification({ type: 'warning', message: 'Vui long nhap bien so xe truoc khi yeu cau AI!' })
+    const plateError = validateLicensePlate(licensePlate)
+    if (plateError) {
+      setValidationError(plateError)
       return
     }
     navigate(ROUTE_PATHS.aiRecommendation, {
-      state: { licensePlate, vehicleType, ticketType, checkStatus, plateSource }
+      state: { licensePlate: normalizePlate(licensePlate), vehicleType, ticketType, checkStatus, plateSource }
     })
   }, [licensePlate, vehicleType, ticketType, checkStatus, plateSource, navigate])
 
   // Navigate to Manual Slot
   const handleManualSlotClick = useCallback(() => {
+    const plateError = validateLicensePlate(licensePlate)
+    if (plateError) {
+      setValidationError(plateError)
+      return
+    }
     navigate(ROUTE_PATHS.manualSlot, {
-      state: { licensePlate, vehicleType, ticketType, checkStatus, plateSource }
+      state: { licensePlate: normalizePlate(licensePlate), vehicleType, ticketType, checkStatus, plateSource }
     })
   }, [licensePlate, vehicleType, ticketType, checkStatus, plateSource, navigate])
 
   // Confirm Entry
   const handleConfirmEntry = useCallback(async () => {
-    if (!licensePlate.trim()) {
-      setNotification({ type: 'warning', message: 'Vui long nhap bien so xe!' })
+    const plateError = validateLicensePlate(licensePlate)
+    if (plateError) {
+      setValidationError(plateError)
       return
     }
     if (!selectedSlot) {
-      setNotification({ type: 'warning', message: 'Vui long chi dinh vi tri do xe!' })
+      setNotification({ type: 'warning', message: 'Vui lòng chọn vị trí đỗ xe!' })
       return
     }
 
     setLoading(true)
     setNotification(null)
+    const cleanPlate = normalizePlate(licensePlate)
 
     try {
-      const result = await startParkingSession(
-        licensePlate.toUpperCase().trim(),
+      const result = await assignParkingSlot({
+        slotId: selectedSlot.id,
+        licensePlate: cleanPlate,
         vehicleType,
         ticketType,
-        selectedSlot.id
-      )
+      })
 
       if (result.success && result.data) {
         const newEntry = {
-          id: result.data.id,
+          id: result.data.sessionId,
           time: getFormattedCurrentTime(),
-          licensePlate: licensePlate.toUpperCase().trim(),
+          licensePlate: cleanPlate,
           vehicleType,
           ticketType,
           assignedSlot: selectedSlot.slotCode,
@@ -199,24 +211,24 @@ function VehicleEntryPage() {
 
         navigate(ROUTE_PATHS.checkinSuccess, {
           state: {
-            licensePlate: licensePlate.toUpperCase().trim(),
+            licensePlate: cleanPlate,
             vehicleType,
             ticketType: ticketType.split(' ')[0],
             checkStatus,
             plateSource,
             selectedSlotId: selectedSlot.slotCode,
-            ticketCode: result.data.ticketCode || result.data.TicketCode,
-            entryTime: result.data.entryTime || result.data.EntryTime || new Date().toISOString(),
+            ticketCode: result.data.ticketCode,
+            entryTime: result.data.entryTime || new Date().toISOString(),
             method: aiRecommendation ? 'AI Recommended' : 'Manual Selection',
             matchScore: aiRecommendation ? `${aiRecommendation.score}%` : '90%',
-            sessionId: result.data.id
+            sessionId: result.data.sessionId
           }
         })
       } else {
-        setNotification({ type: 'error', message: result.message || 'Check-in failed. Please try again.' })
+        setNotification({ type: 'error', message: result.message || 'Check-in thất bại. Vui lòng thử lại.' })
       }
     } catch {
-      setNotification({ type: 'error', message: 'Loi khi check-in. Vui long thu lai.' })
+      setNotification({ type: 'error', message: 'Lỗi khi check-in. Vui lòng thử lại.' })
     } finally {
       setLoading(false)
     }
@@ -229,7 +241,8 @@ function VehicleEntryPage() {
     setCheckStatus('Idle')
     setSelectedSlot(null)
     setAiRecommendation(null)
-    setNotification({ type: 'info', message: 'Da xoa trang form.' })
+    setValidationError('')
+    setNotification({ type: 'info', message: 'Đã xóa trắng form.' })
   }, [])
 
   // Preset Scan
@@ -286,6 +299,8 @@ function VehicleEntryPage() {
               onManualSlot={handleManualSlotClick}
               onRequestAI={handleRequestAIRecommendation}
               onConfirmEntry={handleConfirmEntry}
+              validationError={validationError}
+              setValidationError={setValidationError}
             />
           </div>
 
@@ -380,7 +395,8 @@ function EntryForm({
   selectedSlot, onClearSlot,
   loading,
   onCheckInfo, onClearForm,
-  onManualSlot, onRequestAI, onConfirmEntry
+  onManualSlot, onRequestAI, onConfirmEntry,
+  validationError, setValidationError
 }) {
   return (
     <div className="entry-form-ui bg-surface-container-lowest rounded-xl shadow-[0_4px_12px_rgba(15,23,42,0.05)] border border-outline-variant/30 p-6 relative overflow-hidden h-full">
@@ -419,13 +435,14 @@ function EntryForm({
               <input
                 type="text"
                 id="license-plate"
-                className="bg-surface border border-outline-variant text-on-surface text-body-md rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5 uppercase font-mono-label font-bold tracking-wider"
+                className={`bg-surface border text-on-surface text-body-md rounded-lg focus:ring-primary focus:border-primary block w-full pl-10 p-2.5 uppercase font-mono-label font-bold tracking-wider ${validationError ? 'border-red-500 border-2' : 'border-outline-variant'}`}
                 placeholder="51A-12345"
                 value={licensePlate}
-                onChange={(e) => setLicensePlate(e.target.value)}
+                onChange={(e) => { setLicensePlate(e.target.value); setValidationError('') }}
                 disabled={loading}
               />
             </div>
+            {validationError && <p className="mt-1 text-xs text-red-600 font-medium">{validationError}</p>}
           </div>
 
           <FormSelect
@@ -508,6 +525,8 @@ function EntryForm({
           onAI={onRequestAI}
           selectedSlot={selectedSlot}
           onConfirm={onConfirmEntry}
+          hasCheckedInfo={checkStatus !== 'Idle'}
+          licensePlate={licensePlate}
         />
 
         {selectedSlot && (
@@ -573,7 +592,9 @@ function SlotOption({ icon, title, desc, color }) {
   )
 }
 
-function ActionButtons({ loading, onClear, onCheck, onManual, onAI }) {
+function ActionButtons({ loading, onClear, onCheck, onManual, onAI, hasCheckedInfo, licensePlate }) {
+  const plateReady = !!(licensePlate && String(licensePlate).trim())
+  const slotActionsDisabled = loading || !hasCheckedInfo
   return (
     <div className="entry-action-bar flex flex-col sm:flex-row items-center justify-end gap-4 mt-8 pt-6 border-t border-outline-variant/30">
       <button
@@ -586,9 +607,10 @@ function ActionButtons({ loading, onClear, onCheck, onManual, onAI }) {
       </button>
       <button
         type="button"
-        className="entry-action-check w-full sm:w-auto px-6 py-2.5 border border-primary text-primary font-label-md text-label-md rounded-lg hover:bg-primary-fixed transition-colors duration-200 active:scale-[0.98] flex items-center justify-center gap-2"
+        className="entry-action-check w-full sm:w-auto px-6 py-2.5 border border-primary text-primary font-label-md text-label-md rounded-lg hover:bg-primary-fixed transition-colors duration-200 active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         onClick={onCheck}
-        disabled={loading}
+        disabled={loading || !plateReady}
+        title={!plateReady ? 'Nhập biển số trước khi kiểm tra' : 'Kiểm tra thông tin xe'}
       >
         <span className="material-symbols-outlined text-[18px]">search</span>
         {loading ? 'Checking...' : 'Check Info'}
@@ -597,25 +619,29 @@ function ActionButtons({ loading, onClear, onCheck, onManual, onAI }) {
         <div className="entry-action-main-buttons flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button
             type="button"
-            className="w-full sm:w-auto px-6 py-2.5 border border-outline-variant text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-container-low transition-colors duration-200 active:scale-[0.98] flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-6 py-2.5 border border-outline-variant text-on-surface font-label-md text-label-md rounded-lg hover:bg-surface-container-low transition-colors duration-200 active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
             onClick={onManual}
-            disabled={loading}
+            disabled={slotActionsDisabled}
+            title={!hasCheckedInfo ? 'Bấm "Check Info" trước để xác nhận thông tin xe' : 'Chọn vị trí thủ công'}
           >
             <span className="material-symbols-outlined text-[18px]">map</span>
             Manual Slot Selection
           </button>
           <button
             type="button"
-            className="w-full sm:w-auto px-6 py-2.5 bg-primary text-white font-label-md text-label-md rounded-lg hover:opacity-90 transition-opacity duration-200 active:scale-[0.98] flex items-center justify-center gap-2 shadow-md"
+            className="w-full sm:w-auto px-6 py-2.5 bg-primary text-white font-label-md text-label-md rounded-lg hover:opacity-90 transition-opacity duration-200 active:scale-[0.98] flex items-center justify-center gap-2 shadow-md disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
             onClick={onAI}
-            disabled={loading}
+            disabled={slotActionsDisabled}
+            title={!hasCheckedInfo ? 'Bấm "Check Info" trước để AI gợi ý vị trí phù hợp' : 'Yêu cầu AI gợi ý vị trí'}
           >
             <span className="material-symbols-outlined text-[18px]">psychology</span>
             Request AI Slot Recommendation
           </button>
         </div>
         <p className="entry-action-hint text-[11px] text-outline text-right max-w-[400px]">
-          Staff can use AI recommendation or manually select an available slot from the parking map.
+          {hasCheckedInfo
+            ? 'Chọn AI để được gợi ý vị trí phù hợp, hoặc chọn thủ công từ bản đồ.'
+            : '⚠️ Bấm "Check Info" trước để xác nhận biển số, vé tháng hoặc đặt chỗ.'}
         </p>
       </div>
     </div>
@@ -627,16 +653,16 @@ function ConfirmButton({ loading, slotCode, onConfirm }) {
     <div className="mt-4 pt-4 border-t border-dashed border-outline-variant/40">
       <button
         type="button"
-        className="w-full py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-md flex items-center justify-center gap-2"
+        className="w-full py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-md flex items-center justify-center gap-2 uppercase tracking-wide"
         onClick={onConfirm}
         disabled={loading}
       >
         {loading ? (
-          <>Processing...</>
+          <>Đang xử lý...</>
         ) : (
           <>
             <span className="material-symbols-outlined">check_circle</span>
-            XAC NHAN CHO XE VAO & IN VE (VI TRI: {slotCode})
+            Xác nhận cho xe vào &amp; in vé — Vị trí: {slotCode}
           </>
         )}
       </button>

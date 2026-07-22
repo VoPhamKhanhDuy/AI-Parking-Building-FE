@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging.Abstractions;
 using ParkingSystem.Application.Common.Exceptions;
 using ParkingSystem.Application.ParkingSessions.DTOs;
 using ParkingSystem.Application.ParkingSessions.Services;
@@ -25,6 +26,7 @@ public class ParkingSessionServiceTests
         InMemoryRepository<ParkingSession> Sessions,
         InMemoryRepository<ParkingTicket> Tickets,
         InMemoryRepository<ParkingSlot> Slots,
+        InMemoryRepository<ParkingZone> Zones,
         InMemoryRepository<Vehicle> Vehicles,
         FakeUnitOfWork Uow)
         Build()
@@ -32,15 +34,22 @@ public class ParkingSessionServiceTests
         var sessions = new InMemoryRepository<ParkingSession>();
         var tickets = new InMemoryRepository<ParkingTicket>();
         var slots = new InMemoryRepository<ParkingSlot>();
+        var zones = new InMemoryRepository<ParkingZone>();
         var vehicles = new InMemoryRepository<Vehicle>();
+        var aiLogs = new InMemoryRepository<AIRecommendationLog>();
         var uow = new FakeUnitOfWork();
         var clock = new FixedTimeProvider(Now);
-        var svc = new ParkingSessionService(sessions, tickets, slots, vehicles, uow, clock);
-        return (svc, sessions, tickets, slots, vehicles, uow);
+        var logger = NullLogger<ParkingSessionService>.Instance;
+        var svc = new ParkingSessionService(sessions, tickets, slots, zones, vehicles, aiLogs, uow, clock, logger);
+        return (svc, sessions, tickets, slots, zones, vehicles, uow);
     }
 
     private static (ParkingTicket ticket, ParkingSlot slot, Vehicle vehicle)
-        SeedAvailableTicket(InMemoryRepository<ParkingTicket> tickets, InMemoryRepository<ParkingSlot> slots, InMemoryRepository<Vehicle> vehicles)
+        SeedAvailableTicket(
+            InMemoryRepository<ParkingTicket> tickets,
+            InMemoryRepository<ParkingSlot> slots,
+            InMemoryRepository<Vehicle> vehicles,
+            InMemoryRepository<ParkingZone> zones)
     {
         var vehicleTypeId = Guid.NewGuid();
         var vehicle = new Vehicle
@@ -60,6 +69,7 @@ public class ParkingSessionServiceTests
             Id = Guid.NewGuid(),
             SlotCode = "B1-A-001",
             Status = SlotStatus.Available,
+            ParkingZoneId = zone.Id,
             ParkingZone = zone
         };
         var ticket = new ParkingTicket
@@ -73,14 +83,15 @@ public class ParkingSessionServiceTests
         vehicles.AddAsync(vehicle).GetAwaiter().GetResult();
         slots.AddAsync(slot).GetAwaiter().GetResult();
         tickets.AddAsync(ticket).GetAwaiter().GetResult();
+        zones.AddAsync(zone).GetAwaiter().GetResult();
         return (ticket, slot, vehicle);
     }
 
     [Fact]
     public async Task StartAsync_creates_session_claims_slot_and_activates_ticket()
     {
-        var (svc, sessions, tickets, slots, _, uow) = Build();
-        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, new InMemoryRepository<Vehicle>());
+        var (svc, sessions, tickets, slots, zones, _, uow) = Build();
+        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, new InMemoryRepository<Vehicle>(), zones);
 
         var dto = await svc.StartAsync(new StartSessionRequest { TicketId = ticket.Id, SlotId = slot.Id });
 
@@ -96,7 +107,7 @@ public class ParkingSessionServiceTests
     [Fact]
     public async Task StartAsync_throws_404_when_ticket_missing()
     {
-        var (svc, _, _, slots, _, _) = Build();
+        var (svc, _, _, slots, zones, _, _) = Build();
         var slot = new ParkingSlot { Id = Guid.NewGuid(), SlotCode = "X", Status = SlotStatus.Available };
         await slots.AddAsync(slot);
 
@@ -107,7 +118,7 @@ public class ParkingSessionServiceTests
     [Fact]
     public async Task StartAsync_throws_404_when_slot_missing()
     {
-        var (svc, _, tickets, _, _, _) = Build();
+        var (svc, _, tickets, _, zones, _, _) = Build();
         var ticket = new ParkingTicket { Id = Guid.NewGuid(), TicketCode = "T", VehicleId = Guid.NewGuid(), Status = TicketStatus.Issued };
         await tickets.AddAsync(ticket);
 
@@ -120,9 +131,9 @@ public class ParkingSessionServiceTests
     [InlineData(TicketStatus.Completed)]
     public async Task StartAsync_rejects_terminal_ticket_status(TicketStatus status)
     {
-        var (svc, _, tickets, slots, _, _) = Build();
+        var (svc, _, tickets, slots, zones, _, _) = Build();
         var vehicles = new InMemoryRepository<Vehicle>();
-        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles);
+        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles, zones);
         ticket.Status = status;
 
         await Assert.ThrowsAsync<ValidationException>(() =>
@@ -132,9 +143,9 @@ public class ParkingSessionServiceTests
     [Fact]
     public async Task StartAsync_throws_409_when_ticket_already_has_active_session()
     {
-        var (svc, sessions, tickets, slots, _, _) = Build();
+        var (svc, sessions, tickets, slots, zones, _, _) = Build();
         var vehicles = new InMemoryRepository<Vehicle>();
-        var (ticket, slot1, _) = SeedAvailableTicket(tickets, slots, vehicles);
+        var (ticket, slot1, _) = SeedAvailableTicket(tickets, slots, vehicles, zones);
         var slot2 = new ParkingSlot { Id = Guid.NewGuid(), SlotCode = "B1-A-002", Status = SlotStatus.Available };
         await slots.AddAsync(slot2);
 
@@ -157,9 +168,9 @@ public class ParkingSessionServiceTests
     public async Task StartAsync_throws_409_when_slot_already_has_active_session_even_if_reserved()
     {
         // Regression: a Reserved slot must not be double-booked by another start call.
-        var (svc, sessions, tickets, slots, _, _) = Build();
+        var (svc, sessions, tickets, slots, zones, _, _) = Build();
         var vehicles = new InMemoryRepository<Vehicle>();
-        var (ticket1, slot, _) = SeedAvailableTicket(tickets, slots, vehicles);
+        var (ticket1, slot, _) = SeedAvailableTicket(tickets, slots, vehicles, zones);
         var ticket2 = new ParkingTicket
         {
             Id = Guid.NewGuid(),
@@ -188,9 +199,9 @@ public class ParkingSessionServiceTests
     [Fact]
     public async Task StartAsync_throws_400_when_slot_under_maintenance()
     {
-        var (svc, _, tickets, slots, _, _) = Build();
+        var (svc, _, tickets, slots, zones, _, _) = Build();
         var vehicles = new InMemoryRepository<Vehicle>();
-        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles);
+        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles, zones);
         slot.Status = SlotStatus.Maintenance;
 
         await Assert.ThrowsAsync<ValidationException>(() =>
@@ -200,9 +211,9 @@ public class ParkingSessionServiceTests
     [Fact]
     public async Task EndAsync_frees_slot_and_completes_ticket()
     {
-        var (svc, sessions, tickets, slots, _, uow) = Build();
+        var (svc, sessions, tickets, slots, zones, _, uow) = Build();
         var vehicles = new InMemoryRepository<Vehicle>();
-        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles);
+        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles, zones);
         var session = new ParkingSession
         {
             Id = Guid.NewGuid(),
@@ -230,9 +241,9 @@ public class ParkingSessionServiceTests
     [Fact]
     public async Task EndAsync_throws_when_session_not_active()
     {
-        var (svc, sessions, tickets, slots, _, _) = Build();
+        var (svc, sessions, tickets, slots, zones, _, _) = Build();
         var vehicles = new InMemoryRepository<Vehicle>();
-        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles);
+        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles, zones);
         var session = new ParkingSession
         {
             Id = Guid.NewGuid(),
@@ -251,9 +262,9 @@ public class ParkingSessionServiceTests
     [Fact]
     public async Task EndAsync_throws_400_when_exit_before_entry()
     {
-        var (svc, sessions, tickets, slots, _, _) = Build();
+        var (svc, sessions, tickets, slots, zones, _, _) = Build();
         var vehicles = new InMemoryRepository<Vehicle>();
-        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles);
+        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles, zones);
         var session = new ParkingSession
         {
             Id = Guid.NewGuid(),
@@ -272,9 +283,9 @@ public class ParkingSessionServiceTests
     [Fact]
     public async Task EndAsync_throws_409_when_pending_payment_exists()
     {
-        var (svc, sessions, tickets, slots, _, _) = Build();
+        var (svc, sessions, tickets, slots, zones, _, _) = Build();
         var vehicles = new InMemoryRepository<Vehicle>();
-        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles);
+        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles, zones);
         var session = new ParkingSession
         {
             Id = Guid.NewGuid(),
@@ -295,9 +306,9 @@ public class ParkingSessionServiceTests
     public async Task EndAsync_re_fetches_slot_when_navigation_null_and_404s_if_missing()
     {
         // Regression: if session.Slot is null we must look it up fresh, and 404 if gone.
-        var (svc, sessions, tickets, slots, _, _) = Build();
+        var (svc, sessions, tickets, slots, zones, _, _) = Build();
         var vehicles = new InMemoryRepository<Vehicle>();
-        var (ticket, _, _) = SeedAvailableTicket(tickets, slots, vehicles);
+        var (ticket, _, _) = SeedAvailableTicket(tickets, slots, vehicles, zones);
         var session = new ParkingSession
         {
             Id = Guid.NewGuid(),
@@ -316,9 +327,9 @@ public class ParkingSessionServiceTests
     [Fact]
     public async Task CancelAsync_frees_slot_and_mirrors_cancel_onto_ticket()
     {
-        var (svc, sessions, tickets, slots, _, _) = Build();
+        var (svc, sessions, tickets, slots, zones, _, _) = Build();
         var vehicles = new InMemoryRepository<Vehicle>();
-        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles);
+        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles, zones);
         var session = new ParkingSession
         {
             Id = Guid.NewGuid(),
@@ -343,9 +354,9 @@ public class ParkingSessionServiceTests
     [Fact]
     public async Task CancelAsync_is_idempotent_when_already_cancelled()
     {
-        var (svc, sessions, tickets, slots, _, _) = Build();
+        var (svc, sessions, tickets, slots, zones, _, _) = Build();
         var vehicles = new InMemoryRepository<Vehicle>();
-        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles);
+        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles, zones);
         var session = new ParkingSession
         {
             Id = Guid.NewGuid(),
@@ -367,9 +378,9 @@ public class ParkingSessionServiceTests
     [Fact]
     public async Task CancelAsync_refuses_completed_session()
     {
-        var (svc, sessions, tickets, slots, _, _) = Build();
+        var (svc, sessions, tickets, slots, zones, _, _) = Build();
         var vehicles = new InMemoryRepository<Vehicle>();
-        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles);
+        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles, zones);
         var session = new ParkingSession
         {
             Id = Guid.NewGuid(),
@@ -389,9 +400,9 @@ public class ParkingSessionServiceTests
     public async Task CancelAsync_preserves_already_completed_ticket()
     {
         // If the ticket is already Completed (e.g. via End), cancel must not regress it to Cancelled.
-        var (svc, sessions, tickets, slots, _, _) = Build();
+        var (svc, sessions, tickets, slots, zones, _, _) = Build();
         var vehicles = new InMemoryRepository<Vehicle>();
-        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles);
+        var (ticket, slot, _) = SeedAvailableTicket(tickets, slots, vehicles, zones);
         ticket.Status = TicketStatus.Completed;
         var session = new ParkingSession
         {
