@@ -6,7 +6,6 @@ import {
   translateEnum,
   unwrapList,
   shapeReservation,
-  formatRangeTime,
   RESERVATION_STATUS_MAP,
 } from '../../core/models/entities'
 
@@ -22,7 +21,7 @@ export async function getReservations(params = {}) {
     const { data } = await api.get('/reservations', { params: safeParams })
     const rawReservations = Array.isArray(data) ? data
       : Array.isArray(data?.reservations) ? data.reservations
-      : unwrapList(data)
+        : unwrapList(data)
     const activities = Array.isArray(data?.activities) ? data.activities : []
     return { success: true, data: { reservations: rawReservations.map(shapeReservation), activities } }
   } catch (error) {

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
-import { filterSystemLogs, getSystemLogs } from './systemLogService'
+import { getSystemLogs } from './systemLogService'
 import './SystemLogPage.css'
 
 const DEFAULT_FILTERS = { search: '', module: 'All Modules', status: 'All Statuses', period: 'Current Shift' }

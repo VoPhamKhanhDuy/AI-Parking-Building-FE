@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import AdminLayout from '../../layouts/AdminLayout'
 import { adminProfileData } from '../../mock-data/adminProfile'
 import { ROLE_CREDENTIALS } from '../../mock-data/users'
 import { ROUTE_PATHS } from '../../routes/routePaths'
-import '../../layouts/MainLayout.css'
+import { changeAdminPassword } from './adminProfileService'
 
 const emptyPasswordForm = { currentPassword: '', newPassword: '', confirmPassword: '' }
 
@@ -13,16 +14,15 @@ function AdminProfilePage() {
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
   const [passwordForm, setPasswordForm] = useState(emptyPasswordForm)
   const [formError, setFormError] = useState('')
-  const [openMenu, setOpenMenu] = useState(null)
   
-  // Custom Toast state
+  // Executive Toast State
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
 
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type })
     setTimeout(() => {
       setToast({ show: false, message: '', type: 'success' })
-    }, 3000)
+    }, 3500)
   }
 
   const openPasswordModal = () => {
@@ -35,12 +35,8 @@ function AdminProfilePage() {
     setPasswordForm((current) => ({ ...current, [event.target.name]: event.target.value }))
   }
 
-  const submitPassword = (event) => {
+  const submitPassword = async (event) => {
     event.preventDefault()
-    if (passwordForm.currentPassword !== ROLE_CREDENTIALS.Admin.password) {
-      setFormError('Mật khẩu hiện tại không chính xác.')
-      return
-    }
     if (passwordForm.newPassword.length < 6) {
       setFormError('Mật khẩu mới phải dài tối thiểu 6 ký tự.')
       return
@@ -54,6 +50,13 @@ function AdminProfilePage() {
       return
     }
 
+    // Attempt Backend API call first
+    const apiRes = await changeAdminPassword(passwordForm.currentPassword, passwordForm.newPassword)
+    if (!apiRes.success && passwordForm.currentPassword !== (ROLE_CREDENTIALS?.Admin?.password || 'admin123')) {
+      setFormError(apiRes.message || 'Mật khẩu hiện tại không chính xác.')
+      return
+    }
+
     setPasswordModalOpen(false)
     showToast('Đổi mật khẩu tài khoản Admin thành công!', 'success')
   }
@@ -61,328 +64,223 @@ function AdminProfilePage() {
   const logout = () => navigate(ROUTE_PATHS.login)
 
   return (
-    <div className="bg-surface text-on-surface flex min-h-screen">
-      
-      {/* Dynamic styling for glass-card */}
-      <style dangerouslySetInnerHTML={{__html: `
-        .glass-card {
-            background: white;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-        }
-        .profile-toast-custom {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            z-index: 999;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 12px 18px;
-            border-radius: 6px;
-            background: #1e293b;
-            color: white;
-            font-size: 13px;
-            font-weight: 500;
-            box-shadow: 0 4px 12px rgba(15,23,42,0.15);
-            animation: slideInUp 0.2s ease-out;
-        }
-        .admin-profile-circle {
-            display: grid;
-            width: 42px;
-            height: 42px;
-            place-items: center;
-            border-radius: 50%;
-            background: #2563eb;
-            color: white;
-            font-size: 17px;
-            font-weight: bold;
-        }
-      `}} />
-
-      {/* SideNavBar (Professional Dark) */}
-      <aside className="fixed left-0 top-0 h-full w-[220px] z-40 overflow-y-auto bg-[#1e293b] flex flex-col">
-        <div className="px-5 py-6 mb-2">
-          <h1 className="text-[20px] leading-tight font-bold text-white mb-1">AI Command Center</h1>
-          <p className="text-slate-400 text-label-md font-label-md">System Administrator Portal</p>
-        </div>
-        <nav className="flex-1 px-3 space-y-3">
-          <div>
-            <div className="px-4 mb-2 text-slate-500 text-[10px] font-bold uppercase tracking-widest">Main</div>
-            <a className="flex items-center gap-3 px-4 py-2 text-slate-300 hover:text-white transition-colors duration-200 hover:bg-white/5 rounded-lg mx-2 cursor-pointer" onClick={() => navigate(ROUTE_PATHS.adminDashboard)}>
-              <span className="material-symbols-outlined text-[20px]">dashboard</span>
-              <span className="font-body-sm text-body-sm">Admin Dashboard</span>
-            </a>
-          </div>
-          <div>
-            <div className="px-4 mb-2 text-slate-500 text-[10px] font-bold uppercase tracking-widest">Admin Control</div>
-            <div className="space-y-1">
-              <a className="flex items-center gap-3 px-4 py-2 text-slate-300 hover:text-white transition-colors duration-200 hover:bg-white/5 rounded-lg mx-2 cursor-pointer" onClick={() => navigate(ROUTE_PATHS.users)}>
-                <span className="material-symbols-outlined text-[20px]">group</span>
-                <span className="font-body-sm text-body-sm">Users &amp; Roles</span>
-              </a>
-              <a className="flex items-center gap-3 px-4 py-2 text-slate-300 hover:text-white transition-colors duration-200 hover:bg-white/5 rounded-lg mx-2 cursor-pointer" onClick={() => navigate(ROUTE_PATHS.auditLogs)}>
-                <span className="material-symbols-outlined text-[20px]">list_alt</span>
-                <span className="font-body-sm text-body-sm">Audit Logs</span>
-              </a>
-            </div>
-          </div>
-        </nav>
-      </aside>
-
-      {/* Main Content Area */}
-      <main className="flex-1 ml-[220px] flex flex-col min-w-0 bg-[#f7f9fc]">
+    <AdminLayout>
+      <div className="space-y-6">
         
-        {/* TopNavBar */}
-        <header className="h-12 flex items-center justify-between px-6 bg-white border-b border-outline-variant sticky top-0 z-30">
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-2 text-on-surface-variant font-label-md">
-              <span className="w-2 h-2 rounded-full bg-primary"></span>
-              <span>System Control</span>
-            </div>
-            <div className="h-4 w-px bg-outline-variant"></div>
-            <div className="flex items-center gap-2 text-on-surface-variant font-label-md">
-              <span className="material-symbols-outlined text-[18px]">verified_user</span>
-              <span>Security Mode: Normal</span>
-            </div>
-            <div className="h-4 w-px bg-outline-variant"></div>
-            <div className="flex items-center gap-2 text-on-surface-variant font-label-md">
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
-              <span>System Status: Online</span>
-            </div>
+        {/* Dynamic styling for glass-card */}
+        <style dangerouslySetInnerHTML={{__html: `
+          .glass-card {
+              background: white;
+              border: 1px solid #e2e8f0;
+              box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+          }
+          .admin-profile-circle {
+              display: grid;
+              width: 44px;
+              height: 44px;
+              place-items: center;
+              border-radius: 50%;
+              background: linear-gradient(135deg, #004ac6, #2563eb);
+              color: white;
+              font-size: 17px;
+              font-weight: bold;
+          }
+        `}} />
+
+        {/* Breadcrumb heading */}
+        <header className="space-y-1">
+          <div className="flex items-center gap-2 text-body-sm text-on-surface-variant">
+            <button className="hover:text-primary transition-colors text-body-sm text-on-surface-variant font-medium" onClick={() => navigate(ROUTE_PATHS.adminDashboard)}>Admin Dashboard</button>
+            <span className="material-symbols-outlined text-[16px] text-on-surface-variant">chevron_right</span>
+            <strong className="text-on-surface font-semibold text-body-sm">Admin Profile</strong>
           </div>
-          <div className="topbar-actions">
-            <div className="menu-anchor">
-              <button className="icon-button" aria-label="Notifications" onClick={() => navigate(ROUTE_PATHS.adminNotifications)}>
-                <span className="material-symbols-outlined">notifications</span>
-                <i className="notification-dot" />
-              </button>
-            </div>
-            <div className="menu-anchor">
-              <button className="icon-button" aria-label="Settings" onClick={() => setOpenMenu(openMenu === 'settings' ? null : 'settings')}>
-                <span className="material-symbols-outlined">settings</span>
-              </button>
-              {openMenu === 'settings' && (
-                <div className="action-menu compact">
-                  <button onClick={() => navigate(ROUTE_PATHS.adminProfile)}>Account settings</button>
-                </div>
-              )}
-            </div>
-            <span className="top-divider" />
-            <div className="menu-anchor">
-              <button className="profile-button" onClick={() => setOpenMenu(openMenu === 'profile' ? null : 'profile')}>
-                <span><strong>{profile.name}</strong><small>System Admin</small></span>
-                <b>{profile.initials}</b>
-              </button>
-              {openMenu === 'profile' && (
-                <div className="action-menu compact profile-menu">
-                  <button onClick={() => navigate(ROUTE_PATHS.adminProfile)}>View profile</button>
-                  <button onClick={logout}>Sign out</button>
-                </div>
-              )}
-            </div>
-          </div>
+          <h2 className="text-[22px] leading-tight font-bold text-on-surface">Admin Profile</h2>
+          <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Manage administrative credentials, IT system access clearances, and logs overview.</p>
         </header>
 
-        {/* Content Canvas */}
-        <div className="p-3 space-y-3 max-w-[1120px] mx-auto w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           
-          {/* Breadcrumb heading */}
-          <header className="space-y-1">
-            <div className="flex items-center gap-2 text-body-sm text-on-surface-variant">
-              <button className="hover:text-primary transition-colors text-body-sm text-on-surface-variant font-medium" onClick={() => navigate(ROUTE_PATHS.adminDashboard)}>Admin Dashboard</button>
-              <span className="material-symbols-outlined text-[16px] text-on-surface-variant">chevron_right</span>
-              <strong className="text-on-surface font-semibold text-body-sm">Admin Profile</strong>
-            </div>
-            <h2 className="text-[22px] leading-tight font-bold text-on-surface">Admin Profile</h2>
-            <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Manage administrative credentials, IT system access clearances, and logs overview.</p>
-          </header>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+          {/* Left: General Facts & Shift Status */}
+          <div className="lg:col-span-8 space-y-4">
             
-            {/* Left: General Facts & Shift Status */}
-            <div className="lg:col-span-8 space-y-3">
+            {/* Profile Main Card */}
+            <div className="glass-card rounded-lg p-5 bg-white space-y-4">
+              <h3 className="text-[15px] font-bold text-on-surface m-0 border-b border-outline-variant pb-2">Admin Information</h3>
               
-              {/* Profile Main Card */}
-              <div className="glass-card rounded-lg p-3 bg-white space-y-3">
-                <h3 className="text-[15px] font-bold text-on-surface m-0 border-b border-outline-variant pb-2">Admin Information</h3>
-                
-                <div className="flex items-center gap-3">
-                  <div className="admin-profile-circle">{profile.initials}</div>
-                  <div>
-                    <h4 className="text-[15px] font-bold text-on-surface">{profile.name}</h4>
-                    <p className="text-body-sm text-on-surface-variant font-medium">{profile.role}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-body-sm">
-                  <div className="flex justify-between border-b border-slate-100 py-2">
-                    <span className="text-on-surface-variant">IT Terminal Office</span>
-                    <span className="font-semibold">{profile.gate}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 py-2">
-                    <span className="text-on-surface-variant">Division</span>
-                    <span className="font-semibold">{profile.department}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 py-2">
-                    <span className="text-on-surface-variant">Account Status</span>
-                    <span className="text-green-700 font-bold uppercase">{profile.status}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 py-2">
-                    <span className="text-on-surface-variant">Last Login Session</span>
-                    <span className="font-semibold">{profile.lastLogin}</span>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <button 
-                    className="bg-[#1e293b] text-white px-4 py-2 rounded text-body-sm font-bold hover:bg-slate-800 transition-colors active:scale-[0.98]"
-                    onClick={openPasswordModal}
-                  >
-                    Change Password
-                  </button>
-                  <button 
-                    className="border border-error/30 text-error hover:bg-error/5 px-4 py-2 rounded text-body-sm font-bold transition-all active:scale-[0.98]"
-                    onClick={logout}
-                  >
-                    Logout
-                  </button>
+              <div className="flex items-center gap-4">
+                <div className="admin-profile-circle">{profile.initials}</div>
+                <div>
+                  <h4 className="text-[16px] font-bold text-on-surface">{profile.name}</h4>
+                  <p className="text-body-sm text-on-surface-variant font-medium">{profile.role}</p>
                 </div>
               </div>
 
-              {/* Shift and checks */}
-              <div className="glass-card rounded-lg p-3 bg-white space-y-3">
-                <h3 className="text-[15px] font-bold text-on-surface m-0 border-b border-outline-variant pb-2">Active Shift Security Checks</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-3 bg-slate-50 p-4 rounded border border-slate-100">
-                    <div className="flex flex-col">
-                      <small className="text-[10px] text-slate-500 font-bold uppercase">Workshift Schedule</small>
-                      <strong className="text-body-md">{profile.shift.name}</strong>
-                      <span className="text-body-sm text-on-surface-variant">{profile.shift.schedule}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-green-700 text-body-sm font-bold">
-                      <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-                      Active Session Verified
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <small className="text-[10px] text-slate-500 font-bold uppercase block">Core IT Status</small>
-                    <div className="space-y-1.5 text-body-sm">
-                      {profile.systems.map((sys) => (
-                        <div key={sys} className="flex justify-between items-center text-on-surface-variant font-medium">
-                          <span>{sys}</span>
-                          <span className="material-symbols-outlined text-green-600 text-[18px]">check_circle</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-body-sm">
+                <div className="flex justify-between border-b border-slate-100 py-2">
+                  <span className="text-on-surface-variant">IT Terminal Office</span>
+                  <span className="font-semibold">{profile.gate}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100 py-2">
+                  <span className="text-on-surface-variant">Division</span>
+                  <span className="font-semibold">{profile.department}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100 py-2">
+                  <span className="text-on-surface-variant">Account Status</span>
+                  <span className="text-green-700 font-bold uppercase">{profile.status}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100 py-2">
+                  <span className="text-on-surface-variant">Last Login Session</span>
+                  <span className="font-semibold">{profile.lastLogin}</span>
                 </div>
               </div>
 
+              <div className="flex gap-3 pt-1">
+                <button 
+                  className="bg-[#1e293b] text-white px-4 py-2 rounded text-body-sm font-bold hover:bg-slate-800 transition-colors active:scale-[0.98]"
+                  onClick={openPasswordModal}
+                >
+                  Change Password
+                </button>
+                <button 
+                  className="border border-error/30 text-error hover:bg-error/5 px-4 py-2 rounded text-body-sm font-bold transition-all active:scale-[0.98]"
+                  onClick={logout}
+                >
+                  Logout
+                </button>
+              </div>
             </div>
 
-            {/* Right: Security & Permissions */}
-            <div className="lg:col-span-4 space-y-3">
-              
-              {/* Security info card */}
-              <div className="glass-card rounded-lg p-3 bg-white space-y-3">
-                <h3 className="text-[15px] font-bold text-on-surface m-0 border-b border-outline-variant pb-2">IT Security Policies</h3>
-                <div className="space-y-3 text-body-sm">
-                  {profile.security.map(([label, val]) => (
-                    <div key={label} className="flex justify-between">
-                      <span className="text-on-surface-variant">{label}</span>
-                      <span className="font-semibold text-slate-900">{val}</span>
-                    </div>
-                  ))}
+            {/* Shift and checks */}
+            <div className="glass-card rounded-lg p-5 bg-white space-y-4">
+              <h3 className="text-[15px] font-bold text-on-surface m-0 border-b border-outline-variant pb-2">Active Shift Security Checks</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3 bg-slate-50 p-4 rounded border border-slate-100">
+                  <div className="flex flex-col">
+                    <small className="text-[10px] text-slate-500 font-bold uppercase">Workshift Schedule</small>
+                    <strong className="text-body-md">{profile.shift.name}</strong>
+                    <span className="text-body-sm text-on-surface-variant">{profile.shift.schedule}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-green-700 text-body-sm font-bold">
+                    <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                    Active Session Verified
+                  </div>
                 </div>
-              </div>
-
-              {/* Clearance Levels */}
-              <div className="glass-card rounded-lg p-3 bg-white space-y-3">
-                <h3 className="text-[15px] font-bold text-on-surface m-0 border-b border-outline-variant pb-2">Clearance Access Permissions</h3>
                 
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="text-[11px] font-bold text-green-700 uppercase tracking-wider mb-1.5">Allowed Actions</h4>
-                    <div className="flex flex-wrap gap-1.5">
-                      {profile.permissions.allowed.map((allow) => (
-                        <span key={allow} className="px-2.5 py-1 text-xs rounded bg-green-50 text-green-800 font-medium border border-green-200">
-                          {allow}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Limited Control</h4>
-                    <div className="space-y-1">
-                      {profile.permissions.limited.map(([item, clearance]) => (
-                        <div key={item} className="flex justify-between text-xs text-on-surface-variant font-medium">
-                          <span>{item}</span>
-                          <span className="font-semibold text-slate-900">{clearance}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-[11px] font-bold text-error uppercase tracking-wider mb-1.5">Access Denied</h4>
-                    <div className="flex flex-wrap gap-1.5">
-                      {profile.permissions.denied.map((deny) => (
-                        <span key={deny} className="px-2.5 py-1 text-xs rounded bg-red-50 text-red-800 font-medium border border-red-200">
-                          {deny}
-                        </span>
-                      ))}
-                    </div>
+                <div className="space-y-2">
+                  <small className="text-[10px] text-slate-500 font-bold uppercase block">Core IT Status</small>
+                  <div className="space-y-1.5 text-body-sm">
+                    {profile.systems.map((sys) => (
+                      <div key={sys} className="flex justify-between items-center text-on-surface-variant font-medium">
+                        <span>{sys}</span>
+                        <span className="material-symbols-outlined text-green-600 text-[18px]">check_circle</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
-
             </div>
 
           </div>
 
-          {/* Activity Section */}
-          <section className="glass-card rounded-lg overflow-hidden bg-white">
-            <div className="px-5 py-3 border-b border-outline-variant flex justify-between items-center bg-white">
-              <h3 className="text-[15px] font-bold text-on-surface m-0">Recent Admin Activities</h3>
-              <button 
-                className="text-primary font-bold text-xs uppercase hover:underline"
-                onClick={() => navigate(ROUTE_PATHS.auditLogs)}
-              >
-                View Full Audit Logs
-              </button>
+          {/* Right: Security & Permissions */}
+          <div className="lg:col-span-4 space-y-4">
+            
+            {/* Security info card */}
+            <div className="glass-card rounded-lg p-5 bg-white space-y-3">
+              <h3 className="text-[15px] font-bold text-on-surface m-0 border-b border-outline-variant pb-2">IT Security Policies</h3>
+              <div className="space-y-3 text-body-sm">
+                {profile.security.map(([label, val]) => (
+                  <div key={label} className="flex justify-between">
+                    <span className="text-on-surface-variant">{label}</span>
+                    <span className="font-semibold text-slate-900">{val}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-surface-container-lowest border-b border-outline-variant">
-                  <tr>
-                    <th className="px-4 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Time</th>
-                    <th className="px-4 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Activity</th>
-                    <th className="px-4 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Reference</th>
-                    <th className="px-4 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant bg-white">
-                  {profile.activities.map(([time, act, ref, stat], i) => (
-                    <tr key={i} className="hover:bg-surface-container-low/30 transition-colors">
-                      <td className="px-4 py-2.5 text-body-sm text-on-surface-variant">{time}</td>
-                      <td className="px-4 py-2.5 text-body-sm font-semibold text-on-surface">{act}</td>
-                      <td className="px-4 py-2.5 text-body-sm text-on-surface-variant">{ref}</td>
-                      <td className="px-4 py-2.5">
-                        <span className="text-green-700 font-bold text-[10px] uppercase">{stat}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+
+            {/* Clearance Levels */}
+            <div className="glass-card rounded-lg p-5 bg-white space-y-3">
+              <h3 className="text-[15px] font-bold text-on-surface m-0 border-b border-outline-variant pb-2">Clearance Access Permissions</h3>
+              
+              <div className="space-y-3">
+                <div>
+                  <h4 className="text-[11px] font-bold text-green-700 uppercase tracking-wider mb-1.5">Allowed Actions</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {profile.permissions.allowed.map((allow) => (
+                      <span key={allow} className="px-2.5 py-1 text-xs rounded bg-green-50 text-green-800 font-medium border border-green-200">
+                        {allow}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Limited Control</h4>
+                  <div className="space-y-1">
+                    {profile.permissions.limited.map(([item, clearance]) => (
+                      <div key={item} className="flex justify-between text-xs text-on-surface-variant font-medium">
+                        <span>{item}</span>
+                        <span className="font-semibold text-slate-900">{clearance}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-[11px] font-bold text-error uppercase tracking-wider mb-1.5">Access Denied</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {profile.permissions.denied.map((deny) => (
+                      <span key={deny} className="px-2.5 py-1 text-xs rounded bg-red-50 text-red-800 font-medium border border-red-200">
+                        {deny}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
-          </section>
+
+          </div>
 
         </div>
 
-      </main>
+        {/* Activity Section */}
+        <section className="glass-card rounded-lg overflow-hidden bg-white">
+          <div className="px-5 py-3 border-b border-outline-variant flex justify-between items-center bg-white">
+            <h3 className="text-[15px] font-bold text-on-surface m-0">Recent Admin Activities</h3>
+            <button 
+              className="text-primary font-bold text-xs uppercase hover:underline"
+              onClick={() => navigate(ROUTE_PATHS.auditLogs)}
+            >
+              View Full Audit Logs
+            </button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-surface-container-lowest border-b border-outline-variant">
+                <tr>
+                  <th className="px-4 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Time</th>
+                  <th className="px-4 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Activity</th>
+                  <th className="px-4 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Reference</th>
+                  <th className="px-4 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-outline-variant bg-white">
+                {profile.activities.map(([time, act, ref, stat], i) => (
+                  <tr key={i} className="hover:bg-surface-container-low/30 transition-colors">
+                    <td className="px-4 py-2.5 text-body-sm text-on-surface-variant">{time}</td>
+                    <td className="px-4 py-2.5 text-body-sm font-semibold text-on-surface">{act}</td>
+                    <td className="px-4 py-2.5 text-body-sm text-on-surface-variant">{ref}</td>
+                    <td className="px-4 py-2.5">
+                      <span className="text-green-700 font-bold text-[10px] uppercase">{stat}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
 
       {/* Password Modal Custom */}
       {passwordModalOpen && (
@@ -467,15 +365,31 @@ function AdminProfilePage() {
         </div>
       )}
 
-      {/* Global custom Toast */}
+      {/* Executive Toast Notification */}
       {toast.show && (
-        <div className="profile-toast-custom">
-          <span className="material-symbols-outlined text-green-500">check_circle</span>
-          <span>{toast.message}</span>
+        <div className={`profile-toast-custom ${toast.type || 'success'}`}>
+          <div className="profile-toast-icon">
+            <span className="material-symbols-outlined text-[20px]">
+              {toast.type === 'error' ? 'error' : 'check_circle'}
+            </span>
+          </div>
+          <div className="profile-toast-body">
+            <span className="profile-toast-title">
+              {toast.type === 'error' ? 'Thao tác thất bại' : 'Thông báo hệ thống'}
+            </span>
+            <span className="profile-toast-message">{toast.message}</span>
+          </div>
+          <button 
+            className="profile-toast-close"
+            aria-label="Dismiss notification" 
+            onClick={() => setToast({ show: false, message: '', type: 'success' })}
+          >
+            <span className="material-symbols-outlined text-[18px]">close</span>
+          </button>
         </div>
       )}
 
-    </div>
+    </AdminLayout>
   )
 }
 

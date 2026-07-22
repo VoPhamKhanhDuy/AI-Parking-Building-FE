@@ -12,7 +12,7 @@ function AdminNotificationsPage() {
   const [selectedId, setSelectedId] = useState(null)
   const [filters, setFilters] = useState(defaultFilters)
   const [openMenu, setOpenMenu] = useState(null)
-  
+
   // Custom Toast state
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
 
@@ -24,14 +24,14 @@ function AdminNotificationsPage() {
   }
 
   const filteredItems = notifications.filter((item) => {
-    const matchSearch = !filters.search || 
+    const matchSearch = !filters.search ||
       item.message?.toLowerCase().includes(filters.search.toLowerCase()) ||
       item.licensePlate?.toLowerCase().includes(filters.search.toLowerCase())
     const matchType = filters.type === 'All Types' || item.type === filters.type
     const matchStatus = filters.status === 'All Statuses' || item.status === filters.status
     return matchSearch && matchType && matchStatus
   })
-  
+
   const selected = filteredItems.find((item) => item.id === selectedId) || filteredItems[0]
   const unreadCount = notifications.filter((item) => item.status === 'Unread').length
 
@@ -59,9 +59,10 @@ function AdminNotificationsPage() {
 
   return (
     <div className="bg-surface text-on-surface flex min-h-screen">
-      
+
       {/* Dynamic styling for glass-card */}
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .glass-card {
             background: white;
             border: 1px solid #e2e8f0;
@@ -127,7 +128,7 @@ function AdminNotificationsPage() {
 
       {/* Main Content Area */}
       <main className="flex-1 ml-[240px] flex flex-col min-w-0 bg-[#f7f9fc]">
-        
+
         {/* TopNavBar */}
         <header className="h-14 flex items-center justify-between px-8 bg-white border-b border-outline-variant sticky top-0 z-30">
           <div className="flex items-center gap-8">
@@ -181,7 +182,7 @@ function AdminNotificationsPage() {
 
         {/* Content Canvas */}
         <div className="p-4 space-y-4 max-w-[1280px] mx-auto w-full">
-          
+
           {/* Breadcrumb Heading */}
           <header className="space-y-1">
             <div className="flex items-center gap-2 text-body-sm text-on-surface-variant">
@@ -196,18 +197,18 @@ function AdminNotificationsPage() {
           {/* Filters Bar */}
           <section className="glass-card p-4 rounded-lg flex flex-wrap items-center gap-3 bg-white">
             <div className="relative flex-1 min-w-[200px]">
-              <input 
-                name="search" 
-                value={filters.search} 
-                onChange={updateFilter} 
-                className="w-full pl-9 pr-4 py-1.5 bg-surface-container-low border border-outline-variant rounded text-body-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none" 
-                placeholder="Search plate, ticket, reservation..." 
+              <input
+                name="search"
+                value={filters.search}
+                onChange={updateFilter}
+                className="w-full pl-9 pr-4 py-1.5 bg-surface-container-low border border-outline-variant rounded text-body-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                placeholder="Search plate, ticket, reservation..."
               />
               <span className="material-symbols-outlined absolute left-2.5 top-2 text-on-surface-variant text-[18px]">search</span>
             </div>
-            <select 
-              name="type" 
-              value={filters.type} 
+            <select
+              name="type"
+              value={filters.type}
               onChange={updateFilter}
               className="bg-surface-container-low border border-outline-variant rounded text-body-sm px-3 py-1.5 outline-none"
             >
@@ -216,9 +217,9 @@ function AdminNotificationsPage() {
               <option>Gate Issue</option>
               <option>Payment Warning</option>
             </select>
-            <select 
-              name="status" 
-              value={filters.status} 
+            <select
+              name="status"
+              value={filters.status}
               onChange={updateFilter}
               className="bg-surface-container-low border border-outline-variant rounded text-body-sm px-3 py-1.5 outline-none"
             >
@@ -226,9 +227,9 @@ function AdminNotificationsPage() {
               <option>Unread</option>
               <option>Read</option>
             </select>
-            <button 
-              className="ml-auto bg-primary text-white px-4 py-1.5 rounded text-body-sm font-bold active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none" 
-              onClick={markAllRead} 
+            <button
+              className="ml-auto bg-primary text-white px-4 py-1.5 rounded text-body-sm font-bold active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
+              onClick={markAllRead}
               disabled={!unreadCount}
             >
               Mark All Read {unreadCount > 0 && <span className="ml-1 px-1.5 py-0.5 rounded bg-white text-primary text-[10px] font-bold">{unreadCount}</span>}
@@ -237,7 +238,7 @@ function AdminNotificationsPage() {
 
           {/* Core Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            
+
             {/* List Table */}
             <section className="lg:col-span-8 glass-card rounded-lg overflow-hidden bg-white">
               <div className="px-5 py-3 border-b border-outline-variant bg-white">
@@ -256,26 +257,24 @@ function AdminNotificationsPage() {
                   </thead>
                   <tbody className="divide-y divide-outline-variant bg-white">
                     {filteredItems.map((item) => (
-                      <tr 
-                        key={item.id} 
-                        className={`cursor-pointer transition-colors ${selected?.id === item.id ? 'bg-primary/5 font-medium' : 'hover:bg-surface-container-low/30'}`} 
+                      <tr
+                        key={item.id}
+                        className={`cursor-pointer transition-colors ${selected?.id === item.id ? 'bg-primary/5 font-medium' : 'hover:bg-surface-container-low/30'}`}
                         onClick={() => setSelectedId(item.id)}
                       >
                         <td className="px-4 py-3 text-body-sm text-on-surface-variant">{item.time}</td>
                         <td className="px-4 py-3 text-body-sm text-on-surface-variant">{item.type}</td>
                         <td className="px-4 py-3 text-body-sm text-on-surface"><strong>{item.message}</strong></td>
                         <td className="px-4 py-3 text-body-sm">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                            item.priority === 'High' ? 'bg-red-50 text-red-700' :
-                            item.priority === 'Medium' ? 'bg-orange-50 text-orange-700' :
-                            'bg-slate-100 text-slate-700'
-                          }`}>{item.priority}</span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${item.priority === 'High' ? 'bg-red-50 text-red-700' :
+                              item.priority === 'Medium' ? 'bg-orange-50 text-orange-700' :
+                                'bg-slate-100 text-slate-700'
+                            }`}>{item.priority}</span>
                         </td>
                         <td className="px-4 py-3 text-body-sm">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                            item.status === 'Unread' ? 'bg-blue-50 text-blue-700' :
-                            'bg-slate-100 text-slate-600'
-                          }`}>{item.status}</span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${item.status === 'Unread' ? 'bg-blue-50 text-blue-700' :
+                              'bg-slate-100 text-slate-600'
+                            }`}>{item.status}</span>
                         </td>
                       </tr>
                     ))}
@@ -302,13 +301,13 @@ function AdminNotificationsPage() {
                     <div className="flex justify-between"><span className="text-on-surface-variant">License Plate</span><span className="font-semibold">{selected.licensePlate || 'N/A'}</span></div>
                     <div className="flex justify-between"><span className="text-on-surface-variant">Status</span><span className="font-semibold uppercase text-primary">{selected.status}</span></div>
                   </div>
-                  
+
                   <div className="p-3 bg-slate-50 border border-slate-100 rounded text-body-sm leading-relaxed font-medium text-on-surface-variant">
                     {selected.description}
                   </div>
 
                   <div className="pt-2">
-                    <button 
+                    <button
                       className="w-full bg-[#1e293b] hover:bg-slate-800 text-white py-2 rounded text-body-sm font-bold transition-all active:scale-[0.98] disabled:opacity-50"
                       onClick={markSelectedRead}
                       disabled={selected.status === 'Read'}

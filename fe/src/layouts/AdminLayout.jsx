@@ -6,11 +6,9 @@ import { useAuth } from '../contexts/useAuth'
 import './MainLayout.css'
 import './AdminLayout.css'
 
-const adminItems = [
-  ['people', 'Users & Roles', ROUTE_PATHS.users],
-  ['history', 'Audit Logs', ROUTE_PATHS.auditLogs],
-  ['terminal', 'System Logs', ROUTE_PATHS.systemLogs],
-  ['account_balance_wallet', 'Pricing Rules', ROUTE_PATHS.pricing],
+const adminControlItems = [
+  ['group', 'Users & Roles', ROUTE_PATHS.users],
+  ['list_alt', 'Audit Logs', ROUTE_PATHS.auditLogs],
 ]
 
 function AdminLayout({ children }) {
@@ -32,16 +30,16 @@ function AdminLayout({ children }) {
   }
 
   const getInitials = (name) => {
-    if (!name) return '?'
+    if (!name) return 'TV'
     return name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
   }
 
   const getRoleDisplay = (role) => {
     const roleMap = {
-      'Admin': 'Administrator',
+      'Admin': 'System Admin',
       'SystemAdmin': 'System Admin',
     }
-    return roleMap[role] || role || 'Administrator'
+    return roleMap[role] || role || 'System Admin'
   }
 
   const isActive = (path) => {
@@ -50,6 +48,8 @@ function AdminLayout({ children }) {
     }
     return location.pathname === path || location.pathname.startsWith(`${path}/`)
   }
+
+  const userDisplayName = user?.fullName || user?.FullName || 'Trần Thanh Vân'
 
   return (
     <div className="main-layout admin-layout">
@@ -63,10 +63,10 @@ function AdminLayout({ children }) {
 
       <aside className={`sidebar${sidebarOpen ? ' open' : ''}`}>
         <div className="brand">
-          <span className="brand-icon material-symbols-outlined">admin_panel_settings</span>
+          <span className="brand-icon material-symbols-outlined">directions_car</span>
           <div>
-            <strong>Admin Console</strong>
-            <small>AI Parking Building</small>
+            <strong>AI Command Center</strong>
+            <small>System Administrator Portal</small>
           </div>
         </div>
 
@@ -81,8 +81,8 @@ function AdminLayout({ children }) {
             <span>Admin Dashboard</span>
           </Link>
 
-          <small className="admin-nav-label">Administration</small>
-          {adminItems.map(([icon, label, path]) => (
+          <small className="admin-nav-label">Admin Control</small>
+          {adminControlItems.map(([icon, label, path]) => (
             <Link
               key={label}
               to={path}
@@ -93,16 +93,6 @@ function AdminLayout({ children }) {
               <span>{label}</span>
             </Link>
           ))}
-
-          <small className="admin-nav-label">System</small>
-          <Link
-            to={ROUTE_PATHS.adminProfile}
-            className={isActive(ROUTE_PATHS.adminProfile) ? 'active' : ''}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <span className="material-symbols-outlined">shield_person</span>
-            <span>Admin Profile</span>
-          </Link>
         </nav>
       </aside>
 
@@ -115,7 +105,7 @@ function AdminLayout({ children }) {
           >
             <span className="material-symbols-outlined">menu</span>
           </button>
-          <span className="gate-pill"><i />Control Center</span>
+          <span className="gate-pill"><i />Building A</span>
           <span className="clock">
             <span className="material-symbols-outlined">schedule</span>
             {time}
@@ -152,10 +142,10 @@ function AdminLayout({ children }) {
           <div className="menu-anchor">
             <button className="profile-button" onClick={() => setOpenMenu(!openMenu)}>
               <span>
-                <strong>{user?.fullName || user?.FullName || user?.email || 'Administrator'}</strong>
+                <strong>{userDisplayName}</strong>
                 <small>{getRoleDisplay(user?.role || user?.Role)}</small>
               </span>
-              <b>{getInitials(user?.fullName || user?.FullName || 'A')}</b>
+              <b>{getInitials(userDisplayName)}</b>
             </button>
             {openMenu && (
               <div className="action-menu compact profile-menu admin-account-menu">

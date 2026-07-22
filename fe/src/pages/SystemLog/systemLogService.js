@@ -1,7 +1,6 @@
 import { api } from '../../core/api/apiClient'
 import logger from '../../core/utils/logger'
 import {
-  normalizeFields,
   sanitizeParams,
   stripUnsupportedParams,
   unwrapList,

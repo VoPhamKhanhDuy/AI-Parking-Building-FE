@@ -63,6 +63,7 @@ function StaffProfilePage() {
   const [toast, setToast] = useState('')
 
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (!storedUser) {
       setLoading(false)
       setError('You are not signed in.')
@@ -83,7 +84,8 @@ function StaffProfilePage() {
       })
       .finally(() => active && setLoading(false))
     return () => { active = false }
-  }, [])
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [storedUser])
 
   useEffect(() => {
     if (!toast) return undefined

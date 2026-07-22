@@ -6,7 +6,6 @@ import {
   translateEnum,
   unwrapList,
   shapeTicket,
-  typeLabel,
   TICKET_STATUS_MAP,
   TICKET_TYPE_MAP,
 } from '../../core/models/entities'
@@ -37,7 +36,7 @@ export async function getTicketByCode(code) {
   try {
     const { data } = await api.get(`/tickets/by-code/${encodeURIComponent(code)}`)
     return { success: true, data: shapeTicket(data) }
-  } catch (error) {
+  } catch {
     logger.error('Tickets', `Ticket not found: ${code}`)
     return { success: false, message: 'Ticket not found' }
   }
