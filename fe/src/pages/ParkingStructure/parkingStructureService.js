@@ -43,7 +43,7 @@ export async function createBuilding(buildingData) {
     return { success: true, data }
   } catch (error) {
     logger.error('ParkingStructure', `Failed to create building: ${error.message}`)
-    return { success: false }
+    return { success: false, message: error.response?.data?.message || error.message }
   }
 }
 
@@ -53,37 +53,59 @@ export async function createFloor(buildingId, floorData) {
     return { success: true, data }
   } catch (error) {
     logger.error('ParkingStructure', `Failed to create floor: ${error.message}`)
-    return { success: false }
+    return { success: false, message: error.response?.data?.message || error.message }
   }
 }
 
 export async function createZone(floorId, zoneData) {
   try {
-    const { data } = await api.post('/zones', { ...zoneData, floorId })
+    const payload = {
+      name: zoneData.name || zoneData.zone,
+      vehicleType: zoneData.vehicleType || zoneData.type || 'Car',
+      capacity: zoneData.capacity || 20,
+      floorId
+    }
+    const { data } = await api.post('/parking-zones', payload)
     return { success: true, data }
   } catch (error) {
     logger.error('ParkingStructure', `Failed to create zone: ${error.message}`)
-    return { success: false }
+    return { success: false, message: error.response?.data?.message || error.message }
   }
 }
 
 export async function updateZone(zoneId, zoneData) {
   try {
-    const { data } = await api.put(`/zones/${zoneId}`, zoneData)
+    const { data } = await api.put(`/parking-zones/${zoneId}`, zoneData)
     return { success: true, data }
   } catch (error) {
     logger.error('ParkingStructure', `Failed to update zone: ${error.message}`)
-    return { success: false }
+    return { success: false, message: error.response?.data?.message || error.message }
+  }
+}
+
+export async function createSlot(zoneId, slotData) {
+  try {
+    const payload = {
+      code: slotData.code,
+      slotNumber: slotData.slotNumber || 1,
+      vehicleType: slotData.vehicleType || 'Car',
+      zoneId
+    }
+    const { data } = await api.post('/parking-slots', payload)
+    return { success: true, data }
+  } catch (error) {
+    logger.error('ParkingStructure', `Failed to create slot: ${error.message}`)
+    return { success: false, message: error.response?.data?.message || error.message }
   }
 }
 
 export async function updateSlot(slotId, slotData) {
   try {
-    const { data } = await api.put(`/slots/${slotId}`, slotData)
+    const { data } = await api.put(`/parking-slots/${slotId}`, slotData)
     return { success: true, data }
   } catch (error) {
     logger.error('ParkingStructure', `Failed to update slot: ${error.message}`)
-    return { success: false }
+    return { success: false, message: error.response?.data?.message || error.message }
   }
 }
 

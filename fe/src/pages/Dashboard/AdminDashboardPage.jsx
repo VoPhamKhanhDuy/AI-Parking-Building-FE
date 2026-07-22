@@ -264,13 +264,6 @@ function AdminDashboardPage() {
             <h2 className="font-headline-md text-headline-md font-bold text-on-surface">Admin Dashboard</h2>
             <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">System Administration: Monitor accounts, configure system settings, manage role access, and view audit history.</p>
           </div>
-          <button
-            className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-body-sm font-bold shadow transition-all active:scale-[0.98]"
-            onClick={handlePolicyConfig}
-          >
-            <span className="material-symbols-outlined text-[18px]">settings_applications</span>
-            Configure System Settings
-          </button>
         </section>
 
         {/* KPI Row */}
