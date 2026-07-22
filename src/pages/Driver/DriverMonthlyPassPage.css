@@ -1,0 +1,278 @@
+.driver-monthly-pass-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: #191c1e;
+}
+
+.driver-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #737686;
+}
+
+.driver-breadcrumb button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #004ac6;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.driver-breadcrumb button:hover {
+  text-decoration: underline;
+}
+
+.driver-breadcrumb b {
+  color: #191c1e;
+}
+
+.driver-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.driver-heading h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #191c1e;
+  margin: 0 0 4px;
+}
+
+.driver-heading p {
+  font-size: 13px;
+  color: #737686;
+  margin: 0;
+}
+
+.packages-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.package-card {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid #d8dadd;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.2s;
+}
+
+.package-card.selected {
+  border-color: #004ac6;
+  box-shadow: 0 4px 14px rgba(0, 74, 198, 0.1);
+}
+
+.popular-badge {
+  position: absolute;
+  top: -10px;
+  right: 16px;
+  background: #004ac6;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 8px;
+  text-transform: uppercase;
+}
+
+.pkg-header h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #191c1e;
+  margin: 0;
+}
+
+.pkg-price {
+  font-size: 22px;
+  font-weight: 800;
+  color: #004ac6;
+  display: block;
+  margin: 6px 0 14px;
+}
+
+.pkg-price small {
+  font-size: 11px;
+  color: #737686;
+  font-weight: 400;
+}
+
+.perks-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.perks-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #434655;
+}
+
+.perks-list span {
+  font-size: 16px;
+  color: #16a34a;
+}
+
+.btn-select-pkg {
+  width: 100%;
+  padding: 8px;
+  background: #eceef1;
+  border: 1px solid #d8dadd;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #191c1e;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-select-pkg.active {
+  background: #004ac6;
+  color: #ffffff;
+  border-color: #004ac6;
+}
+
+.pass-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.card-panel {
+  background: #ffffff;
+  border: 1px solid #d8dadd;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.card-panel h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #191c1e;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 14px;
+}
+
+.checkbox-group {
+  margin-top: 8px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #434655;
+  cursor: pointer;
+}
+
+.btn-submit-pass {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: #004ac6;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 14px;
+}
+
+.btn-submit-pass:hover {
+  background: #003896;
+}
+
+.form-msg {
+  font-size: 12px;
+  color: #16a34a;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.passes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pass-card-item {
+  background: #f7f9fc;
+  border: 1px solid #e2e8f0;
+  padding: 14px;
+  border-radius: 10px;
+}
+
+.pass-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pass-top strong {
+  font-size: 13px;
+  color: #191c1e;
+}
+
+.pass-top p {
+  font-size: 11px;
+  color: #737686;
+  margin: 2px 0 0;
+}
+
+.pass-status {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+
+.pass-status.active { background: #dcfce7; color: #15803d; }
+.pass-status.pending-approval { background: #fef3c7; color: #b45309; }
+
+.pass-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.pass-meta-grid small {
+  display: block;
+  font-size: 10px;
+  color: #737686;
+  text-transform: uppercase;
+}
+
+.pass-meta-grid strong {
+  font-size: 11px;
+  color: #191c1e;
+}
+
+@media (max-width: 767px) {
+  .pass-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,334 @@
+.pay-fee-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.secure-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.secure-badge span {
+  font-size: 16px;
+  color: #16a34a;
+}
+
+.pay-fee-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 20px;
+}
+
+.session-meta-box {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+}
+
+.meta-col small {
+  display: block;
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.meta-col strong {
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.rate-info-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #eff6ff;
+  color: #1e40af;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.breakdown-table {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #475569;
+}
+
+.breakdown-row .amount {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.breakdown-row .amount.discount {
+  color: #16a34a;
+}
+
+.breakdown-row.total {
+  font-size: 16px;
+  color: #0f172a;
+  padding-top: 8px;
+}
+
+.total-amount {
+  font-size: 24px;
+  font-weight: 800;
+  color: #2563eb;
+}
+
+/* Payment Methods */
+.methods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.method-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.method-option:hover {
+  background: #f1f5f9;
+}
+
+.method-option.selected {
+  background: #eff6ff;
+  border-color: #2563eb;
+}
+
+.method-icon {
+  font-size: 24px;
+  color: #2563eb;
+}
+
+.method-text {
+  flex: 1;
+}
+
+.method-text strong {
+  display: block;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.method-text small {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.rec-tag {
+  font-size: 10px;
+  font-weight: 700;
+  background: #dcfce7;
+  color: #15803d;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.vietqr-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.vietqr-img {
+  width: 160px;
+  height: 160px;
+  margin: 10px 0;
+}
+
+.qr-meta p {
+  font-size: 12px;
+  color: #475569;
+  margin: 2px 0;
+}
+
+.btn-pay-submit {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-pay-submit:hover {
+  background: #1d4ed8;
+}
+
+/* Receipt Success Box */
+.receipt-success-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 32px;
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.success-icon-wrap span {
+  font-size: 64px;
+  color: #16a34a;
+}
+
+.receipt-success-card h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 8px;
+}
+
+.receipt-success-card p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 4px 0 20px;
+}
+
+.receipt-box {
+  width: 100%;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  padding: 20px;
+  border-radius: 14px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.receipt-header {
+  text-align: center;
+}
+
+.receipt-header strong {
+  display: block;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.receipt-header small {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.receipt-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #475569;
+  margin: 8px 0;
+}
+
+.receipt-amount {
+  font-size: 18px;
+  color: #2563eb;
+}
+
+.gate-pass-tag {
+  background: #dcfce7;
+  color: #15803d;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.btn-print {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+/* History Table */
+.history-table-wrap {
+  overflow-x: auto;
+}
+
+.driver-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+.driver-table th {
+  background: #f8fafc;
+  color: #475569;
+  padding: 10px 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.driver-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #0f172a;
+}
+
+.status-badge.success {
+  background: #dcfce7;
+  color: #15803d;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .pay-fee-grid {
+    grid-template-columns: 1fr;
+  }
+}

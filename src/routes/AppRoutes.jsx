@@ -28,6 +28,11 @@ import TicketsPage from '../pages/Tickets/TicketsPage'
 import MonthlyPassPage from '../pages/MonthlyPass/MonthlyPassPage'
 import LostTicketPage from '../pages/LostTicket/LostTicketPage'
 import ReservationPage from '../pages/Reservation/ReservationPage'
+import DriverPortalPage from '../pages/Driver/DriverPortalPage'
+import ParkVehiclePage from '../pages/Driver/ParkVehiclePage'
+import ReceiveTicketPage from '../pages/Driver/ReceiveTicketPage'
+import DriverMonthlyPassPage from '../pages/Driver/DriverMonthlyPassPage'
+import DriverReservationPage from '../pages/Driver/DriverReservationPage'
 import { ROUTE_PATHS } from './routePaths'
 
 function ComingSoonPage() {
@@ -78,6 +83,15 @@ function AppRoutes() {
       <Route path={ROUTE_PATHS.monthlyPass} element={<MonthlyPassPage />} />
       <Route path={ROUTE_PATHS.lostTicket} element={<LostTicketPage />} />
       <Route path={ROUTE_PATHS.reservation} element={<ReservationPage />} />
+
+      {/* Driver / Parking User Routes */}
+      <Route path={ROUTE_PATHS.driverPortal} element={<DriverPortalPage />} />
+      <Route path={ROUTE_PATHS.driverParkVehicle} element={<ParkVehiclePage />} />
+      <Route path={ROUTE_PATHS.driverReceiveTicket} element={<ReceiveTicketPage />} />
+      <Route path="/driver/pay-fee" element={<Navigate to="/driver/receive-ticket?tab=pay-fee" replace />} />
+      <Route path={ROUTE_PATHS.driverMonthlyPass} element={<DriverMonthlyPassPage />} />
+      <Route path={ROUTE_PATHS.driverReservation} element={<DriverReservationPage />} />
+
       <Route path="/not-found" element={<ComingSoonPage />} />
       <Route path="/*" element={<ComingSoonPage />} />
       <Route path="*" element={<Navigate to="/not-found" replace />} />

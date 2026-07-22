@@ -32,6 +32,8 @@ function LoginPage() {
         navigate(ROUTE_PATHS.adminDashboard)
       } else if (result.user?.role === 'Manager') {
         navigate(ROUTE_PATHS.managerDashboard)
+      } else if (result.user?.role === 'Driver') {
+        navigate(ROUTE_PATHS.driverPortal)
       } else {
         navigate(ROUTE_PATHS.dashboard)
       }

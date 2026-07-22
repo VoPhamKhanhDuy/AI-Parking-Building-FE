@@ -2,12 +2,14 @@ export const ROLE_CREDENTIALS = {
   Admin: { email: 'sysadmin.parking@gmail.com', password: 'Admin@2026' },
   Manager: { email: 'facility.manager.a@gmail.com', password: 'Manager@2026' },
   'Parking Staff': { email: 'entry.staff.a@gmail.com', password: 'Staff@2026' },
+  Driver: { email: 'driver.user@gmail.com', password: 'Driver@2026' },
 }
 
 export const demoUsers = [
   { role: 'Admin', icon: 'admin_panel_settings', ...ROLE_CREDENTIALS.Admin },
   { role: 'Manager', icon: 'manage_accounts', ...ROLE_CREDENTIALS.Manager },
-  { role: 'Parking Staff', icon: 'badge', featured: true, ...ROLE_CREDENTIALS['Parking Staff'] },
+  { role: 'Parking Staff', icon: 'badge', ...ROLE_CREDENTIALS['Parking Staff'] },
+  { role: 'Driver', title: 'Parking User / Driver', icon: 'directions_car', featured: true, ...ROLE_CREDENTIALS.Driver },
 ]
 
 export const mockUsers = [
@@ -22,4 +24,9 @@ export const mockUsers = [
   { id: 7, email: 'entry.staff.a@gmail.com', password: 'Staff@2026', name: 'Nguyễn Văn An', role: 'Parking Staff' },
   { id: 8, email: 'exit.staff.b@gmail.com', password: 'Staff@2026', name: 'Phạm Thu Hà', role: 'Parking Staff' },
   { id: 9, email: 'parking.support@gmail.com', password: 'Staff@2026', name: 'Trần Minh Đức', role: 'Parking Staff' },
+
+  { id: 10, email: 'driver.user@gmail.com', password: 'Driver@2026', name: 'Nguyễn Văn A', role: 'Driver', phone: '0901 234 567', primaryPlate: '51A-12345' },
+  { id: 11, email: 'driver.ev@gmail.com', password: 'Driver@2026', name: 'Trần Minh B', role: 'Driver', phone: '0912 556 778', primaryPlate: '30A-99887' },
+  { id: 12, email: 'driver.bike@gmail.com', password: 'Driver@2026', name: 'Lê Hoàng C', role: 'Driver', phone: '0988 110 221', primaryPlate: '61C-23111' },
 ]
+

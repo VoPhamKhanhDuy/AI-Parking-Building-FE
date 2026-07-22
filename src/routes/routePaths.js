@@ -28,4 +28,11 @@ export const ROUTE_PATHS = {
   reservation: '/reservation',
   lostTicket: '/lost-ticket',
   systemLogs: '/system-logs',
+  driverPortal: '/driver',
+  driverParkVehicle: '/driver/park-vehicle',
+  driverReceiveTicket: '/driver/receive-ticket',
+  driverPayFee: '/driver/receive-ticket?tab=pay-fee',
+  driverMonthlyPass: '/driver/monthly-pass',
+  driverReservation: '/driver/reservation',
 }
+
