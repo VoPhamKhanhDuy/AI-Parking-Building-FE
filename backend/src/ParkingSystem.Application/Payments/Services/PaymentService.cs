@@ -81,7 +81,7 @@ public class PaymentService : IPaymentService
 
         var existing = await _payments.FirstOrDefaultAsync(
             new PaymentSpecifications.BySession(session.Id), ct);
-        if (existing is not null)
+        if (existing is not null && IsBlockingPayment(existing.Status))
         {
             throw new ConflictException(
                 $"A payment already exists for session '{session.Id}'.");
@@ -111,6 +111,17 @@ public class PaymentService : IPaymentService
         payment.ProcessedByUser = cashier;
         return payment.ToDto();
     }
+
+    /// <summary>
+    /// Returns true for terminal/active statuses that should block creating a new payment on
+    /// the same session. Failed/Cancelled payments are intentionally NOT blocking so the
+    /// cashier can re-issue a fresh QR after a previous attempt failed.
+    /// </summary>
+    internal static bool IsBlockingPayment(PaymentStatus status)
+        => status is PaymentStatus.Pending
+            or PaymentStatus.Paid
+            or PaymentStatus.Refunded
+            or PaymentStatus.Waived;
 
     public async Task<PaymentDto> MarkPaidAsync(Guid id, MarkPaidRequest req, CancellationToken ct = default)
     {

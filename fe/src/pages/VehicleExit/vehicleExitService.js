@@ -9,6 +9,31 @@ import QRCode from 'qrcode'
 
 export { shapeSession, formatVnd } from '../../core/models/entities'
 
+// Payment statuses we are willing to reuse from a 409 conflict.
+// Refunded / Waived are terminal; Failed / Cancelled are NOT reusable because
+// the backend will already let the cashier create a fresh payment (409 never fires).
+const REUSABLE_STATUSES = new Set(['PENDING', 'PAID'])
+
+// /payments/by-session/{id} returns Status as the numeric PaymentStatus enum
+// (0=Pending, 1=Paid, 2=Failed, 3=Refunded, 4=Waived, 5=Cancelled) while
+// /vehicle-exits/{id}/payments returns the string form. Normalise both shapes.
+const PAYMENT_STATUS_NAMES = {
+  0: 'PENDING',
+  1: 'PAID',
+  2: 'FAILED',
+  3: 'REFUNDED',
+  4: 'WAIVED',
+  5: 'CANCELLED',
+}
+
+function normalizePaymentStatus(raw) {
+  if (raw === null || raw === undefined) return ''
+  const asString = String(raw).trim().toUpperCase()
+  if (!asString) return ''
+  if (PAYMENT_STATUS_NAMES[asString]) return PAYMENT_STATUS_NAMES[asString]
+  return asString
+}
+
 export async function fetchActiveSessions() {
   try {
     const { data } = await api.get('/vehicle-exits/active')
@@ -86,7 +111,7 @@ export async function createExitPayment(sessionId) {
       paymentId: id,
       amount: data.amount ?? data.Amount,
       method: data.method ?? data.Method,
-      status: data.status ?? data.Status,
+      status: normalizePaymentStatus(data.status ?? data.Status),
       transactionCode: data.transactionCode || data.TransactionCode,
       qrImageUrl,
       bankName: 'Mock Bank',
@@ -97,18 +122,34 @@ export async function createExitPayment(sessionId) {
     if (status === 409) {
       try {
         const existing = await fetchExitPaymentBySession(sessionId)
-        if (existing?.paymentId) {
+        if (existing?.paymentId && REUSABLE_STATUSES.has(normalizePaymentStatus(existing.status))) {
           return { ...existing, reused: true }
         }
       } catch {
         // surface a friendly message below
       }
-      const message = extractErrorMessage(error, 'A pending payment already exists for this session.')
+      const message = extractErrorMessage(error, 'A payment already exists for this session and cannot be replaced.')
       throw new Error(message, { cause: error })
     }
     const message = extractErrorMessage(error, 'Failed to create payment')
     throw new Error(message, { cause: error })
   }
+}
+
+// Optimistic reuse: skip the POST entirely if an existing PENDING/PAID payment is
+// already attached to the session. Avoids the 409 console error on repeat clicks
+// (browser DevTools logs every 4xx response regardless of JS handling).
+export async function getOrCreateExitPayment(sessionId) {
+  if (!sessionId) return null
+  try {
+    const existing = await fetchExitPaymentBySession(sessionId)
+    if (existing?.paymentId && REUSABLE_STATUSES.has(normalizePaymentStatus(existing.status))) {
+      return { ...existing, reused: true }
+    }
+  } catch {
+    // fall through and try to create
+  }
+  return createExitPayment(sessionId)
 }
 
 export async function checkExitPaymentStatus(paymentId) {
@@ -163,7 +204,7 @@ async function shapeFromPaymentDto(data) {
     paymentId: id,
     amount: data.amount ?? data.Amount,
     method: data.method ?? data.Method,
-    status: data.status ?? data.Status,
+    status: normalizePaymentStatus(data.status ?? data.Status),
     transactionCode: data.transactionReference || data.TransactionReference || `TXN-${String(id).slice(0, 8)}`,
     qrImageUrl,
     bankName: 'Mock Bank',

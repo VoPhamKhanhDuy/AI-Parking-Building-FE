@@ -118,6 +118,56 @@ public class PaymentServiceTests
             svc.CreateAsync(new CreatePaymentRequest { SessionId = session.Id, Amount = 1m }));
     }
 
+    [Theory]
+    [InlineData(PaymentStatus.Pending)]
+    [InlineData(PaymentStatus.Paid)]
+    [InlineData(PaymentStatus.Refunded)]
+    [InlineData(PaymentStatus.Waived)]
+    public async Task CreateAsync_throws_409_for_non_retryable_existing_payments(PaymentStatus existingStatus)
+    {
+        var (svc, payments, sessions, _, _) = Build();
+        var session = SeedCompletedSession(sessions);
+        await payments.AddAsync(new Payment
+        {
+            Id = Guid.NewGuid(),
+            SessionId = session.Id,
+            Status = existingStatus,
+            Amount = 1m
+        });
+
+        await Assert.ThrowsAsync<ConflictException>(() =>
+            svc.CreateAsync(new CreatePaymentRequest { SessionId = session.Id, Amount = 1m }));
+    }
+
+    [Theory]
+    [InlineData(PaymentStatus.Failed)]
+    [InlineData(PaymentStatus.Cancelled)]
+    public async Task CreateAsync_allows_retry_when_existing_payment_is_failed_or_cancelled(PaymentStatus existingStatus)
+    {
+        var (svc, payments, sessions, _, uow) = Build();
+        var session = SeedCompletedSession(sessions);
+        await payments.AddAsync(new Payment
+        {
+            Id = Guid.NewGuid(),
+            SessionId = session.Id,
+            Status = existingStatus,
+            Amount = 1m
+        });
+
+        var dto = await svc.CreateAsync(new CreatePaymentRequest
+        {
+            SessionId = session.Id,
+            Amount = 5000m,
+            Method = PaymentMethod.Cash
+        });
+
+        Assert.Equal(PaymentStatus.Pending, dto.Status);
+        Assert.Equal(5000m, dto.Amount);
+        Assert.Equal(session.Id, dto.SessionId);
+        Assert.Equal(2, payments.All.Count); // previous Failed/Cancelled is kept + new Pending
+        Assert.Equal(1, uow.SaveChangesCallCount);
+    }
+
     [Fact]
     public async Task MarkPaidAsync_transitions_pending_to_paid_and_records_cashier()
     {

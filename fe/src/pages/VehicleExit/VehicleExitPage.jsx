@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import MainLayout from '../../layouts/MainLayout'
 import { ROUTE_PATHS } from '../../routes/routePaths'
-import { calculateExitFee, checkExitPaymentStatus, createExitPayment, fetchVehicleExitData, getPaymentSummary, lookupVehicleExitSession, processVehicleExit } from './vehicleExitService'
+import { calculateExitFee, checkExitPaymentStatus, getOrCreateExitPayment, fetchVehicleExitData, getPaymentSummary, lookupVehicleExitSession, processVehicleExit } from './vehicleExitService'
 import { validateLicensePlate, validateTicketCode, classifyQuery } from '../../core/utils/vehicleValidation'
 import './VehicleExitPage.css'
 
@@ -104,7 +104,7 @@ function VehicleExitPage() {
     actionInProgress.current = true
     setAction('payment')
     try {
-      const newPayment = await createExitPayment(selected.id)
+      const newPayment = await getOrCreateExitPayment(selected.id)
       setPayment(newPayment)
       if (newPayment?.paymentId) {
         setMessage(newPayment.reused
