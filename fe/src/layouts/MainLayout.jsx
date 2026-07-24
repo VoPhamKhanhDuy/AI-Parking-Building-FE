@@ -15,6 +15,7 @@ const NAVIGATION_ITEMS = [
   { icon: 'calendar_month', label: 'Monthly Pass', path: ROUTE_PATHS.monthlyPass },
   { icon: 'event_available', label: 'Reservation', path: ROUTE_PATHS.reservation },
   { icon: 'find_replace', label: 'Lost Ticket', path: ROUTE_PATHS.lostTicket },
+  { icon: 'history', label: 'System Logs', path: ROUTE_PATHS.systemLogs },
 ]
 
 const ROLE_DISPLAY_MAP = {

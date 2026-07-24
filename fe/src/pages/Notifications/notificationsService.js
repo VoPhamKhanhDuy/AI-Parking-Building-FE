@@ -43,6 +43,16 @@ export async function markAllAsRead() {
   }
 }
 
+export async function deleteNotification(id) {
+  try {
+    await api.delete(`/notifications/${id}`)
+    return { success: true }
+  } catch (error) {
+    logger.error('Notifications', `Failed to delete notification: ${error.message}`)
+    return { success: false, message: 'Failed to delete notification' }
+  }
+}
+
 export async function filterNotifications(params = {}) {
   return getNotifications(params)
 }

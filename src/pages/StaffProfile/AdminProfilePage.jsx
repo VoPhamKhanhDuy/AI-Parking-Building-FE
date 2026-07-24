@@ -1,12 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import MainLayout from '../../layouts/MainLayout'
 import { adminProfileData } from '../../mock-data/adminProfile'
-import { ROLE_CREDENTIALS } from '../../mock-data/users'
 import { ROUTE_PATHS } from '../../routes/routePaths'
-import { formatCurrentTime } from '../Dashboard/dashboardService'
-import '../../layouts/MainLayout.css'
+import './StaffProfilePage.css'
 
 const emptyPasswordForm = { currentPassword: '', newPassword: '', confirmPassword: '' }
+
+function getInitials(name) {
+  if (!name) return 'AD'
+  const parts = name.trim().split(/\s+/).filter(Boolean)
+  if (!parts.length) return 'AD'
+  return ((parts[0][0] || '') + (parts[parts.length - 1][0] || '')).toUpperCase()
+}
 
 function AdminProfilePage() {
   const navigate = useNavigate()
@@ -14,25 +20,13 @@ function AdminProfilePage() {
   const [passwordModalOpen, setPasswordModalOpen] = useState(false)
   const [passwordForm, setPasswordForm] = useState(emptyPasswordForm)
   const [formError, setFormError] = useState('')
-  const [openMenu, setOpenMenu] = useState(null)
-  const [time, setTime] = useState(() => formatCurrentTime ? formatCurrentTime() : new Date().toLocaleTimeString('en-GB'))
+  const [toast, setToast] = useState('')
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTime(formatCurrentTime ? formatCurrentTime() : new Date().toLocaleTimeString('en-GB'))
-    }, 1000)
-    return () => clearInterval(timer)
-  }, [])
-  
-  // Custom Toast state
-  const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
-
-  const showToast = (message, type = 'success') => {
-    setToast({ show: true, message, type })
-    setTimeout(() => {
-      setToast({ show: false, message: '', type: 'success' })
-    }, 3000)
-  }
+    if (!toast) return undefined
+    const timer = setTimeout(() => setToast(''), 2600)
+    return () => clearTimeout(timer)
+  }, [toast])
 
   const openPasswordModal = () => {
     setPasswordForm(emptyPasswordForm)
@@ -40,437 +34,224 @@ function AdminProfilePage() {
     setPasswordModalOpen(true)
   }
 
-  const updatePassword = (event) => {
-    setPasswordForm((current) => ({ ...current, [event.target.name]: event.target.value }))
-  }
+  const updatePassword = (event) => setPasswordForm((current) => ({ ...current, [event.target.name]: event.target.value }))
 
-  const submitPassword = (event) => {
+  const submitPassword = async (event) => {
     event.preventDefault()
-    if (passwordForm.currentPassword !== ROLE_CREDENTIALS.Admin.password) {
-      setFormError('Mật khẩu hiện tại không chính xác.')
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setFormError('Please fill in all password fields.')
       return
     }
     if (passwordForm.newPassword.length < 6) {
-      setFormError('Mật khẩu mới phải dài tối thiểu 6 ký tự.')
-      return
-    }
-    if (passwordForm.newPassword === passwordForm.currentPassword) {
-      setFormError('Mật khẩu mới không được trùng với mật khẩu cũ.')
+      setFormError('New password must be at least 6 characters long.')
       return
     }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setFormError('Xác nhận mật khẩu mới không khớp.')
+      setFormError('New password and confirmation do not match.')
       return
     }
 
     setPasswordModalOpen(false)
-    showToast('Đổi mật khẩu tài khoản Admin thành công!', 'success')
+    setPasswordForm(emptyPasswordForm)
+    setToast('Admin password updated successfully!')
   }
 
   const logout = () => navigate(ROUTE_PATHS.login)
 
+  const displayName = profile.name || 'System Admin'
+  const initials = getInitials(displayName)
+  const email = profile.email || 'admin@parking.vn'
+
   return (
-    <div className="bg-surface text-on-surface flex min-h-screen">
-      
-      {/* Dynamic styling for glass-card */}
-      <style dangerouslySetInnerHTML={{__html: `
-        .glass-card {
-            background: white;
-            border: 1px solid #e2e8f0;
-            box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-        }
-        .admin-profile-circle {
-            display: grid;
-            width: 42px;
-            height: 42px;
-            place-items: center;
-            border-radius: 50%;
-            background: #2563eb;
-            color: white;
-            font-size: 17px;
-            font-weight: bold;
-        }
-      `}} />
-
-      {/* SideNavBar (Professional Dark) */}
-      <aside className="fixed left-0 top-0 h-full w-[220px] z-40 overflow-y-auto bg-[#1e293b] flex flex-col">
-        <div className="px-5 py-6 mb-2">
-          <h1 className="text-[20px] leading-tight font-bold text-white mb-1">AI Command Center</h1>
-          <p className="text-slate-400 text-label-md font-label-md">System Administrator Portal</p>
-        </div>
-        <nav className="flex-1 px-3 space-y-3">
-          <div>
-            <div className="px-4 mb-2 text-slate-500 text-[10px] font-bold uppercase tracking-widest">Main</div>
-            <a className="flex items-center gap-3 px-4 py-2 text-slate-300 hover:text-white transition-colors duration-200 hover:bg-white/5 rounded-lg mx-2 cursor-pointer" onClick={() => navigate(ROUTE_PATHS.adminDashboard)}>
-              <span className="material-symbols-outlined text-[20px]">dashboard</span>
-              <span className="font-body-sm text-body-sm">Admin Dashboard</span>
-            </a>
+    <MainLayout>
+      <div className="staff-profile-page">
+        <header className="staff-page-heading">
+          <div className="staff-breadcrumb">
+            <button onClick={() => navigate(ROUTE_PATHS.adminDashboard)}>Dashboard</button>
+            <span className="material-symbols-outlined">chevron_right</span>
+            <strong>Admin Profile</strong>
           </div>
-          <div>
-            <div className="px-4 mb-2 text-slate-500 text-[10px] font-bold uppercase tracking-widest">Admin Control</div>
-            <div className="space-y-1">
-              <a className="flex items-center gap-3 px-4 py-2 text-slate-300 hover:text-white transition-colors duration-200 hover:bg-white/5 rounded-lg mx-2 cursor-pointer" onClick={() => navigate(ROUTE_PATHS.users)}>
-                <span className="material-symbols-outlined text-[20px]">group</span>
-                <span className="font-body-sm text-body-sm">Users &amp; Roles</span>
-              </a>
-              <a className="flex items-center gap-3 px-4 py-2 text-slate-300 hover:text-white transition-colors duration-200 hover:bg-white/5 rounded-lg mx-2 cursor-pointer" onClick={() => navigate(ROUTE_PATHS.auditLogs)}>
-                <span className="material-symbols-outlined text-[20px]">list_alt</span>
-                <span className="font-body-sm text-body-sm">Audit Logs</span>
-              </a>
-            </div>
-          </div>
-        </nav>
-      </aside>
-
-      {/* Main Content Area */}
-      <main className="flex-1 ml-[220px] flex flex-col min-w-0 bg-[#f7f9fc]">
-        
-        {/* TopNavBar */}
-        <header className="h-12 flex items-center justify-between px-6 bg-white border-b border-outline-variant sticky top-0 z-30">
-          <div className="flex items-center gap-8">
-            <span className="gate-pill"><i></i>Building A</span>
-            <span className="clock">
-              <span className="material-symbols-outlined">schedule</span>
-              {time}
-            </span>
-            <div className="shift-info">
-              <span>
-                <small>Operation Mode</small>
-                <strong>Normal</strong>
-              </span>
-              <span>
-                <small>System Status</small>
-                <strong>Online</strong>
-              </span>
-            </div>
-          </div>
-          <div className="topbar-actions">
-            <div className="menu-anchor">
-              <button className="icon-button" aria-label="Notifications" onClick={() => navigate(ROUTE_PATHS.adminNotifications)}>
-                <span className="material-symbols-outlined">notifications</span>
-                <i className="notification-dot" />
-              </button>
-            </div>
-            <div className="menu-anchor">
-              <button className="icon-button" aria-label="Settings" onClick={() => setOpenMenu(openMenu === 'settings' ? null : 'settings')}>
-                <span className="material-symbols-outlined">settings</span>
-              </button>
-              {openMenu === 'settings' && (
-                <div className="action-menu compact">
-                  <button onClick={() => navigate(ROUTE_PATHS.adminProfile)}>Account settings</button>
-                </div>
-              )}
-            </div>
-            <span className="top-divider" />
-            <div className="menu-anchor">
-              <button className="profile-button" onClick={() => setOpenMenu(openMenu === 'profile' ? null : 'profile')}>
-                <span><strong>{profile.name}</strong><small>System Admin</small></span>
-                <b>{profile.initials}</b>
-              </button>
-              {openMenu === 'profile' && (
-                <div className="action-menu compact profile-menu">
-                  <button onClick={() => navigate(ROUTE_PATHS.adminProfile)}>View profile</button>
-                  <button onClick={logout}>Sign out</button>
-                </div>
-              )}
-            </div>
-          </div>
+          <h1>System Admin Profile</h1>
+          <p>Manage administrative credentials, IT system access clearances, and recent activity logs.</p>
         </header>
 
-        {/* Content Canvas */}
-        <div className="p-3 space-y-3 max-w-[1120px] mx-auto w-full">
-          
-          {/* Breadcrumb heading */}
-          <header className="space-y-1">
-            <div className="flex items-center gap-2 text-body-sm text-on-surface-variant">
-              <button className="hover:text-primary transition-colors text-body-sm text-on-surface-variant font-medium" onClick={() => navigate(ROUTE_PATHS.adminDashboard)}>Admin Dashboard</button>
-              <span className="material-symbols-outlined text-[16px] text-on-surface-variant">chevron_right</span>
-              <strong className="text-on-surface font-semibold text-body-sm">Admin Profile</strong>
-            </div>
-            <h2 className="text-[22px] leading-tight font-bold text-on-surface">Admin Profile</h2>
-            <p className="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Manage administrative credentials, IT system access clearances, and logs overview.</p>
-          </header>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-            
-            {/* Left: General Facts & Shift Status */}
-            <div className="lg:col-span-8 space-y-3">
-              
-              {/* Profile Main Card */}
-              <div className="glass-card rounded-lg p-3 bg-white space-y-3">
-                <h3 className="text-[15px] font-bold text-on-surface m-0 border-b border-outline-variant pb-2">Admin Information</h3>
-                
-                <div className="flex items-center gap-3">
-                  <div className="admin-profile-circle">{profile.initials}</div>
-                  <div>
-                    <h4 className="text-[15px] font-bold text-on-surface">{profile.name}</h4>
-                    <p className="text-body-sm text-on-surface-variant font-medium">{profile.role}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-body-sm">
-                  <div className="flex justify-between border-b border-slate-100 py-2">
-                    <span className="text-on-surface-variant">IT Terminal Office</span>
-                    <span className="font-semibold">{profile.gate}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 py-2">
-                    <span className="text-on-surface-variant">Division</span>
-                    <span className="font-semibold">{profile.department}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 py-2">
-                    <span className="text-on-surface-variant">Account Status</span>
-                    <span className="text-green-700 font-bold uppercase">{profile.status}</span>
-                  </div>
-                  <div className="flex justify-between border-b border-slate-100 py-2">
-                    <span className="text-on-surface-variant">Last Login Session</span>
-                    <span className="font-semibold">{profile.lastLogin}</span>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <button 
-                    className="bg-[#1e293b] text-white px-4 py-2 rounded text-body-sm font-bold hover:bg-slate-800 transition-colors active:scale-[0.98]"
-                    onClick={openPasswordModal}
-                  >
-                    Change Password
-                  </button>
-                  <button 
-                    className="border border-error/30 text-error hover:bg-error/5 px-4 py-2 rounded text-body-sm font-bold transition-all active:scale-[0.98]"
-                    onClick={logout}
-                  >
-                    Logout
-                  </button>
-                </div>
-              </div>
-
-              {/* Shift and checks */}
-              <div className="glass-card rounded-lg p-3 bg-white space-y-3">
-                <h3 className="text-[15px] font-bold text-on-surface m-0 border-b border-outline-variant pb-2">Active Shift Security Checks</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-3 bg-slate-50 p-4 rounded border border-slate-100">
-                    <div className="flex flex-col">
-                      <small className="text-[10px] text-slate-500 font-bold uppercase">Workshift Schedule</small>
-                      <strong className="text-body-md">{profile.shift.name}</strong>
-                      <span className="text-body-sm text-on-surface-variant">{profile.shift.schedule}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-green-700 text-body-sm font-bold">
-                      <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
-                      Active Session Verified
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <small className="text-[10px] text-slate-500 font-bold uppercase block">Core IT Status</small>
-                    <div className="space-y-1.5 text-body-sm">
-                      {profile.systems.map((sys) => (
-                        <div key={sys} className="flex justify-between items-center text-on-surface-variant font-medium">
-                          <span>{sys}</span>
-                          <span className="material-symbols-outlined text-green-600 text-[18px]">check_circle</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-            {/* Right: Security & Permissions */}
-            <div className="lg:col-span-4 space-y-3">
-              
-              {/* Security info card */}
-              <div className="glass-card rounded-lg p-3 bg-white space-y-3">
-                <h3 className="text-[15px] font-bold text-on-surface m-0 border-b border-outline-variant pb-2">IT Security Policies</h3>
-                <div className="space-y-3 text-body-sm">
-                  {profile.security.map(([label, val]) => (
-                    <div key={label} className="flex justify-between">
-                      <span className="text-on-surface-variant">{label}</span>
-                      <span className="font-semibold text-slate-900">{val}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Clearance Levels */}
-              <div className="glass-card rounded-lg p-3 bg-white space-y-3">
-                <h3 className="text-[15px] font-bold text-on-surface m-0 border-b border-outline-variant pb-2">Clearance Access Permissions</h3>
-                
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="text-[11px] font-bold text-green-700 uppercase tracking-wider mb-1.5">Allowed Actions</h4>
-                    <div className="flex flex-wrap gap-1.5">
-                      {profile.permissions.allowed.map((allow) => (
-                        <span key={allow} className="px-2.5 py-1 text-xs rounded bg-green-50 text-green-800 font-medium border border-green-200">
-                          {allow}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">Limited Control</h4>
-                    <div className="space-y-1">
-                      {profile.permissions.limited.map(([item, clearance]) => (
-                        <div key={item} className="flex justify-between text-xs text-on-surface-variant font-medium">
-                          <span>{item}</span>
-                          <span className="font-semibold text-slate-900">{clearance}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="text-[11px] font-bold text-error uppercase tracking-wider mb-1.5">Access Denied</h4>
-                    <div className="flex flex-wrap gap-1.5">
-                      {profile.permissions.denied.map((deny) => (
-                        <span key={deny} className="px-2.5 py-1 text-xs rounded bg-red-50 text-red-800 font-medium border border-red-200">
-                          {deny}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* Activity Section */}
-          <section className="glass-card rounded-lg overflow-hidden bg-white">
-            <div className="px-5 py-3 border-b border-outline-variant flex justify-between items-center bg-white">
-              <h3 className="text-[15px] font-bold text-on-surface m-0">Recent Admin Activities</h3>
-              <button 
-                className="text-primary font-bold text-xs uppercase hover:underline"
-                onClick={() => navigate(ROUTE_PATHS.auditLogs)}
-              >
-                View Full Audit Logs
-              </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-surface-container-lowest border-b border-outline-variant">
-                  <tr>
-                    <th className="px-4 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Time</th>
-                    <th className="px-4 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Activity</th>
-                    <th className="px-4 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Reference</th>
-                    <th className="px-4 py-2.5 font-label-md text-on-surface-variant uppercase text-[10px] tracking-widest font-bold">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant bg-white">
-                  {profile.activities.map(([time, act, ref, stat], i) => (
-                    <tr key={i} className="hover:bg-surface-container-low/30 transition-colors">
-                      <td className="px-4 py-2.5 text-body-sm text-on-surface-variant">{time}</td>
-                      <td className="px-4 py-2.5 text-body-sm font-semibold text-on-surface">{act}</td>
-                      <td className="px-4 py-2.5 text-body-sm text-on-surface-variant">{ref}</td>
-                      <td className="px-4 py-2.5">
-                        <span className="text-green-700 font-bold text-[10px] uppercase">{stat}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-        </div>
-
-      </main>
-
-      {/* Password Modal Custom */}
-      {passwordModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn">
-          <section className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden border border-outline-variant">
-            <header className="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-slate-50">
+        <section className="profile-top-grid">
+          <article className="profile-card staff-information">
+            <h2>Admin Information</h2>
+            <div className="staff-identity">
+              <span>{initials}</span>
               <div>
-                <h3 className="font-body-lg font-bold text-on-surface">Đổi mật khẩu Admin</h3>
-                <p className="text-xs text-on-surface-variant font-medium mt-0.5">Sử dụng mật khẩu mạnh để bảo mật tài khoản.</p>
+                <strong>{displayName}</strong>
+                <p>{profile.role}</p>
               </div>
-              <button 
-                className="text-on-surface-variant hover:bg-slate-200 p-1.5 rounded-full transition-colors"
-                onClick={() => setPasswordModalOpen(false)}
-              >
-                <span className="material-symbols-outlined text-[20px]">close</span>
-              </button>
-            </header>
-            
-            <form onSubmit={submitPassword} className="p-6 space-y-4">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-on-surface-variant uppercase">Mật khẩu hiện tại</label>
-                <input 
-                  autoFocus 
-                  name="currentPassword" 
-                  type="password" 
-                  value={passwordForm.currentPassword} 
-                  onChange={updatePassword} 
-                  className="w-full px-3.5 py-2 border border-outline-variant rounded focus:ring-1 focus:ring-primary focus:border-primary text-body-sm outline-none"
-                  required 
-                />
+            </div>
+            <dl className="staff-facts">
+              <dt>Terminal Gate</dt>
+              <dd>{profile.gate}</dd>
+              <dt>Department</dt>
+              <dd>{profile.department}</dd>
+              <dt>Email</dt>
+              <dd>{email}</dd>
+              <dt>Status</dt>
+              <dd className="active-text">{profile.status}</dd>
+              <dt>Last Login</dt>
+              <dd>{profile.lastLogin}</dd>
+            </dl>
+            <div className="staff-primary-actions">
+              <button onClick={openPasswordModal}>Change Password</button>
+              <button className="danger" onClick={logout}>Sign Out</button>
+            </div>
+          </article>
+
+          <article className="profile-card shift-card">
+            <h2>Active IT & System Status</h2>
+            <div className="shift-grid">
+              <div className="shift-details">
+                <span>
+                  <small>Shift Name</small>
+                  <strong>{profile.shift.name}</strong>
+                </span>
+                <span>
+                  <small>Schedule</small>
+                  <strong>{profile.shift.schedule}</strong>
+                </span>
+                <span>
+                  <small>Status</small>
+                  <strong className="active-text"><i />Active Session Verified</strong>
+                </span>
               </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-on-surface-variant uppercase">Mật khẩu mới</label>
-                <input 
-                  name="newPassword" 
-                  type="password" 
-                  value={passwordForm.newPassword} 
-                  onChange={updatePassword} 
-                  className="w-full px-3.5 py-2 border border-outline-variant rounded focus:ring-1 focus:ring-primary focus:border-primary text-body-sm outline-none"
-                  minLength="6" 
-                  required 
-                />
+              <div>
+                <small className="section-label">Core IT Services</small>
+                <div className="system-checks">
+                  {profile.systems.map((system) => (
+                    <span key={system}>
+                      {system}
+                      <i className="material-symbols-outlined">check_circle</i>
+                    </span>
+                  ))}
+                </div>
               </div>
+            </div>
+            <div className="shift-message">
+              <span className="material-symbols-outlined">shield</span>
+              <p>System Administrator privileges active. Core IT servers and security services operational.</p>
+            </div>
+          </article>
+        </section>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-on-surface-variant uppercase">Xác nhận mật khẩu mới</label>
-                <input 
-                  name="confirmPassword" 
-                  type="password" 
-                  value={passwordForm.confirmPassword} 
-                  onChange={updatePassword} 
-                  className="w-full px-3.5 py-2 border border-outline-variant rounded focus:ring-1 focus:ring-primary focus:border-primary text-body-sm outline-none"
-                  minLength="6" 
-                  required 
-                />
+        <section className="profile-middle-grid">
+          <article className="profile-card security-card">
+            <h2>Account Security Policies</h2>
+            <dl>
+              {profile.security.map(([label, value]) => (
+                <div key={label}>
+                  <dt>{label}</dt>
+                  <dd className={value === 'Active' ? 'active-text' : ''}>{value}</dd>
+                </div>
+              ))}
+            </dl>
+            <div className="security-actions">
+              <button onClick={openPasswordModal}>Change Password</button>
+              <button onClick={logout}>Sign Out</button>
+            </div>
+          </article>
+
+          <article className="profile-card permissions-card">
+            <h2>Clearance & Access Permissions</h2>
+            <section>
+              <h3>Full Access</h3>
+              <div className="permission-tags allowed">
+                {profile.permissions.allowed.map((item) => <span key={item}>{item}</span>)}
               </div>
+            </section>
+            <section>
+              <h3>Limited Control</h3>
+              <div className="limited-list">
+                {profile.permissions.limited.map(([name, access]) => (
+                  <span key={name}><i>{name}</i><strong>{access}</strong></span>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3>No Access</h3>
+              <div className="permission-tags denied">
+                {profile.permissions.denied.map((item) => <span key={item}>{item}</span>)}
+              </div>
+            </section>
+          </article>
+        </section>
 
-              {formError && (
-                <p className="text-xs font-bold text-error bg-red-50 p-2 border border-red-200 rounded">
-                  {formError}
-                </p>
-              )}
+        <section className="profile-card activity-section">
+          <header>
+            <h2>Recent Admin Activities</h2>
+            <button onClick={() => navigate(ROUTE_PATHS.auditLogs)}>View Full Audit Logs</button>
+          </header>
+          <div className="profile-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Activity</th>
+                  <th>Reference</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {profile.activities.map(([time, activity, reference, status]) => (
+                  <tr key={`${time}-${activity}`}>
+                    <td>{time}</td>
+                    <td><strong>{activity}</strong></td>
+                    <td className="activity-reference">{reference}</td>
+                    <td>
+                      <span className={`activity-status ${status.toLowerCase()}`}>{status}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-              <div className="flex justify-end gap-2 pt-2">
-                <button 
-                  type="button" 
-                  onClick={() => setPasswordModalOpen(false)}
-                  className="px-4 py-2 border border-outline-variant text-on-surface rounded text-body-sm font-semibold hover:bg-slate-50 transition-colors"
-                >
-                  Hủy bỏ
+        {passwordModalOpen && (
+          <div className="password-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setPasswordModalOpen(false)}>
+            <section className="password-modal" role="dialog" aria-modal="true" aria-labelledby="password-title">
+              <header>
+                <div>
+                  <h2 id="password-title">Change Admin Password</h2>
+                  <p>Use a strong password to maintain administrator security.</p>
+                </div>
+                <button aria-label="Close" onClick={() => setPasswordModalOpen(false)}>
+                  <span className="material-symbols-outlined">close</span>
                 </button>
-                <button 
-                  type="submit"
-                  className="px-4 py-2 bg-primary hover:bg-blue-700 text-white rounded text-body-sm font-bold transition-colors"
-                >
-                  Cập nhật
-                </button>
-              </div>
-            </form>
-          </section>
-        </div>
-      )}
+              </header>
+              <form onSubmit={submitPassword}>
+                <label>Current Password
+                  <input autoFocus name="currentPassword" type="password" value={passwordForm.currentPassword} onChange={updatePassword} required />
+                </label>
+                <label>New Password
+                  <input name="newPassword" type="password" value={passwordForm.newPassword} onChange={updatePassword} minLength="6" required />
+                </label>
+                <label>Confirm New Password
+                  <input name="confirmPassword" type="password" value={passwordForm.confirmPassword} onChange={updatePassword} minLength="6" required />
+                </label>
+                {formError && <p className="password-error" role="alert">{formError}</p>}
+                <div>
+                  <button type="button" onClick={() => setPasswordModalOpen(false)}>Cancel</button>
+                  <button className="save-password" type="submit">Update Password</button>
+                </div>
+              </form>
+            </section>
+          </div>
+        )}
 
-      {/* Global custom Toast */}
-      {toast.show && (
-        <div className={`profile-toast-custom ${toast.type || 'success'}`}>
-          <span className="material-symbols-outlined">
-            {toast.type === 'error' ? 'cancel' : 'check_circle'}
-          </span>
-          <span>{toast.message}</span>
-        </div>
-      )}
-
-    </div>
+        {toast && (
+          <div className="profile-toast" role="status">
+            <span className="material-symbols-outlined">check_circle</span>
+            {toast}
+          </div>
+        )}
+      </div>
+    </MainLayout>
   )
 }
 

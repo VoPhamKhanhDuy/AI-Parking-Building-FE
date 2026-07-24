@@ -7,7 +7,7 @@ namespace ParkingSystem.API.Controllers;
 
 [ApiController]
 [Route("api/system-logs")]
-[Authorize(Roles = "Admin")]
+[Authorize]
 public class SystemLogsController : ControllerBase
 {
     private readonly ISystemLogQueryService _service;

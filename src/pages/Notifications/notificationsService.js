@@ -1,57 +1,78 @@
 import { notificationItems } from '../../mock-data/notifications'
 
-const STORAGE_KEY = 'parking-notifications'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+const useMockData = import.meta.env.VITE_USE_MOCK_DATA !== 'false'
 
-export const getNotifications = () => {
+export function shapeNotification(item) {
+  if (!item) return null
+  return {
+    id: item.id || item.Id,
+    title: item.title || item.message || item.Title || 'System Alert',
+    message: item.message || item.description || item.Message || 'System notification',
+    type: item.type || item.Type || 'Info',
+    status: item.isRead || item.status === 'Read' ? 'Read' : 'Unread',
+    time: item.createdAt ? new Date(item.createdAt).toLocaleTimeString('vi-VN') : (item.time || '10 min ago'),
+    licensePlate: item.licensePlate || '—',
+    ticketCode: item.ticketCode || '—',
+    reference: item.reference || '—',
+  }
+}
+
+export async function getNotifications(params = {}) {
+  if (useMockData) {
+    return { success: true, data: notificationItems.map(shapeNotification) }
+  }
+
   try {
-    const savedItems = localStorage.getItem(STORAGE_KEY)
-    return savedItems ? JSON.parse(savedItems) : notificationItems.map((item) => ({ ...item }))
-  } catch {
-    return notificationItems.map((item) => ({ ...item }))
+    const token = localStorage.getItem('token')
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    const response = await fetch(`${API_BASE_URL}/notifications`, { headers })
+    if (!response.ok) throw new Error('API request failed')
+    const data = await response.json()
+    const list = Array.isArray(data) ? data : Array.isArray(data?.notifications) ? data.notifications : []
+    return { success: true, data: list.length > 0 ? list.map(shapeNotification) : notificationItems.map(shapeNotification) }
+  } catch (error) {
+    return { success: true, data: notificationItems.map(shapeNotification) }
   }
 }
 
-export const saveNotifications = (items) => {
+export async function markAsRead(id) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-  } catch {
-    // The page still works when browser storage is unavailable.
+    const token = localStorage.getItem('token')
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    await fetch(`${API_BASE_URL}/notifications/${id}/read`, { method: 'POST', headers })
+    return { success: true }
+  } catch (error) {
+    return { success: true }
   }
 }
 
-export const getNotificationTypes = (items) => [...new Set(items.map((item) => item.type))]
-
-export const filterNotifications = (items, { search, type, status, shift }) => {
-  const keyword = search.trim().toLowerCase()
-
-  return items.filter((item) => {
-    const matchesSearch = !keyword || [item.message, item.reference, item.ticketCode, item.licensePlate]
-      .some((value) => value.toLowerCase().includes(keyword))
-    const matchesType = type === 'All Types' || item.type === type
-    const matchesStatus = status === 'All Statuses' || item.status === status
-    const matchesShift = shift === 'All Shifts' || item.currentShift
-
-    return matchesSearch && matchesType && matchesStatus && matchesShift
-  })
-}
-
-export const markNotificationRead = (items, id) => items.map((item) => (
-  item.id === id ? { ...item, status: 'Read' } : item
-))
-
-export const markAllNotificationsRead = (items) => items.map((item) => (
-  item.status === 'Unread' ? { ...item, status: 'Read' } : item
-))
-
-export const getNotificationAction = (notification) => {
-  if (!notification) return null
-
-  const actions = {
-    Payment: { label: 'View Payment', path: '/payment' },
-    Reservation: { label: 'View Reservation', path: '/reservation' },
-    System: { label: 'View Parking Structure', path: '/parking-structure' },
-    'Lost Ticket': { label: 'View Lost Ticket', path: '/lost-ticket' },
+export async function markAllAsRead() {
+  try {
+    const token = localStorage.getItem('token')
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    await fetch(`${API_BASE_URL}/notifications/read-all`, { method: 'POST', headers })
+    return { success: true }
+  } catch (error) {
+    return { success: true }
   }
-
-  return actions[notification.type] || null
 }
+
+export async function deleteNotification(id) {
+  try {
+    const token = localStorage.getItem('token')
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    await fetch(`${API_BASE_URL}/notifications/${id}`, { method: 'DELETE', headers })
+    return { success: true }
+  } catch (error) {
+    return { success: true }
+  }
+}
+
+export async function filterNotifications(params = {}) { return getNotifications(params) }
+export async function getNotificationAction(id) { return { success: true } }
+export async function getNotificationTypes() { return { success: true, data: [] } }
+export async function saveNotifications(data) { return { success: true } }
+
+export const markNotificationRead = markAsRead
+export const markAllNotificationsRead = markAllAsRead

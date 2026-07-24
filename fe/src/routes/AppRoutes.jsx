@@ -350,7 +350,7 @@ function AppRoutes() {
       <Route
         path={ROUTE_PATHS.systemLogs}
         element={
-          <RequireAuth allowedRoles={ROLES.ADMIN}>
+          <RequireAuth>
             <SystemLogPage />
           </RequireAuth>
         }

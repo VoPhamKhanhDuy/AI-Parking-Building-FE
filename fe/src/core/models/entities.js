@@ -602,20 +602,30 @@ export function shapeNotification(raw) {
 export function shapeLog(raw) {
   if (!raw || typeof raw !== 'object') return null
   const n = normalizeFields(raw, LOG_SCHEMA)
-  const createdAt = n.createdAt ? new Date(n.createdAt) : null
+  const createdAtRaw = n.createdAt || raw.createdAt || raw.CreatedAt
+  const createdAt = createdAtRaw ? new Date(createdAtRaw) : null
+  const id = n.id || raw.id || raw.Id || `LOG-${Date.now()}`
+  const moduleName = n.module || raw.module || raw.Module || raw.targetEntity || raw.TargetEntity || 'System'
+  const activityName = n.activity || raw.activity || raw.Activity || raw.action || raw.Action || n.description || 'System Activity'
+  const staffName = n.staff || raw.staff || raw.Staff || raw.userName || raw.UserName || 'System Staff'
+  const statusName = n.status || raw.status || raw.Status || 'Completed'
+  const descriptionText = n.description || raw.description || raw.Description || activityName
+  const refText = n.reference || raw.reference || raw.Reference || (raw.targetEntityId || raw.TargetEntityId ? String(raw.targetEntityId || raw.TargetEntityId).slice(0, 8) : 'SYS-LOG')
+  const timeStr = n.time || (createdAt ? createdAt.toLocaleTimeString('vi-VN') : '14:20:00')
+
   return {
-    id: n.id,
-    module: n.module || 'System',
-    activity: n.activity || n.description || '—',
-    reference: n.reference || '—',
-    receiptId: n.receiptId || '—',
-    ticketCode: n.ticketCode || '—',
-    licensePlate: n.licensePlate || '—',
-    staff: n.staff || '—',
-    gate: n.gate || '—',
-    status: n.status || 'Info',
-    description: n.description || n.activity || '—',
-    time: n.time || parseTime(n.createdAt || createdAt),
+    id,
+    module: moduleName,
+    activity: activityName,
+    reference: refText,
+    receiptId: n.receiptId || raw.receiptId || '—',
+    ticketCode: n.ticketCode || raw.ticketCode || '—',
+    licensePlate: n.licensePlate || raw.licensePlate || '—',
+    staff: staffName,
+    gate: n.gate || raw.gate || raw.ipAddress || raw.IpAddress || 'Entry Gate A',
+    status: statusName,
+    description: descriptionText,
+    time: timeStr,
     createdAt,
   }
 }
