@@ -9,8 +9,8 @@ import {
   findLostTicketSession,
   formatLostTicketMoney,
   getLostTicketPageData
-} from './lostTicketService'
-import './LostTicketPage.css'
+} from "../LostTicket/lostTicketService"
+import "../LostTicket/LostTicketPage.css";
 
 // NOTE: lostTicketService.js has no payment-processing export yet.
 // Kept local here (same axios/mock pattern as the rest of the service)
