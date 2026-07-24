@@ -53,7 +53,7 @@ public class PricingRulesController : ControllerBase
 
     /// <summary>Create a new pricing rule (Admin only — affects all future billing).</summary>
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Manager")]
     [ProducesResponseType(typeof(PricingRuleDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PricingRuleDto>> Create(
@@ -65,7 +65,7 @@ public class PricingRulesController : ControllerBase
 
     /// <summary>Update fields of an existing rule (Admin only).</summary>
     [HttpPatch("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Manager")]
     [ProducesResponseType(typeof(PricingRuleDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PricingRuleDto>> Update(
@@ -74,7 +74,7 @@ public class PricingRulesController : ControllerBase
 
     /// <summary>Enable or disable a pricing rule (Admin only).</summary>
     [HttpPost("{id:guid}/set-active")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Manager")]
     [ProducesResponseType(typeof(PricingRuleDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PricingRuleDto>> SetActive(
@@ -83,7 +83,7 @@ public class PricingRulesController : ControllerBase
 
     /// <summary>Soft-delete a pricing rule (Admin only).</summary>
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Manager")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)

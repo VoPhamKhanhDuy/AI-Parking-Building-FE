@@ -1,12 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "BHJ75Y2gdOU=",
+  "dgSpecHash": "w6a6vBjnY8g=",
   "success": true,
-  "projectFilePath": "D:\\Ki8\\SWD392\\project\\ParkingSystem\\backend\\src\\ParkingSystem.Domain\\ParkingSystem.Domain.csproj",
-  "expectedPackageFiles": [
-    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\6eac54686fbf2462808ae275b2825b8c\\nuget\\microsoft.netcore.app.ref\\8.0.27\\microsoft.netcore.app.ref.8.0.27.nupkg.sha512",
-    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\6eac54686fbf2462808ae275b2825b8c\\nuget\\microsoft.windowsdesktop.app.ref\\8.0.27\\microsoft.windowsdesktop.app.ref.8.0.27.nupkg.sha512",
-    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\6eac54686fbf2462808ae275b2825b8c\\nuget\\microsoft.aspnetcore.app.ref\\8.0.27\\microsoft.aspnetcore.app.ref.8.0.27.nupkg.sha512"
-  ],
+  "projectFilePath": "D:\\SWD\\AI-Parking-Building-FE\\backend\\src\\ParkingSystem.Domain\\ParkingSystem.Domain.csproj",
+  "expectedPackageFiles": [],
   "logs": []
 }

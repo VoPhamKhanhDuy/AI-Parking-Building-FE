@@ -1,16 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "IdUiw2a5Hok=",
+  "dgSpecHash": "Xqd+Q7Dvv7s=",
   "success": true,
-  "projectFilePath": "D:\\Ki8\\SWD392\\project\\ParkingSystem\\backend\\src\\ParkingSystem.Application\\ParkingSystem.Application.csproj",
+  "projectFilePath": "D:\\SWD\\AI-Parking-Building-FE\\backend\\src\\ParkingSystem.Application\\ParkingSystem.Application.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\6eac54686fbf2462808ae275b2825b8c\\nuget\\fluentvalidation\\11.9.0\\fluentvalidation.11.9.0.nupkg.sha512",
-    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\6eac54686fbf2462808ae275b2825b8c\\nuget\\fluentvalidation.dependencyinjectionextensions\\11.9.0\\fluentvalidation.dependencyinjectionextensions.11.9.0.nupkg.sha512",
-    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\6eac54686fbf2462808ae275b2825b8c\\nuget\\microsoft.extensions.dependencyinjection.abstractions\\8.0.2\\microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
-    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\6eac54686fbf2462808ae275b2825b8c\\nuget\\microsoft.extensions.logging.abstractions\\8.0.2\\microsoft.extensions.logging.abstractions.8.0.2.nupkg.sha512",
-    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\6eac54686fbf2462808ae275b2825b8c\\nuget\\microsoft.netcore.app.ref\\8.0.27\\microsoft.netcore.app.ref.8.0.27.nupkg.sha512",
-    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\6eac54686fbf2462808ae275b2825b8c\\nuget\\microsoft.windowsdesktop.app.ref\\8.0.27\\microsoft.windowsdesktop.app.ref.8.0.27.nupkg.sha512",
-    "C:\\Users\\ASUS\\AppData\\Local\\Temp\\cursor-sandbox-cache\\6eac54686fbf2462808ae275b2825b8c\\nuget\\microsoft.aspnetcore.app.ref\\8.0.27\\microsoft.aspnetcore.app.ref.8.0.27.nupkg.sha512"
+    "C:\\Users\\ADMIN\\.nuget\\packages\\fluentvalidation\\11.9.0\\fluentvalidation.11.9.0.nupkg.sha512",
+    "C:\\Users\\ADMIN\\.nuget\\packages\\fluentvalidation.dependencyinjectionextensions\\11.9.0\\fluentvalidation.dependencyinjectionextensions.11.9.0.nupkg.sha512",
+    "C:\\Users\\ADMIN\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.2\\microsoft.extensions.dependencyinjection.abstractions.8.0.2.nupkg.sha512",
+    "C:\\Users\\ADMIN\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\8.0.2\\microsoft.extensions.logging.abstractions.8.0.2.nupkg.sha512"
   ],
   "logs": []
 }
