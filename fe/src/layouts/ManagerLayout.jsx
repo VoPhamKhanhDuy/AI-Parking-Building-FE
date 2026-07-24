@@ -8,7 +8,6 @@ import './ManagerLayout.css'
 
 const managementItems = [
   ['apartment', 'Parking Structure', ROUTE_PATHS.parkingStructure],
-  ['account_balance_wallet', 'Pricing Rules', ROUTE_PATHS.pricing],
   ['assessment', 'Reports', ROUTE_PATHS.reports],
   ['badge', 'Staff Activity', ROUTE_PATHS.staffActivity],
 ]
@@ -97,14 +96,6 @@ function ManagerLayout({ children }) {
           </div>
         </div>
         <div className="topbar-actions">
-          <button className="icon-button" onClick={() => navigate(ROUTE_PATHS.notifications)}>
-            <span className="material-symbols-outlined">notifications</span>
-            <i className="notification-dot" />
-          </button>
-          <button className="icon-button" onClick={() => navigate(ROUTE_PATHS.managerProfile)}>
-            <span className="material-symbols-outlined">settings</span>
-          </button>
-          <span className="top-divider" />
           <div className="menu-anchor">
             <button className="profile-button" onClick={() => setOpenMenu(!openMenu)}>
               <span>

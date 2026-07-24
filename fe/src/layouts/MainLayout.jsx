@@ -6,7 +6,6 @@ import { useClock } from '../hooks/useClock'
 import './MainLayout.css'
 
 const NAVIGATION_ITEMS = [
-  { icon: 'dashboard', label: 'Dashboard', path: ROUTE_PATHS.dashboard },
   { icon: 'login', label: 'Vehicle Entry', path: ROUTE_PATHS.vehicleEntry },
   { icon: 'psychology', label: 'AI Recommendation', path: ROUTE_PATHS.aiRecommendation },
   { icon: 'map', label: 'Parking Map', path: ROUTE_PATHS.parkingMap },
@@ -16,7 +15,6 @@ const NAVIGATION_ITEMS = [
   { icon: 'calendar_month', label: 'Monthly Pass', path: ROUTE_PATHS.monthlyPass },
   { icon: 'event_available', label: 'Reservation', path: ROUTE_PATHS.reservation },
   { icon: 'find_replace', label: 'Lost Ticket', path: ROUTE_PATHS.lostTicket },
-  { icon: 'history', label: 'System Logs', path: ROUTE_PATHS.systemLogs },
 ]
 
 const ROLE_DISPLAY_MAP = {
@@ -132,45 +130,6 @@ function MainLayout({ children }) {
         </div>
 
         <div className="topbar-actions">
-          <div className="menu-anchor">
-            <button
-              className="icon-button"
-              aria-label="Notifications"
-              onClick={() => navigate(ROUTE_PATHS.notifications)}
-            >
-              <span className="material-symbols-outlined">notifications</span>
-              <i className="notification-dot" />
-            </button>
-          </div>
-
-          <div className="menu-anchor">
-            <button
-              className="icon-button"
-              aria-label="Settings"
-              onClick={() => toggleMenu('settings')}
-            >
-              <span className="material-symbols-outlined">settings</span>
-            </button>
-            {openMenu === 'settings' && (
-              <div className="action-menu compact staff-settings-menu">
-                <button onClick={() => { closeMenu(); navigate(ROUTE_PATHS.profile) }}>
-                  <span className="material-symbols-outlined">person</span>
-                  <span>View profile</span>
-                </button>
-                <button onClick={() => { closeMenu(); navigate(`${ROUTE_PATHS.profile}#account-security`) }}>
-                  <span className="material-symbols-outlined">manage_accounts</span>
-                  <span>Account settings</span>
-                </button>
-                <button className="staff-settings-signout" onClick={handleLogout}>
-                  <span className="material-symbols-outlined">logout</span>
-                  <span>Sign out</span>
-                </button>
-              </div>
-            )}
-          </div>
-
-          <span className="top-divider" />
-
           <div className="menu-anchor">
             <button
               className="profile-button"

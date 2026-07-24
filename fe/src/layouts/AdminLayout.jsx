@@ -123,22 +123,6 @@ function AdminLayout({ children }) {
         </div>
 
         <div className="topbar-actions">
-          <button
-            className="icon-button"
-            aria-label="Notifications"
-            onClick={() => navigate(ROUTE_PATHS.adminNotifications || ROUTE_PATHS.notifications)}
-          >
-            <span className="material-symbols-outlined">notifications</span>
-            <i className="notification-dot" />
-          </button>
-          <button
-            className="icon-button"
-            aria-label="Settings"
-            onClick={() => navigate(ROUTE_PATHS.adminProfile)}
-          >
-            <span className="material-symbols-outlined">settings</span>
-          </button>
-          <span className="top-divider" />
           <div className="menu-anchor">
             <button className="profile-button" onClick={() => setOpenMenu(!openMenu)}>
               <span>
